@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { getClassifierStatus, reloadQueries } = require('../services/brandClassifier');
+const { getClassifierStatus, getLanguageDetectionStatus, reloadQueries } = require('../services/brandClassifier');
 const { getQueueStatus } = require('../services/kwatchQueue');
+const { getStatus: getRelevancyStatus } = require('../utils/relevancyClassifier');
 
 // GET /api/health - Health check
 router.get('/', (req, res) => {
   const classifierStatus = getClassifierStatus();
   const queueStatus = getQueueStatus();
+  const relevancyStatus = getRelevancyStatus();
+  const langDetectionStatus = getLanguageDetectionStatus();
   
   res.json({
     status: 'OK',
@@ -15,6 +18,15 @@ router.get('/', (req, res) => {
       brandClassifier: {
         initialized: classifierStatus.initialized,
         queryCount: classifierStatus.queryCount,
+      },
+      relevancyClassifier: {
+        initialized: relevancyStatus.initialized,
+        threshold: relevancyStatus.config?.threshold || null,
+        embeddingModel: relevancyStatus.config?.embeddingModel || null,
+      },
+      languageDetection: {
+        initialized: langDetectionStatus.initialized,
+        library: langDetectionStatus.library,
       },
       kwatchQueue: queueStatus,
     },

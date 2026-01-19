@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { kwatchContainer, kwatchProcessedContainer } = require('../config/database');
 const { classifyText } = require('./brandClassifier');
+const { classifyRelevancy, isReady: isRelevancyReady } = require('../utils/relevancyClassifier');
 
 // In-memory queue for handling webhook notifications
 const kwatchQueue = [];
@@ -14,7 +15,89 @@ function generateKWatchId(platform, datetime, author) {
   return crypto.createHash('md5').update(input).digest('hex');
 }
 
-// Classify a single item and push to processed container if matched
+/**
+ * Extract subTopic from query string
+ * Takes all characters before the first full stop (period)
+ * @param {string} query - The query string
+ * @returns {string} - Characters before first period, or full string if no period
+ */
+function extractSubTopicFromQuery(query) {
+  if (!query || typeof query !== 'string') {
+    return 'Unknown';
+  }
+  const periodIndex = query.indexOf('.');
+  if (periodIndex === -1) {
+    return query.trim();
+  }
+  return query.substring(0, periodIndex).trim() || 'Unknown';
+}
+
+/**
+ * Classify item using relevancy model (SBERT + SVM)
+ * Used as fallback when brand classification doesn't match
+ * @param {object} item - The item to classify
+ * @returns {Promise<boolean>} - True if item was relevant and pushed to processed container
+ */
+async function classifyRelevancyAndPushIfRelevant(item) {
+  // Ensure relevancy classifier is initialized
+  if (!isRelevancyReady()) {
+    console.log('[RelevancyClassifier] Model not ready, skipping relevancy check');
+    return false;
+  }
+
+  // Combine title + content for classification (same as brand classifier)
+  const textToClassify = `${item.title || ''} ${item.content || ''}`.trim();
+  
+  if (!textToClassify) {
+    return false;
+  }
+
+  try {
+    const relevancyResult = await classifyRelevancy(textToClassify);
+    
+    if (relevancyResult.isRelevant) {
+      // Extract subTopic from query (characters before first full stop)
+      const subTopic = extractSubTopicFromQuery(item.query);
+      
+      const processedDocument = {
+        id: item.id,
+        platform: item.platform,
+        query: item.query, // Original KWatch query
+        datetime: item.datetime,
+        link: item.link,
+        author: item.author,
+        title: item.title || '',
+        content: item.content,
+        sentiment: item.sentiment,
+        receivedAt: item.receivedAt,
+        // Relevancy classification results
+        topic: 'General-RelevancyClassification',
+        subTopic: subTopic,
+        queryName: 'RelevancyClassification',
+        internalId: '74747474747474747474747474747474',
+        classificationMethod: 1,
+        relevancyProbability: relevancyResult.probability,
+      };
+
+      await kwatchProcessedContainer.items.create(processedDocument);
+      console.log(`[RelevancyClassifier] Item ${item.id} classified as RELEVANT (prob: ${relevancyResult.probability}) -> topic: "General-RelevancyClassification", subTopic: "${subTopic}"`);
+      return true;
+    }
+    
+    return false;
+  } catch (err) {
+    // Handle conflict (item already exists) gracefully
+    if (err.code === 409) {
+      console.log(`[RelevancyClassifier] Item ${item.id} already exists in processed container, skipping`);
+    } else {
+      console.error(`[RelevancyClassifier] Failed to process item ${item.id}:`, err.message);
+    }
+    return false;
+  }
+}
+
+// Classify a single item (based on brand logic) and push to processed container if matched
+// Returns: { matched: boolean, method: string } to track classification source
 async function classifyAndPushIfMatched(item) {
   // Combine title + content for classification
   const textToClassify = `${item.title || ''} ${item.content || ''}`;
@@ -41,21 +124,23 @@ async function classifyAndPushIfMatched(item) {
         subTopic: classification.subTopic,
         queryName: classification.queryName,
         internalId: classification.internalId,
+        classificationMethod: 0,
       };
 
       await kwatchProcessedContainer.items.create(processedDocument);
       console.log(`[BrandClassifier] Item ${item.id} classified as "${classification.topic}/${classification.subTopic}" and pushed to processed container`);
-      return true;
+      return { matched: true, method: 'BrandQuery' };
     } catch (err) {
       // Handle conflict (item already exists) gracefully
       if (err.code === 409) {
         console.log(`[BrandClassifier] Item ${item.id} already exists in processed container, skipping`);
+        return { matched: true, method: 'BrandQuery', alreadyExists: true };
       } else {
         console.error(`[BrandClassifier] Failed to push item ${item.id} to processed container:`, err.message);
       }
     }
   }
-  return false;
+  return { matched: false, method: null };
 }
 
 // Process queue in batches
@@ -78,13 +163,27 @@ async function processKWatchQueue() {
     const successful = results.filter(r => r.status === 'fulfilled').length;
     const failed = results.filter(r => r.status === 'rejected').length;
 
-    // Classify and push matched items to processed container
-    const classificationResults = await Promise.all(
-      batch.map(item => classifyAndPushIfMatched(item))
-    );
-    const matchedCount = classificationResults.filter(matched => matched).length;
+    // Classify items: First try brand classification, then relevancy as fallback
+    let brandMatchedCount = 0;
+    let relevancyMatchedCount = 0;
+    
+    for (const item of batch) {
+      // Step 1: Try brand classification first
+      const brandResult = await classifyAndPushIfMatched(item);
+      
+      if (brandResult.matched) {
+        brandMatchedCount++;
+      } else {
+        // Step 2: If brand classification didn't match, try relevancy classification
+        const relevancyMatched = await classifyRelevancyAndPushIfRelevant(item);
+        if (relevancyMatched) {
+          relevancyMatchedCount++;
+        }
+      }
+    }
 
-    console.log(`Batch complete: ${successful} raw inserted, ${failed} failed, ${matchedCount} classified`);
+    const totalClassified = brandMatchedCount + relevancyMatchedCount;
+    console.log(`Batch complete: ${successful} raw inserted, ${failed} failed | Classified: ${brandMatchedCount} brand, ${relevancyMatchedCount} relevancy (${totalClassified} total)`);
     
     // Log any failures
     results.forEach((result, idx) => {

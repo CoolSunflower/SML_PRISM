@@ -289,6 +289,14 @@ function getClassifierStatus() {
   };
 }
 
+// Get the status of language detection (franc)
+function getLanguageDetectionStatus() {
+  return {
+    initialized: franc !== null,
+    library: 'franc',
+  };
+}
+
 // Force re-initialization (useful for hot-reloading queries)
 async function reloadQueries() {
   isInitialized = false;
@@ -300,6 +308,7 @@ module.exports = {
   initializeBrandClassifier,
   classifyText,
   getClassifierStatus,
+  getLanguageDetectionStatus,
   reloadQueries,
   detectPortuguese,
 };
