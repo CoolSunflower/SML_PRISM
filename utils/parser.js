@@ -172,20 +172,17 @@ function parseRule(query) {
       const tok = peek();
       if (tok && (tok.type === "NEAR" || tok.type === "NEAR_WORD")) {
         consume();
-        let distance = tok.distance;
+        // Consume the distance token if present (for NEAR_WORD form)
         if (tok.type === "NEAR_WORD") {
           const next = peek();
           if (next && next.type === "TERM" && /^\/(\d+)$/.test(next.value)) {
             consume();
-            distance = parseInt(next.value.slice(1), 10);
-          } else {
-            // NEAR without /n defaults to NEAR/9
-            distance = 9;
           }
         }
         const right = parseUnary();
         if (!right) throw new Error("NEAR must have right operand");
-        node = { type: "NEAR", distance, left: node, right };
+        // Treat NEAR as AND
+        node = { type: "AND", left: node, right };
         continue;
       }
       break;
