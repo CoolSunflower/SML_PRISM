@@ -1,0 +1,4 @@
+# Ignore migration data files
+raw-data.json
+classification-results.json
+classification-results-filtered.json
