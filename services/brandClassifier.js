@@ -2,9 +2,48 @@ const fs = require('fs');
 const path = require('path');
 const { parseRule, evaluateRule } = require('../utils/parser');
 
+// Language detection library (loaded dynamically since franc is ESM-only)
+let franc = null;
+
 // In-memory storage for compiled brand query ASTs
 let brandQueries = [];
 let isInitialized = false;
+
+// Initialize language detection library
+async function initializeLanguageDetection() {
+  if (!franc) {
+    try {
+      const francModule = await import('franc');
+      franc = francModule.franc;
+      console.log('[BrandClassifier] franc language detection loaded');
+    } catch (err) {
+      console.warn('[BrandClassifier] Failed to load franc:', err.message);
+    }
+  }
+}
+
+/**
+ * Detect if text is Portuguese using franc
+ * @param {string} text - The text to check
+ * @returns {{isPortuguese: boolean, lang: string|null}}
+ */
+function detectPortuguese(text) {
+  if (!franc) {
+    return { isPortuguese: false, lang: null };
+  }
+
+  try {
+    // franc returns ISO 639-3 codes, Portuguese is 'por'
+    const langCode = franc(text, { minLength: 10 });
+    return {
+      isPortuguese: langCode === 'por',
+      lang: langCode,
+    };
+  } catch (err) {
+    console.warn('[BrandClassifier] franc detection error:', err.message);
+    return { isPortuguese: false, lang: null };
+  }
+}
 
 /**
  * Parse CSV handling multi-line quoted fields
@@ -94,12 +133,16 @@ function parseCSV(csvContent) {
 /**
  * Initialize the brand classifier by loading and pre-compiling all queries
  * Should be called once at server startup
+ * @returns {Promise<object>} Initialization result
  */
-function initializeBrandClassifier() {
+async function initializeBrandClassifier() {
   if (isInitialized) {
     console.log('[BrandClassifier] Already initialized, skipping...');
     return { success: true, queryCount: brandQueries.length };
   }
+
+  // Initialize language detection libraries
+  await initializeLanguageDetection();
 
   try {
     const csvPath = path.join(__dirname, '../config/BrandQueries.csv');
@@ -170,6 +213,27 @@ function initializeBrandClassifier() {
 }
 
 /**
+ * Check if a match requires special case handling for language detection
+ * Currently handles: Fixos/French - skip if text is detected as Portuguese
+ * @param {object} query - The matched query object
+ * @param {string} text - The original text
+ * @returns {boolean} - true if match should be skipped (false positive)
+ */
+function shouldSkipMatch(query, text) {
+  // Special case 1: Fixos + French - check if text is actually Portuguese
+  if (query.subTopic === 'Fixos' && query.queryName === 'French') {
+    const langResult = detectPortuguese(text);
+    
+    if (langResult.isPortuguese) {
+      console.log(`[BrandClassifier] Skipping Fixos/French match - Portuguese detected (lang: ${langResult.lang})`);
+      return true; // Skip this match
+    }
+  }
+  
+  return false; // Don't skip, proceed with match
+}
+
+/**
  * Classify text against all brand queries
  * Returns on first match (single classification only)
  * @param {string} text - The text to classify (content from social media post)
@@ -189,7 +253,13 @@ function classifyText(text) {
     try {
       const result = evaluateRule(query.ast, text);
       if (result.matched) {
-        // Return immediately on first match
+        // Check for special cases that should be skipped (e.g., language detection)
+        const skip = shouldSkipMatch(query, text);
+        if (skip) {
+          continue; // Skip this match and continue to next query
+        }
+        
+        // Return immediately on valid match
         return {
           matched: true,
           classification: {
@@ -220,7 +290,7 @@ function getClassifierStatus() {
 }
 
 // Force re-initialization (useful for hot-reloading queries)
-function reloadQueries() {
+async function reloadQueries() {
   isInitialized = false;
   brandQueries = [];
   return initializeBrandClassifier();
@@ -231,4 +301,5 @@ module.exports = {
   classifyText,
   getClassifierStatus,
   reloadQueries,
+  detectPortuguese,
 };

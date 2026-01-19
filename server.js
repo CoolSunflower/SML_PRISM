@@ -30,21 +30,28 @@ app.get('/', (req, res) => {
   });
 });
 
-// Initialize Brand Classifier with pre-compiled ASTs
-console.log('[Server] Initializing Brand Classifier...');
-const classifierInit = initializeBrandClassifier();
-if (classifierInit.success) {
-  console.log(`[Server] Brand Classifier ready with ${classifierInit.queryCount} queries`);
-} else {
-  console.error('[Server] Brand Classifier initialization failed:', classifierInit.error);
+// Initialize Brand Classifier with pre-compiled ASTs and start server
+async function startServer() {
+  console.log('[Server] Initializing Brand Classifier...');
+  const classifierInit = await initializeBrandClassifier();
+  if (classifierInit.success) {
+    console.log(`[Server] Brand Classifier ready with ${classifierInit.queryCount} queries`);
+  } else {
+    console.error('[Server] Brand Classifier initialization failed:', classifierInit.error);
+  }
+
+  // Start queue processor for KWatch
+  startQueueProcessor();
+  console.log('[Server] KWatch queue processor started');
+
+  app.listen(PORT, () => {
+    const status = getClassifierStatus();
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Brand Classifier: ${status.initialized ? 'Ready' : 'Not Ready'} (${status.queryCount} queries)`);
+  });
 }
 
-// Start queue processor for KWatch
-startQueueProcessor();
-console.log('[Server] KWatch queue processor started');
-
-app.listen(PORT, () => {
-  const status = getClassifierStatus();
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Brand Classifier: ${status.initialized ? 'Ready' : 'Not Ready'} (${status.queryCount} queries)`);
+startServer().catch(err => {
+  console.error('[Server] Failed to start:', err);
+  process.exit(1);
 });
