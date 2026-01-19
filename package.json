@@ -19,6 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "@azure/cosmos": "^4.9.0",
+    "@huggingface/transformers": "^3.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",

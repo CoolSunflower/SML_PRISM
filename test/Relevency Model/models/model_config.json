@@ -1,0 +1,19 @@
+{
+  "model_type": "SVM_RBF",
+  "embedding_model": "Xenova/all-MiniLM-L6-v2",
+  "embedding_dim": 384,
+  "threshold": 0.23889008080574475,
+  "classes": [
+    "Not Related",
+    "Mention"
+  ],
+  "class_labels": [
+    0,
+    1
+  ],
+  "metrics": {
+    "auc_roc": 0.9685841238270093,
+    "recall_at_threshold": 0.99,
+    "precision_at_threshold": 0.9041095890410958
+  }
+}
