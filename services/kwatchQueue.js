@@ -75,8 +75,7 @@ async function classifyRelevancyAndPushIfRelevant(item) {
         subTopic: subTopic,
         queryName: 'RelevancyClassification',
         internalId: '74747474747474747474747474747474',
-        classificationMethod: 1,
-        relevancyProbability: relevancyResult.probability,
+        relevantByModel: true
       };
 
       await kwatchProcessedContainer.items.create(processedDocument);
@@ -107,6 +106,9 @@ async function classifyAndPushIfMatched(item) {
   if (classificationResult.matched) {
     try {
       const classification = classificationResult.classification;
+
+      // For a brand classified item, perform additional relevancy classification
+      const relevancyResult = await classifyRelevancy(textToClassify);
       
       const processedDocument = {
         id: item.id,
@@ -124,7 +126,7 @@ async function classifyAndPushIfMatched(item) {
         subTopic: classification.subTopic,
         queryName: classification.queryName,
         internalId: classification.internalId,
-        classificationMethod: 0,
+        relevantByModel: relevancyResult.isRelevant,
       };
 
       await kwatchProcessedContainer.items.create(processedDocument);
