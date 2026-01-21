@@ -15,6 +15,7 @@ const fs = require('fs');
 const MODELS_DIR = path.join(__dirname, '..', 'models');
 const ONNX_MODEL_PATH = path.join(MODELS_DIR, 'svm_classifier.onnx');
 const CONFIG_PATH = path.join(MODELS_DIR, 'model_config.json');
+process.env.TRANSFORMERS_CACHE = path.join(__dirname, '..', '.hf-cache');
 
 // Classifier state
 let isInitialized = false;
@@ -66,10 +67,10 @@ async function initializeRelevancyClassifier() {
       // Dynamic import for ESM modules
       const [onnxModule, transformersModule] = await Promise.all([
         import('onnxruntime-node'),
-        import('@huggingface/transformers')
+        import('@xenova/transformers')
       ]);
 
-      ort = onnxModule;
+      ort = onnxModule.default;
       pipeline = transformersModule.pipeline;
 
       // Load ONNX model
@@ -81,7 +82,9 @@ async function initializeRelevancyClassifier() {
       const startEmb = Date.now();
       embedder = await pipeline('feature-extraction', config.embedding_model, {
         quantized: true,
+        progress_callback: null // prevents noisy logs on App Service
       });
+
       const embTime = ((Date.now() - startEmb) / 1000).toFixed(2);
       console.log(`[RelevancyClassifier] Embedder loaded in ${embTime}s`);
 

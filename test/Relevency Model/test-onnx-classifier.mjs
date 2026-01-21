@@ -14,8 +14,8 @@
  *   node test-onnx-classifier.mjs --verbose    # Show individual predictions
  */
 
-import { pipeline } from '@huggingface/transformers';
-import * as ort from 'onnxruntime-node';
+import { pipeline } from '@xenova/transformers';
+import ort from 'onnxruntime-node';
 import { performance } from 'perf_hooks';
 import fs from 'fs';
 import path from 'path';
@@ -200,6 +200,7 @@ class ONNXClassifier {
     const startEmb = performance.now();
     this.embedder = await pipeline('feature-extraction', this.config.embedding_model, {
       quantized: true,
+      progress_callback: null // prevents noisy logs
     });
     const endEmb = performance.now();
     console.log(`  ✓ Embedder loaded in ${((endEmb - startEmb) / 1000).toFixed(2)}s`);
