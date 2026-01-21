@@ -73,8 +73,10 @@ async function initializeRelevancyClassifier() {
       ort = onnxModule.default;
       pipeline = transformersModule.pipeline;
 
-      // Load ONNX model
-      session = await ort.InferenceSession.create(ONNX_MODEL_PATH);
+      // Load ONNX model with CPU execution provider (for Linux/Docker compatibility)
+      session = await ort.InferenceSession.create(ONNX_MODEL_PATH, {
+        executionProviders: ['cpu']
+      });
       inputName = session.inputNames[0];
       console.log(`[RelevancyClassifier] ONNX model loaded (input: "${inputName}")`);
 
