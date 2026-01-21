@@ -67,10 +67,10 @@ async function initializeRelevancyClassifier() {
       // Dynamic import for ESM modules
       const [onnxModule, transformersModule] = await Promise.all([
         import('onnxruntime-node'),
-        import('@xenova/transformers')
+        import('@huggingface/transformers')
       ]);
 
-      ort = onnxModule.default;
+      ort = onnxModule;
       pipeline = transformersModule.pipeline;
 
       // Load ONNX model with CPU execution provider (for Linux/Docker compatibility)
@@ -84,7 +84,6 @@ async function initializeRelevancyClassifier() {
       const startEmb = Date.now();
       embedder = await pipeline('feature-extraction', config.embedding_model, {
         quantized: true,
-        progress_callback: null // prevents noisy logs on App Service
       });
 
       const embTime = ((Date.now() - startEmb) / 1000).toFixed(2);
