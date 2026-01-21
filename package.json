@@ -26,7 +26,7 @@
     "fasttext.js": "^1.1.4",
     "franc": "^6.2.0",
     "langdetect": "^0.2.1",
-    "onnxruntime-node": "^1.23.2"
+    "onnxruntime-node": "1.21.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
@@ -34,5 +34,8 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "type": "commonjs"
+  "type": "commonjs",
+  "overrides": {
+    "onnxruntime-node": "1.21.0"
+  }
 }
