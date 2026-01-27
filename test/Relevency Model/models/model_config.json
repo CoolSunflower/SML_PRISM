@@ -2,7 +2,7 @@
   "model_type": "SVM_RBF",
   "embedding_model": "Xenova/all-MiniLM-L6-v2",
   "embedding_dim": 384,
-  "threshold": 0.23889008080574475,
+  "threshold": 0.50,
   "classes": [
     "Not Related",
     "Mention"
