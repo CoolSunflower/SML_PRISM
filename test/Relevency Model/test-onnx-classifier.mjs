@@ -227,13 +227,17 @@ class ONNXClassifier {
     const probabilities = results.probabilities.data;
     const prob = probabilities[1]; // Probability of class 1 (Mention)
     
-    // Apply threshold
-    const prediction = prob >= this.config.threshold ? 1 : 0;
+    // Apply threshold - use stryker_threshold if text contains "stryker"
+    const containsStryker = text.toLowerCase().includes('stryker');
+    const threshold = containsStryker ? this.config.stryker_threshold : this.config.threshold;
+    const prediction = prob >= threshold ? 1 : 0;
     
     return {
       prediction,
       probability: prob,
       label: this.config.classes[prediction],
+      threshold,
+      containsStryker
     };
   }
 
@@ -320,6 +324,7 @@ async function runTest() {
   
   const startPred = performance.now();
   let processed = 0;
+  let strykerCount = 0;
   
   for (const row of data) {
     const text = row['Mention Content'] || '';
@@ -328,6 +333,8 @@ async function runTest() {
     const t0 = performance.now();
     const result = await classifier.predict(text);
     const t1 = performance.now();
+
+    if (result.containsStryker) strykerCount++;
     
     predictions.push(result.prediction);
     labels.push(actualLabel);
@@ -396,6 +403,7 @@ async function runTest() {
 
   // Stryker-specific metrics
   console.log(`\n${colors.cyan}Stryker-Specific Metrics:${colors.reset}`);
+  console.log(`  Samples containing "stryker" detected: ${strykerCount}`);
   const strykerIndices = [];
   for (let i = 0; i < data.length; i++) {
     const text = (data[i]['Mention Content'] || '').toLowerCase();

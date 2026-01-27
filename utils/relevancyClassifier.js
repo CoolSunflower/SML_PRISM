@@ -63,6 +63,7 @@ async function initializeRelevancyClassifier() {
       // Load config
       config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
       console.log(`[RelevancyClassifier] Config loaded (threshold: ${config.threshold.toFixed(4)})`);
+      console.log(`[RelevancyClassifier] Config loaded (stryker_threshold: ${config.stryker_threshold.toFixed(4)})`);
 
       // Dynamic import for ESM modules
       const [onnxModule, transformersModule] = await Promise.all([
@@ -154,13 +155,17 @@ async function classifyRelevancy(text) {
     const probabilities = results.probabilities.data;
     const probability = probabilities[1]; // Probability of class 1 (Relevant/Mention)
 
-    // Apply threshold
-    const isRelevant = probability >= config.threshold;
+    // Apply threshold - use stryker_threshold if text contains "stryker"
+    const containsStryker = text.toLowerCase().includes('stryker');
+    const threshold = containsStryker ? config.stryker_threshold : config.threshold;
+    const isRelevant = probability >= threshold;
 
     return {
       isRelevant,
       probability: Number(probability.toFixed(4)),
-      label: isRelevant ? 'Mention' : 'Not Related'
+      label: isRelevant ? 'Mention' : 'Not Related',
+      threshold,
+      containsStryker
     };
 
   } catch (error) {
