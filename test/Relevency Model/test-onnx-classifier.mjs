@@ -394,6 +394,41 @@ async function runTest() {
   console.log(`  Max time       : ${maxTime.toFixed(2)}ms`);
   console.log(`  Throughput     : ${(1000 / avgTime).toFixed(1)} samples/sec`);
 
+  // Stryker-specific metrics
+  console.log(`\n${colors.cyan}Stryker-Specific Metrics:${colors.reset}`);
+  const strykerIndices = [];
+  for (let i = 0; i < data.length; i++) {
+    const text = (data[i]['Mention Content'] || '').toLowerCase();
+    if (text.includes('stryker')) {
+      strykerIndices.push(i);
+    }
+  }
+  
+  if (strykerIndices.length > 0) {
+    let stp = 0, stn = 0, sfp = 0, sfn = 0;
+    for (const i of strykerIndices) {
+      if (predictions[i] === 1 && labels[i] === 1) stp++;
+      else if (predictions[i] === 0 && labels[i] === 0) stn++;
+      else if (predictions[i] === 1 && labels[i] === 0) sfp++;
+      else if (predictions[i] === 0 && labels[i] === 1) sfn++;
+    }
+    
+    const sAccuracy = (stp + stn) / (stp + stn + sfp + sfn);
+    const sPrecision = stp / (stp + sfp) || 0;
+    const sRecall = stp / (stp + sfn) || 0;
+    const sF1 = 2 * sPrecision * sRecall / (sPrecision + sRecall) || 0;
+    
+    console.log(`  Samples with "stryker": ${strykerIndices.length}`);
+    console.log(`  Accuracy  : ${(sAccuracy * 100).toFixed(2)}%`);
+    console.log(`  Precision : ${(sPrecision * 100).toFixed(2)}%`);
+    console.log(`  Recall    : ${(sRecall * 100).toFixed(2)}%`);
+    console.log(`  F1 Score  : ${(sF1 * 100).toFixed(2)}%`);
+    console.log(`  Confusion Matrix:`);
+    console.log(`    TN: ${stn}, FP: ${sfp}, FN: ${sfn}, TP: ${stp}`);
+  } else {
+    console.log(`  No samples containing "stryker" found`);
+  }
+
   console.log(`\n${colors.cyan}Model Config:${colors.reset}`);
   console.log(`  Threshold : ${classifier.config.threshold.toFixed(4)}`);
   console.log(`  Embedding : ${classifier.config.embedding_model}`);
