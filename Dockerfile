@@ -1,3 +1,6 @@
+# docker build --no-cache -t adarshtesting1/sml-backend:latest .
+# docker push adarshtesting1/sml-backend:latest
+
 # Use Node.js 18 LTS on Linux
 FROM node:20-bookworm
 

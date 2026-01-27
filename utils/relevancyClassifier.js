@@ -164,7 +164,7 @@ async function classifyRelevancy(text) {
       isRelevant,
       probability: Number(probability.toFixed(4)),
       label: isRelevant ? 'Mention' : 'Not Related',
-      threshold,
+      threshold: threshold,
       containsStryker
     };
 
@@ -188,7 +188,6 @@ async function classifyWithMetadata(text) {
   const result = await classifyRelevancy(text);
   return {
     ...result,
-    threshold: config?.threshold || 0,
     model: config?.embedding_model || 'unknown',
     modelType: config?.model_type || 'unknown'
   };

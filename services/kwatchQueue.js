@@ -79,7 +79,7 @@ async function classifyRelevancyAndPushIfRelevant(item) {
       };
 
       await kwatchProcessedContainer.items.create(processedDocument);
-      console.log(`[RelevancyClassifier] Item ${item.id} classified as RELEVANT (prob: ${relevancyResult.probability}) -> topic: "General-RelevancyClassification", subTopic: "${subTopic}"`);
+      console.log(`[RelevancyClassifier] Item ${item.id} classified as RELEVANT (prob: ${relevancyResult.probability}, threshold: ${relevancyResult.threshold}) -> topic: "General-RelevancyClassification", subTopic: "${subTopic}"`);
       return true;
     }
     
