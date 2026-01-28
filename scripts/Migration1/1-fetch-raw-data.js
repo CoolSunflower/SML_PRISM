@@ -16,7 +16,7 @@ const { kwatchContainer } = require('../config/database');
 const OUTPUT_FILE = path.join(__dirname, 'data', 'raw-data.json');
 
 // Configuration
-const PAGE_SIZE = 100; // Fetch 100 items per page
+const PAGE_SIZE = 200; // Fetch 100 items per page
 
 /**
  * Get total count of items in the container
