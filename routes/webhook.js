@@ -16,32 +16,38 @@ router.post('/kwatch', async (req, res) => {
       });
     }
 
-    // Generate unique ID
-    const uniqueId = generateKWatchId(payload.platform, payload.datetime, payload.author);
-
-    // Create normalized document for Cosmos DB
-    const kwatchDocument = {
-      id: uniqueId,
-      platform: payload.platform,
-      query: payload.query,
-      datetime: payload.datetime,
-      link: payload.link,
-      author: payload.author,
-      title: payload.title || '',
-      content: payload.content,
-      sentiment: payload.sentiment || 'neutral',
-      receivedAt: new Date().toISOString(),
-      processed: false // Flag for future processing
-    };
-
-    // Add to queue
-    const queuePosition = addToQueue(kwatchDocument);
-    
-    console.log(`KWatch notification queued: ${payload.platform} - ${uniqueId}`);
-    console.log(`Queue size: ${queuePosition}`);
-
+    // Respond immediately to prevent timeout
     res.status(200).json({ 
       message: 'Notification received',
+    });
+
+    // Process asynchronously after response is sent
+    setImmediate(() => {
+      try {
+        // Generate unique ID
+        const uniqueId = generateKWatchId(payload.platform, payload.datetime, payload.author);
+
+        // Create normalized document for Cosmos DB
+        const kwatchDocument = {
+          id: uniqueId,
+          platform: payload.platform,
+          query: payload.query,
+          datetime: payload.datetime,
+          link: payload.link,
+          author: payload.author,
+          title: payload.title || '',
+          content: payload.content,
+          sentiment: payload.sentiment || 'neutral',
+          receivedAt: new Date().toISOString(),
+        };
+
+        const queuePosition = addToQueue(kwatchDocument);
+
+        console.log(`KWatch notification queued: ${payload.platform} - ${uniqueId}`);
+        console.log(`Queue size: ${queuePosition}`);
+      } catch (error) {
+        console.error('Failed to queue notification:', error);
+      }
     });
   } catch (error) {
     console.error('KWatch webhook error:', error);

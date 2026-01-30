@@ -20,6 +20,8 @@ COPY package*.json ./
 # Install production dependencies
 RUN npm ci --only=production
 
+# RUN npx playwright install
+
 # Copy application files
 COPY . .
 
