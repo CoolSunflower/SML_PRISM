@@ -9,8 +9,13 @@ let isProcessingQueue = false;
 const BATCH_SIZE = 10; // Process 10 items at a time
 const BATCH_INTERVAL = 60000; // Process every 60 seconds
 
-// Generate unique ID for KWatch items
-function generateKWatchId(platform, datetime, author) {
+// Generate ID for KWatch items - using content
+function generateKWatchId(content) {
+  return crypto.createHash('md5').update(content).digest('hex');
+}
+
+// In case of duplicate item, generate completely unique ID and mark item as duplicate
+function generateKWatchUniqueId(platform, datetime, author) {
   const input = `${platform}-${datetime}-${author}-${Date.now()}`;
   return crypto.createHash('md5').update(input).digest('hex');
 }
@@ -75,7 +80,9 @@ async function classifyRelevancyAndPushIfRelevant(item) {
         subTopic: subTopic,
         queryName: 'RelevancyClassification',
         internalId: '74747474747474747474747474747474',
-        relevantByModel: true
+        relevantByModel: true,
+        // Duplicate flag
+        isDuplicate: item.isDuplicate || false
       };
 
       await kwatchProcessedContainer.items.create(processedDocument);
@@ -127,6 +134,8 @@ async function classifyAndPushIfMatched(item) {
         queryName: classification.queryName,
         internalId: classification.internalId,
         relevantByModel: relevancyResult.isRelevant,
+        // Duplicate flag
+        isDuplicate: item.isDuplicate || false
       };
 
       await kwatchProcessedContainer.items.create(processedDocument);
@@ -162,8 +171,38 @@ async function processKWatchQueue() {
       batch.map(item => kwatchContainer.items.create(item))
     );
 
-    const successful = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
+    const handledDuplicateIndexes = new Set();
+    let duplicateInsertedCount = 0;
+    let duplicateInsertFailedCount = 0;
+
+    // If some item failed due to duplicate error, generate unique ID (will used for future tasks) and mark as duplicate
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === 'rejected' && result.reason.code === 409) {
+        const originalItem = batch[i];
+        const newId = generateKWatchUniqueId(originalItem.platform, originalItem.datetime, originalItem.author);
+        const duplicateItem = {
+          ...originalItem,
+          id: newId,
+          isDuplicate: true
+        };
+        try {
+          await kwatchContainer.items.create(duplicateItem);
+          console.log(`Duplicate item inserted with new ID: ${newId}`);
+
+          // Update item to have new ID and duplicate flag for further processing as well
+          batch[i] = duplicateItem;
+          handledDuplicateIndexes.add(i);
+          duplicateInsertedCount++;
+        } catch (err) {
+          duplicateInsertFailedCount++;
+          console.error(`Failed to insert duplicate item ${newId}:`, err.message);
+        }
+      }
+    }
+
+    const successful = results.filter(r => r.status === 'fulfilled').length + duplicateInsertedCount;
+    const failed = results.filter((r, idx) => r.status === 'rejected' && !handledDuplicateIndexes.has(idx)).length + duplicateInsertFailedCount;
 
     // Classify items: First try brand classification, then relevancy as fallback
     let brandMatchedCount = 0;
@@ -185,11 +224,11 @@ async function processKWatchQueue() {
     }
 
     const totalClassified = brandMatchedCount + relevancyMatchedCount;
-    console.log(`Batch complete: ${successful} raw inserted, ${failed} failed | Classified: ${brandMatchedCount} brand, ${relevancyMatchedCount} relevancy (${totalClassified} total)`);
+    console.log(`Batch complete: ${successful} raw inserted, ${failed} failed, ${duplicateInsertedCount} duplicates | Classified: ${brandMatchedCount} brand, ${relevancyMatchedCount} relevancy (${totalClassified} total)`);
     
     // Log any failures
     results.forEach((result, idx) => {
-      if (result.status === 'rejected') {
+      if (result.status === 'rejected' && !handledDuplicateIndexes.has(idx)) {
         console.error(`Failed to insert item ${batch[idx].id}:`, result.reason);
       }
     });

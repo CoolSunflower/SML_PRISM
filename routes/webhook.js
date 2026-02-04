@@ -24,8 +24,8 @@ router.post('/kwatch', async (req, res) => {
     // Process asynchronously after response is sent
     setImmediate(() => {
       try {
-        // Generate unique ID
-        const uniqueId = generateKWatchId(payload.platform, payload.datetime, payload.author);
+        // Generate ID using content hash
+        const uniqueId = generateKWatchId(payload.content);
 
         // Create normalized document for Cosmos DB
         const kwatchDocument = {
@@ -39,6 +39,7 @@ router.post('/kwatch', async (req, res) => {
           content: payload.content,
           sentiment: payload.sentiment || 'neutral',
           receivedAt: new Date().toISOString(),
+          isDuplicate: false // Default, may be updated during processing
         };
 
         const queuePosition = addToQueue(kwatchDocument);
