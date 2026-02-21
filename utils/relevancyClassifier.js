@@ -15,7 +15,6 @@ const fs = require('fs');
 const MODELS_DIR = path.join(__dirname, '..', 'models');
 const ONNX_MODEL_PATH = path.join(MODELS_DIR, 'svm_classifier.onnx');
 const CONFIG_PATH = path.join(MODELS_DIR, 'model_config.json');
-process.env.TRANSFORMERS_CACHE = path.join(__dirname, '..', '.hf-cache');
 
 // Classifier state
 let isInitialized = false;

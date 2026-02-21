@@ -1,7 +1,10 @@
+const path = require('path');
+process.env.HF_HOME = path.join(__dirname, '.hf-cache');
+process.env.TRANSFORMERS_CACHE = path.join(__dirname, '.hf-cache');
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 
 // Import routes and services
 const routes = require('./routes');

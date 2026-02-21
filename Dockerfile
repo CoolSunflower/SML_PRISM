@@ -14,15 +14,26 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
+# Set environment variables for HuggingFace cache
+ENV HF_HOME=/app/.hf-cache
+ENV TRANSFORMERS_CACHE=/app/.hf-cache
+
 # Copy package files
 COPY package*.json ./
 
 # Install production dependencies
 RUN npm ci --only=production
 
-# RUN npx playwright install
+# Copy model configuration and download script
+COPY models/model_config.json ./models/
+COPY scripts/download-models.js ./scripts/
 
-# Copy application files
+# Pre-download HuggingFace models during build
+# Clean any existing cache first
+RUN rm -rf /app/.hf-cache /app/node_modules/@huggingface/transformers/.cache && \
+    node scripts/download-models.js
+
+# Copy remaining application files
 COPY . .
 
 # Expose port (Azure App Service uses PORT env var)

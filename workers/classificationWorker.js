@@ -11,6 +11,10 @@
  *   Worker → Main:  { type: 'result', jobId, success, result, error }  (per job)
  */
 
+const path = require('path');
+process.env.HF_HOME = path.join(__dirname, '..', '.hf-cache');
+process.env.TRANSFORMERS_CACHE = path.join(__dirname, '..', '.hf-cache');
+
 const { parentPort } = require('worker_threads');
 const { initializeClassifiers, performClassification } = require('../services/classificationService');
 
