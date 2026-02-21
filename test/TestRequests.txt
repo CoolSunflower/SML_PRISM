@@ -1,0 +1,31 @@
+// Should get classified by Relevancy Classification
+Invoke-WebRequest `
+  -Uri "https://social-media-listening-ahawbrhza5ewc4au.eastus-01.azurewebsites.net/api/webhook/kwatch" `
+  -Method POST `
+  -Headers @{ "Content-Type" = "application/json" } `
+  -Body '{
+    "platform": "twitter",
+    "query": "Mako Surgery Test. Integration",
+    "datetime": "2026-01-21T10:55:24.397Z",
+    "link": "https://test.com/1",
+    "author": "test_user",
+    "title": "Test",
+    "content": "The Mako robotic arm system is revolutionary for knee surgery procedures.",
+    "sentiment": "positive"
+  }'
+
+// Should get classified by Brand Classification
+Invoke-WebRequest `
+  -Uri "https://social-media-listening-ahawbrhza5ewc4au.eastus-01.azurewebsites.net/api/webhook/kwatch" `
+  -Method POST `
+  -Headers @{ "Content-Type" = "application/json" } `
+  -Body '{
+    "platform": "twitter",
+    "query": "Stryker Nailing",
+    "datetime": "2026-01-21T10:55:24.397Z",
+    "link": "https://test.com/1",
+    "author": "test_user",
+    "title": "Test",
+    "content": "Stryker nail implant",
+    "sentiment": "positive"
+  }'

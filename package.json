@@ -24,11 +24,13 @@
   "dependencies": {
     "@azure/cosmos": "^4.9.0",
     "@huggingface/transformers": "^3.8.1",
+    "@mozilla/readability": "^0.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "fasttext.js": "^1.1.4",
     "franc": "^6.2.0",
+    "jsdom": "^28.1.0",
     "langdetect": "^0.2.1",
     "onnxruntime-node": "1.21.0",
     "rss-parser": "^3.13.0",

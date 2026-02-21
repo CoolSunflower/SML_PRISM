@@ -10,6 +10,7 @@ const cors = require('cors');
 const routes = require('./routes');
 const { startQueueProcessor } = require('./services/kwatchQueue');
 const workerPool = require('./services/classificationWorkerPool');
+const { startGoogleAlertsScraper, stopGoogleAlertsScraper } = require('./services/googleAlertsService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,6 +52,10 @@ async function startServer() {
   startQueueProcessor();
   console.log('[Server] KWatch queue processor started');
 
+  // Start Google Alerts RSS scraper (runs every 2 hours, initial scrape on startup)
+  startGoogleAlertsScraper();
+  console.log('[Server] Google Alerts scraper started');
+
   app.listen(PORT, () => {
     const poolMetrics = workerPool.getMetrics();
     console.log(`Server running on port ${PORT}`);
@@ -61,12 +66,14 @@ async function startServer() {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('[Server] SIGTERM received, shutting down...');
+  stopGoogleAlertsScraper();
   await workerPool.shutdown();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('[Server] SIGINT received, shutting down...');
+  stopGoogleAlertsScraper();
   await workerPool.shutdown();
   process.exit(0);
 });
