@@ -24,6 +24,83 @@ let app;
 let server;
 let queueInterval;
 
+// Track test items for cleanup
+const testItemIds = new Set();
+const testContents = new Set();
+const crypto = require('crypto');
+
+// Helper function to track test content for cleanup
+function trackTestContent(content) {
+  const itemId = crypto.createHash('md5').update(content).digest('hex');
+  testItemIds.add(itemId);
+  testContents.add(content);
+  return itemId;
+}
+
+// Helper function to clean up test data
+async function cleanupTestData() {
+  console.log(`Cleaning up ${testItemIds.size} test items and ${testContents.size} content entries...`);
+  
+  // Clean up by item ID (for original items)
+  for (const itemId of testItemIds) {
+    try {
+      await kwatchContainer.item(itemId, ['KWatch', itemId]).delete();
+    } catch (err) {
+      if (err.code !== 404) {
+        console.log(`Warning: Failed to delete ${itemId} from raw container:`, err.message);
+      }
+    }
+
+    try {
+      await kwatchProcessedContainer.item(itemId, ['KWatch', itemId]).delete();
+    } catch (err) {
+      if (err.code !== 404) {
+        console.log(`Warning: Failed to delete ${itemId} from processed container:`, err.message);
+      }
+    }
+  }
+  
+  // Clean up by content query (for duplicates with unique IDs)
+  for (const content of testContents) {
+    try {
+      const querySpec = {
+        query: 'SELECT * FROM c WHERE c.content = @content',
+        parameters: [{ name: '@content', value: content }]
+      };
+      
+      // Delete from raw container
+      const { resources: rawItems } = await kwatchContainer.items.query(querySpec).fetchAll();
+      for (const item of rawItems) {
+        try {
+          await kwatchContainer.item(item.id, ['KWatch', item.id]).delete();
+        } catch (err) {
+          if (err.code !== 404) {
+            console.log(`Warning: Failed to delete duplicate ${item.id} from raw:`, err.message);
+          }
+        }
+      }
+      
+      // Delete from processed container
+      const { resources: processedItems } = await kwatchProcessedContainer.items.query(querySpec).fetchAll();
+      for (const item of processedItems) {
+        try {
+          await kwatchProcessedContainer.item(item.id, ['KWatch', item.id]).delete();
+        } catch (err) {
+          if (err.code !== 404) {
+            console.log(`Warning: Failed to delete duplicate ${item.id} from processed:`, err.message);
+          }
+        }
+      }
+    } catch (err) {
+      console.log(`Warning: Failed to query/delete content "${content.substring(0, 50)}...":`, err.message);
+    }
+  }
+  
+  testItemIds.clear();
+  testContents.clear();
+  console.log('Cleanup completed');
+}
+
 beforeAll(async () => {
   // Set minimal workers for testing to avoid threading issues
   process.env.CLASSIFICATION_WORKERS = '1';
@@ -47,8 +124,14 @@ beforeAll(async () => {
   server = app.listen(3001);
 }, 120000);
 
+afterEach(async () => {
+  // Clean up test data after each test
+  await cleanupTestData();
+}, 30000);
+
 afterAll(async () => {
-  // Clean up
+  // Final cleanup and shutdown
+  await cleanupTestData();
   if (queueInterval) clearInterval(queueInterval);
   await workerPool.shutdown();
   if (server) server.close();
@@ -79,6 +162,7 @@ describe('KWatch Integration with Workers', () => {
 
   test('should process item and write to raw container', async () => {
     const testContent = `Test content for raw container ${Date.now()}`;
+    trackTestContent(testContent);
     const payload = {
       platform: 'KWatch',
       query: 'test query',
@@ -123,6 +207,7 @@ describe('KWatch Integration with Workers', () => {
 
   test('should classify item and write to processed container', async () => {
     const testContent = `Stryker Rejuvenate hip implant recall ${Date.now()}`;
+    trackTestContent(testContent);
     const payload = {
       platform: 'KWatch',
       query: 'hip implant',
@@ -198,6 +283,7 @@ describe('KWatch Integration with Workers', () => {
   test('should classify via relevancy model when brand query fails', async () => {
     // This content should NOT match any brand query but SHOULD be relevant
     const testContent = `The Mako robotic arm system is revolutionary for knee surgery procedures ${Date.now()}`;
+    trackTestContent(testContent);
     const payload = {
       platform: 'KWatch',
       query: 'Mako Surgery Test',
@@ -248,6 +334,7 @@ describe('KWatch Integration with Workers', () => {
 
   test('should handle duplicate content correctly', async () => {
     const duplicateContent = `Duplicate test content ${Date.now()}`;
+    trackTestContent(duplicateContent);
     const payload = {
       platform: 'KWatch',
       query: 'duplicate test',
@@ -309,6 +396,7 @@ describe('KWatch Integration with Workers', () => {
   describe('Race Condition Tests', () => {
     test('RACE-1: Duplicate item arriving during classification should not cause duplicate classification', async () => {
       const testContent = `Race condition test 1 - Stryker hip implant ${Date.now()}`;
+      trackTestContent(testContent);
       const payload = {
         platform: 'KWatch',
         query: 'hip implant race test',
@@ -376,6 +464,7 @@ describe('KWatch Integration with Workers', () => {
     test('RACE-2: Multiple rapid duplicate requests should not overwhelm classification workers', async () => {
       // Use content that definitely matches brand queries for reliable testing
       const testContent = `Stryker hip implant recall notification ${Date.now()}`;
+      trackTestContent(testContent);
       const basePayload = {
         platform: 'KWatch',
         query: 'hip implant race test',
@@ -456,6 +545,8 @@ describe('KWatch Integration with Workers', () => {
       const requests = [];
       
       for (let i = 0; i < 15; i++) {
+        const itemContent = `${testContent} item ${i}`;
+        trackTestContent(itemContent);
         const payload = {
           platform: 'KWatch',
           query: 'batch race test',
@@ -463,7 +554,7 @@ describe('KWatch Integration with Workers', () => {
           link: `https://example.com/race-3-${i}`,
           author: `Batch Tester ${i}`,
           title: 'Batch Race Test',
-          content: `${testContent} item ${i}`,
+          content: itemContent,
           sentiment: 'neutral',
         };
         requests.push(
@@ -504,6 +595,14 @@ describe('KWatch Integration with Workers', () => {
       // Send multiple different items simultaneously to test worker pool isolation
       // Use simpler content that matches brand queries reliably
       const timestamp = Date.now();
+      const content1 = `Stryker hip implant ${timestamp}-1`;
+      const content2 = `Stryker knee replacement ${timestamp}-2`;
+      const content3 = `Stryker spinal surgery ${timestamp}-3`;
+      
+      trackTestContent(content1);
+      trackTestContent(content2);
+      trackTestContent(content3);
+      
       const payloads = [
         {
           platform: 'KWatch',
@@ -512,7 +611,7 @@ describe('KWatch Integration with Workers', () => {
           link: `https://example.com/race-4-1`,
           author: 'Concurrent Tester 1',
           title: 'Concurrent Test 1',
-          content: `Stryker hip implant ${timestamp}-1`,
+          content: content1,
           sentiment: 'positive',
         },
         {
@@ -522,7 +621,7 @@ describe('KWatch Integration with Workers', () => {
           link: `https://example.com/race-4-2`,
           author: 'Concurrent Tester 2',
           title: 'Concurrent Test 2',
-          content: `Stryker knee replacement ${timestamp}-2`,
+          content: content2,
           sentiment: 'negative',
         },
         {
@@ -532,7 +631,7 @@ describe('KWatch Integration with Workers', () => {
           link: `https://example.com/race-4-3`,
           author: 'Concurrent Tester 3',
           title: 'Concurrent Test 3',
-          content: `Stryker spinal surgery ${timestamp}-3`,
+          content: content3,
           sentiment: 'neutral',
         },
       ];
