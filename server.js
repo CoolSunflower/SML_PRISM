@@ -6,8 +6,7 @@ const path = require('path');
 // Import routes and services
 const routes = require('./routes');
 const { startQueueProcessor } = require('./services/kwatchQueue');
-const { initializeBrandClassifier, getClassifierStatus } = require('./services/brandClassifier');
-const { initializeRelevancyClassifier, getStatus: getRelevancyStatus } = require('./utils/relevancyClassifier');
+const workerPool = require('./services/classificationWorkerPool');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,26 +30,18 @@ app.get('/', (req, res) => {
   });
 });
 
-// Initialize classifiers and start server
+// Initialize worker pool and start server
 async function startServer() {
-  // Initialize Brand Classifier
-  console.log('[Server] Initializing Brand Classifier...');
-  const classifierInit = await initializeBrandClassifier();
-  if (classifierInit.success) {
-    console.log(`[Server] Brand Classifier ready with ${classifierInit.queryCount} queries`);
-  } else {
-    console.error('[Server] Brand Classifier initialization failed:', classifierInit.error);
-  }
-
-  // Initialize Relevancy Classifier (SBERT + SVM model)
-  console.log('[Server] Initializing Relevancy Classifier...');
+  // Initialize Classification Worker Pool
+  // Workers load brand classifier + relevancy classifier internally
+  console.log('[Server] Initializing Classification Worker Pool...');
   try {
-    await initializeRelevancyClassifier();
-    const relevancyStatus = getRelevancyStatus();
-    console.log(`[Server] Relevancy Classifier ready (threshold: ${relevancyStatus.config?.threshold?.toFixed(4)})`);
+    await workerPool.initialize();
+    const poolMetrics = workerPool.getMetrics();
+    console.log(`[Server] Worker Pool ready (${poolMetrics.workerCount} workers)`);
   } catch (err) {
-    console.error('[Server] Relevancy Classifier initialization failed:', err.message);
-    console.log('[Server] Continuing without relevancy classification fallback');
+    console.error('[Server] Worker Pool initialization failed:', err.message);
+    console.log('[Server] Continuing without classification workers');
   }
 
   // Start queue processor for KWatch
@@ -58,13 +49,24 @@ async function startServer() {
   console.log('[Server] KWatch queue processor started');
 
   app.listen(PORT, () => {
-    const brandStatus = getClassifierStatus();
-    const relevancyStatus = getRelevancyStatus();
+    const poolMetrics = workerPool.getMetrics();
     console.log(`Server running on port ${PORT}`);
-    console.log(`Brand Classifier: ${brandStatus.initialized ? 'Ready' : 'Not Ready'} (${brandStatus.queryCount} queries)`);
-    console.log(`Relevancy Classifier: ${relevancyStatus.initialized ? 'Ready' : 'Not Ready'}`);
+    console.log(`Classification Workers: ${poolMetrics.initialized ? 'Ready' : 'Not Ready'} (${poolMetrics.workerCount} workers)`);
   });
 }
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('[Server] SIGTERM received, shutting down...');
+  await workerPool.shutdown();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('[Server] SIGINT received, shutting down...');
+  await workerPool.shutdown();
+  process.exit(0);
+});
 
 startServer().catch(err => {
   console.error('[Server] Failed to start:', err);

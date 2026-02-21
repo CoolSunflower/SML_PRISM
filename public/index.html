@@ -419,6 +419,7 @@
       <div class="header-actions">
         <button class="btn-success" onclick="addTestItem()" id="addBtn" style="display: none;">Add Test Item</button>
         <button class="btn-primary" onclick="loadItems()">Refresh</button>
+        <button class="btn-primary" onclick="toggleViewMode()">Change View (Raw ⇔ Processed)</button>
       </div>
     </div>
   </header>
@@ -606,7 +607,7 @@
               <strong>Sentiment:</strong> <span style="color: ${sentimentColor[item.sentiment]}">●</span> ${item.sentiment}
             </div>
           </div>
-          <div class="item-content">${item.content.length > 200 ? item.content.substring(0, 200) + '...' : item.content}</div>
+          <div class="item-content">${item.content.length > 500 ? item.content.substring(0, 500) + '...' : item.content}</div>
           <div class="item-footer">
             <span>📅 ${item.datetime}</span>
             <span>•</span>
@@ -688,7 +689,7 @@
             </div>
           </div>
           ${item.title ? `<div style="color: #f1f5f9; font-weight: 600; margin-bottom: 8px;">${item.title}</div>` : ''}
-          <div class="item-content">${item.content.length > 200 ? item.content.substring(0, 200) + '...' : item.content}</div>
+          <div class="item-content">${item.content.length > 700 ? item.content.substring(0, 700) + '...' : item.content}</div>
           <div class="item-footer">
             <span>📅 ${item.datetime}</span>
             <span>•</span>

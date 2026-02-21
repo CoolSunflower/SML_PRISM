@@ -237,9 +237,9 @@ function shouldSkipMatch(query, text) {
  * Classify text against all brand queries
  * Returns on first match (single classification only)
  * @param {string} text - The text to classify (content from social media post)
- * @returns {Object} Classification result with single match
+ * @returns {Promise<Object>} Classification result with single match
  */
-function classifyText(text) {
+async function classifyText(text) {
   if (!isInitialized) {
     console.warn('[BrandClassifier] Not initialized. Call initializeBrandClassifier() first.');
     return { matched: false, classification: null };
@@ -258,7 +258,7 @@ function classifyText(text) {
         if (skip) {
           continue; // Skip this match and continue to next query
         }
-        
+
         // Return immediately on valid match
         return {
           matched: true,
