@@ -73,6 +73,7 @@ jest.mock('../config/alerts_not_websites.json', () => ['blocked.com', 'spam.org'
 const mockJSDOMInstance = { window: { document: {} } };
 jest.mock('jsdom', () => ({
   JSDOM: jest.fn(() => mockJSDOMInstance),
+  VirtualConsole: jest.fn(() => ({ forwardTo: jest.fn() })),
 }));
 
 // Readability mock

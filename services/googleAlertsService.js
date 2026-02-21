@@ -1,7 +1,13 @@
 'use strict';
 
 const crypto = require('crypto');
-const { JSDOM } = require('jsdom');
+const { JSDOM, VirtualConsole } = require('jsdom');
+
+// Silence jsdom's CSS parser warnings — they fire on nearly every real-world page
+// because jsdom doesn't support modern/vendor-specific CSS. Readability only needs
+// the DOM tree, so these warnings are safe to suppress.
+const silentVirtualConsole = new VirtualConsole();
+silentVirtualConsole.forwardTo(console, { omitJSDOMErrors: true });
 const { Readability } = require('@mozilla/readability');
 const Parser = require('rss-parser');
 
@@ -106,7 +112,7 @@ async function fetchArticleContent(url) {
     if (!contentType.includes('text/html')) return null;
 
     const html = await response.text();
-    const dom = new JSDOM(html, { url });
+    const dom = new JSDOM(html, { url, virtualConsole: silentVirtualConsole });
     const article = new Readability(dom.window.document).parse();
 
     if (!article || !article.textContent) return null;
