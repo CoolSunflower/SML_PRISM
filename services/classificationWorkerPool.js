@@ -1,8 +1,11 @@
 /**
  * Classification Worker Pool
  *
- * Manages a pool of Worker Threads that perform brand + relevancy classification.
- * The main thread submits jobs to the pool (non-blocking) and receives results via callbacks.
+ * Manages a pool of Child Processes that perform brand + relevancy classification.
+ * The main process submits jobs to the pool (non-blocking) and receives results via callbacks.
+ *
+ * Uses child_process instead of worker_threads to avoid V8 HandleScope issues
+ * with onnxruntime-node's native bindings.
  *
  * Features:
  *  - Round-robin job distribution
@@ -11,11 +14,11 @@
  *  - Metrics tracking
  */
 
-const { Worker } = require('worker_threads');
+const { fork } = require('child_process');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const WORKER_SCRIPT = path.join(__dirname, '..', 'workers', 'classificationWorker.js');
+const WORKER_SCRIPT = path.join(__dirname, '..', 'workers', 'classificationWorkerProcess.js');
 
 // Configurable via environment variables
 const DEFAULT_WORKER_COUNT = 2;
@@ -44,10 +47,12 @@ const MAX_PROCESSING_TIMES = 1000;
 /**
  * Create and return a new worker, wiring up message and exit handlers.
  * @param {number} index - Worker index in the pool
- * @returns {{ worker: Worker, ready: boolean, busy: boolean, id: number }}
+ * @returns {{ worker: ChildProcess, ready: boolean, busy: boolean, id: number }}
  */
 function createWorkerEntry(index) {
-  const worker = new Worker(WORKER_SCRIPT);
+  const worker = fork(WORKER_SCRIPT, [], {
+    stdio: ['inherit', 'inherit', 'inherit', 'ipc']
+  });
   const entry = { worker, ready: false, busy: false, id: index };
 
   worker.on('message', (msg) => {
@@ -183,7 +188,7 @@ function submitJob(itemData, callback) {
   nextWorkerIndex = (nextWorkerIndex + 1) % workerCount;
 
   entry.busy = true;
-  entry.worker.postMessage({
+  entry.worker.send({
     type: 'classify',
     jobId,
     data: itemData,
@@ -223,7 +228,12 @@ function getMetrics() {
 async function shutdown() {
   console.log('[WorkerPool] Shutting down workers...');
   shuttingDown = true;
-  const promises = workers.map((entry) => entry.worker.terminate());
+  const promises = workers.map((entry) => {
+    return new Promise((resolve) => {
+      entry.worker.once('exit', resolve);
+      entry.worker.kill();
+    });
+  });
   await Promise.allSettled(promises);
   workers = [];
   isInitialized = false;

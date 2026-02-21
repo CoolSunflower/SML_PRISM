@@ -1,9 +1,12 @@
 /**
- * Classification Worker Thread
+ * Classification Worker Process
  *
- * Runs inside a Node.js Worker Thread.
+ * Runs as a separate Node.js child process (not worker thread).
  * Loads both brand classifier and relevancy classifier on startup,
- * then processes classification jobs received from the main thread.
+ * then processes classification jobs received from the main process via IPC.
+ *
+ * This uses child_process instead of worker_threads to avoid V8 HandleScope
+ * issues with onnxruntime-node's native bindings.
  *
  * Protocol:
  *   Main → Worker:  { type: 'classify', jobId, data: { id, title, content, query, ... } }
@@ -15,13 +18,12 @@ const path = require('path');
 process.env.HF_HOME = path.join(__dirname, '..', '.hf-cache');
 process.env.TRANSFORMERS_CACHE = path.join(__dirname, '..', '.hf-cache');
 
-const { parentPort } = require('worker_threads');
 const { initializeClassifiers, performClassification } = require('../services/classificationService');
 
 let ready = false;
 
 /**
- * Initialize classifiers then signal readiness to main thread.
+ * Initialize classifiers then signal readiness to parent process.
  */
 async function init() {
   try {
@@ -30,23 +32,23 @@ async function init() {
     console.log(`[Worker] Brand: ${status.brandReady ? 'Ready' : 'Failed'} (${status.brandQueryCount} queries), Relevancy: ${status.relevancyReady ? 'Ready' : 'Failed'}`);
 
     ready = true;
-    parentPort.postMessage({ type: 'ready' });
+    process.send({ type: 'ready' });
   } catch (err) {
     console.error('[Worker] Fatal initialization error:', err.message);
-    parentPort.postMessage({ type: 'ready', error: err.message });
+    process.send({ type: 'ready', error: err.message });
   }
 }
 
 /**
- * Handle incoming messages from the main thread.
+ * Handle incoming messages from the parent process.
  */
-parentPort.on('message', async (msg) => {
+process.on('message', async (msg) => {
   if (msg.type !== 'classify') return;
 
   const { jobId, data } = msg;
 
   if (!ready) {
-    parentPort.postMessage({
+    process.send({
       type: 'result',
       jobId,
       success: false,
@@ -59,7 +61,7 @@ parentPort.on('message', async (msg) => {
   try {
     const result = await performClassification(data);
 
-    parentPort.postMessage({
+    process.send({
       type: 'result',
       jobId,
       success: true,
@@ -67,7 +69,7 @@ parentPort.on('message', async (msg) => {
       error: null,
     });
   } catch (err) {
-    parentPort.postMessage({
+    process.send({
       type: 'result',
       jobId,
       success: false,
@@ -75,6 +77,12 @@ parentPort.on('message', async (msg) => {
       error: err.message,
     });
   }
+});
+
+// Handle disconnect/exit
+process.on('disconnect', () => {
+  console.log('[Worker] Parent disconnected, exiting...');
+  process.exit(0);
 });
 
 // Start initialization immediately
