@@ -1930,6 +1930,87 @@ code {
 <li>The unified schema shall be consistent regardless of whether the source is KWatch or Google Alerts.</li>
 </ul>
 <hr>
+<h3 id="58-fr-api-08-operational-alert-email-system-status-planned">5.8 FR-API-08: Operational Alert Email System (Status: Planned)</h3>
+<p><strong>Description:</strong> The system shall send automated email notifications to designated operators when internal pipeline conditions indicate degraded operation, resource pressure, or repeated failures requiring human attention. Unlike the adverse event notifier (which is content-driven), operational alerts are infrastructure- and health-driven, they fire based on system state thresholds, not classification results.</p>
+<p><strong>Trigger Conditions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Trigger ID</th>
+<th>Condition</th>
+<th>Threshold / Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OA-01</td>
+<td>KWatch queue nearing capacity</td>
+<td>Queue size ≥ 80% of <code>MAX_CLASSIFICATION_QUEUE_SIZE</code></td>
+</tr>
+<tr>
+<td>OA-02</td>
+<td>KWatch queue full - items being dropped</td>
+<td>Queue reaches <code>MAX_CLASSIFICATION_QUEUE_SIZE</code> and an item is rejected</td>
+</tr>
+<tr>
+<td>OA-03</td>
+<td>High RSS feed failure rate in a scrape cycle</td>
+<td>≥ 10% of configured feeds fail (parse error, timeout, or HTTP error) in a single cycle</td>
+</tr>
+<tr>
+<td>OA-04</td>
+<td>Complete scrape cycle failure</td>
+<td>All feeds in a scrape cycle fail</td>
+</tr>
+<tr>
+<td>OA-05</td>
+<td>Scrape cycle timeout</td>
+<td>A scrape cycle runs beyond 2x the expected maximum duration</td>
+</tr>
+<tr>
+<td>OA-06</td>
+<td>Worker pool crash storm</td>
+<td>≥ 3 worker crashes within a 5-minute rolling window</td>
+</tr>
+<tr>
+<td>OA-07</td>
+<td>All workers simultaneously unavailable</td>
+<td>No <code>ready</code> worker is available for a configurable duration (e.g., ≥ 30 seconds)</td>
+</tr>
+<tr>
+<td>OA-08</td>
+<td>Repeated Cosmos DB write failures</td>
+<td>≥ 5 consecutive write failures to any container within a batch or scrape cycle</td>
+</tr>
+<tr>
+<td>OA-09</td>
+<td>Translation service unreachable (future)</td>
+<td>Translation service returns errors or times out for ≥ N consecutive requests</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Notification Content (per alert):</strong></p>
+<ul>
+<li>Alert identifier (OA-XX) and human-readable title</li>
+<li>Timestamp of the triggering event</li>
+<li>Current system state values (e.g., queue depth, failure count, worker status)</li>
+<li>Recommended remediation action (e.g., increase queue size, check App Service plan, verify Cosmos DB throughput)</li>
+<li>Environment / deployment identifier (to distinguish prod from staging)</li>
+</ul>
+<p><strong>Deduplication / Suppression:</strong></p>
+<ul>
+<li>Each trigger type shall be suppressed after the first notification until the condition clears and re-occurs, or until a configurable cooldown period (default: 30 minutes) elapses, to prevent alert storms.</li>
+</ul>
+<p><strong>Architecture:</strong> Email delivery mechanism (SMTP, Azure Communication Services, or SendGrid) and recipient list management are shared with the adverse event notifier module and shall use the same delivery infrastructure. Recipient lists shall be configurable without code changes.</p>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Operational alerts shall be delivered within 2 minutes of the triggering condition being detected.</li>
+<li>Alert delivery failures shall be logged but shall not affect the pipeline path that triggered them.</li>
+<li>Duplicate/repeated alerts for the same unresolved condition shall be suppressed for the configured cooldown period.</li>
+<li>All trigger thresholds shall be configurable via environment variables without code changes.</li>
+<li>The system shall expose a <code>/api/health</code> response field indicating the last operational alert sent and its timestamp.</li>
+</ul>
+<hr>
 <h2 id="6-non-functional-requirements">6. Non-Functional Requirements</h2>
 <h3 id="61-nfr-01-performance">6.1 NFR-01: Performance</h3>
 <table>
