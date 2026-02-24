@@ -1,0 +1,3059 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SDD.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="software-design-document-sdd">Software Design Document (SDD)</h1>
+<h2 id="prism-platform-for-real-time-insights--social-monitoring">PRISM: Platform for Real-time Insights &amp; Social Monitoring</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document Version</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>Draft</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>2026-02-22</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#1-introduction">Introduction</a></li>
+<li><a href="#2-high-level-design-hld">High-Level Design (HLD)</a></li>
+<li><a href="#3-low-level-design-lld">Low-Level Design (LLD)</a></li>
+<li><a href="#4-database-design">Database Design</a></li>
+<li><a href="#5-detailed-flows">Detailed Flows</a></li>
+<li><a href="#6-configuration-design">Configuration Design</a></li>
+<li><a href="#7-deployment-design">Deployment Design</a></li>
+</ol>
+<hr>
+<h2 id="1-introduction">1. Introduction</h2>
+<h3 id="11-purpose">1.1 Purpose</h3>
+<p>This document describes the backend software design of <strong>PRISM (Platform for Real-time Insights &amp; Social Monitoring)</strong>. It covers the high-level architecture, low-level module design, database schemas, data flows, configuration management, and deployment strategy. This document is intended for developers, architects, and technical stakeholders involved in building, maintaining, or extending the system.</p>
+<h3 id="12-scope">1.2 Scope</h3>
+<p>This SDD covers:</p>
+<ul>
+<li>The architecture of the PRISM backend (Node.js/Express application)</li>
+<li>Design of all existing modules (ingestion, classification, worker pool, APIs)</li>
+<li>Design of planned modules (translation, NOT words filter, SharePoint publishing, adverse event notifications)</li>
+<li>Azure Cosmos DB schema design for all containers</li>
+<li>End-to-end data flows with Mermaid diagrams</li>
+<li>Configuration file formats and environment variable reference</li>
+<li>Docker and Azure App Service deployment architecture</li>
+</ul>
+<h3 id="13-design-goals--principles">1.3 Design Goals &amp; Principles</h3>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Application</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Async-First</strong></td>
+<td>Webhook responses return immediately; all processing occurs asynchronously via queues and worker pools</td>
+</tr>
+<tr>
+<td><strong>Fault Isolation</strong></td>
+<td>Classification runs in child processes; a crash in one worker does not affect the main process or other workers</td>
+</tr>
+<tr>
+<td><strong>Config-Driven</strong></td>
+<td>Brand rules, RSS feeds, blocklists, and model parameters are externalized to config files</td>
+</tr>
+<tr>
+<td><strong>Graceful Degradation</strong></td>
+<td>If the relevancy model fails to load, the system continues with brand-only classification; if a feed fails, others continue</td>
+</tr>
+<tr>
+<td><strong>Dedup-by-Design</strong></td>
+<td>Both data sources have deduplication built into the ingestion path, using content/URL hashing</td>
+</tr>
+<tr>
+<td><strong>Minimal Dependencies</strong></td>
+<td>The system uses a single database (Cosmos DB) and runs as a single deployable unit</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-high-level-design-hld">2. High-Level Design (HLD)</h2>
+<h3 id="21-system-architecture-overview">2.1 System Architecture Overview</h3>
+<p>The PRISM backend follows a pipeline architecture with four stages: <strong>Ingestion → Classification → Storage → Publishing</strong>. Each stage is decoupled through in-memory queues and asynchronous callbacks.</p>
+<pre><code class="language-mermaid"><div class="mermaid">graph TB
+    subgraph External Sources
+        KW[KWatch Service]
+        GA[Google Alerts RSS]
+        TS[Translation Service<br/>Planned]
+    end
+
+    subgraph PRISM Backend - Express.js Application
+        subgraph Ingestion Layer
+            WH[Webhook Handler<br/>POST /api/webhook/kwatch]
+            RS[RSS Scraper<br/>Scheduled: 2h interval]
+        end
+
+        subgraph Queue Layer
+            KQ[KWatch Queue<br/>In-Memory<br/>Batch: 10 / 60s]
+            GQ[Google Alerts Queue<br/>Per-Cycle Processing]
+        end
+
+        subgraph Classification Layer
+            WP[Worker Pool<br/>N Child Processes]
+            BC[Brand Classifier<br/>1300+ AST Rules]
+            RC[Relevancy Classifier<br/>SBERT + SVM ONNX]
+            NW[NOT Words Filter<br/>Planned]
+        end
+
+        subgraph API Layer
+            API[REST API Endpoints]
+            DASH[Dashboard<br/>Static SPA]
+        end
+
+        subgraph Publishing Layer
+            SP[SharePoint Publisher<br/>Planned]
+            AE[Adverse Event Notifier<br/>Planned]
+            OA[Operational Alert System<br/>Planned]
+        end
+    end
+
+    subgraph Storage
+        DB[(Azure Cosmos DB<br/>5 Containers)]
+    end
+
+    subgraph Downstream
+        SPL[SharePoint Lists]
+        EM[Email Recipients]
+    end
+
+    KW -->|POST webhook| WH
+    GA -->|RSS fetch| RS
+    WH --> KQ
+    RS --> GQ
+    KQ --> WP
+    GQ --> WP
+    WP --> BC
+    WP --> RC
+    RC -.->|Planned| NW
+    WP --> DB
+    WP -.->|Planned| SP
+    WP -.->|Planned| AE
+    API --> DB
+    DASH --> API
+    SP -.-> SPL
+    AE -.-> EM
+    KQ -.->|OA-01/02 Planned| OA
+    GQ -.->|OA-03/04/05 Planned| OA
+    WP -.->|OA-06/07 Planned| OA
+    DB -.->|OA-08 Planned| OA
+    OA -.-> EM
+    KQ -.->|Planned| TS
+    GQ -.->|Planned| TS
+</div></code></pre>
+<h3 id="22-technology-stack">2.2 Technology Stack</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+<th>Version</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Runtime</td>
+<td>Node.js</td>
+<td>&gt;= 18</td>
+<td>Server-side JavaScript runtime</td>
+</tr>
+<tr>
+<td>Framework</td>
+<td>Express.js</td>
+<td>4.22.1</td>
+<td>HTTP server and routing</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>Azure Cosmos DB</td>
+<td>SDK 4.9.0</td>
+<td>NoSQL document storage</td>
+</tr>
+<tr>
+<td>ML Embeddings</td>
+<td>HuggingFace Transformers.js</td>
+<td>3.8.1</td>
+<td>SBERT sentence embeddings</td>
+</tr>
+<tr>
+<td>ML Inference</td>
+<td>ONNX Runtime (Node)</td>
+<td>1.21.0</td>
+<td>SVM model inference</td>
+</tr>
+<tr>
+<td>RSS Parsing</td>
+<td>rss-parser</td>
+<td>3.13.0</td>
+<td>RSS/Atom feed parsing</td>
+</tr>
+<tr>
+<td>Content Extraction</td>
+<td>@mozilla/readability + jsdom</td>
+<td>0.6.0 / 28.1.0</td>
+<td>Article text extraction</td>
+</tr>
+<tr>
+<td>Language Detection</td>
+<td>franc + langdetect</td>
+<td>6.2.0 / 0.2.1</td>
+<td>Language identification</td>
+</tr>
+<tr>
+<td>Hashing</td>
+<td>Node.js crypto (MD5)</td>
+<td>Built-in</td>
+<td>Content and URL deduplication</td>
+</tr>
+<tr>
+<td>Testing</td>
+<td>Jest + Supertest</td>
+<td>30.2.0 / 7.2.2</td>
+<td>Unit and integration testing</td>
+</tr>
+<tr>
+<td>Containerization</td>
+<td>Docker</td>
+<td>node:20-bookworm</td>
+<td>Production deployment</td>
+</tr>
+<tr>
+<td>Translation (Planned)</td>
+<td>Argos Translate</td>
+<td>-</td>
+<td>Neural machine translation</td>
+</tr>
+<tr>
+<td>SharePoint (Planned)</td>
+<td>Microsoft Graph API</td>
+<td>v1.0</td>
+<td>SharePoint list operations</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-data-flow-overview">2.3 Data Flow Overview</h3>
+<p>The following diagram shows the high-level data flow from source to final storage, covering both KWatch and Google Alerts pipelines:</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart LR
+    subgraph Sources
+        S1[KWatch Webhook]
+        S2[Google Alerts RSS]
+    end
+
+    subgraph Ingestion
+        I1[Validate & Enqueue]
+        I2[Scrape & Extract URLs]
+        I3[Fetch Full Content]
+        I4[Blocklist Filter]
+        I5[Deduplication]
+    end
+
+    subgraph Classification
+        C1[Brand Classifier<br/>AST Rule Engine]
+        C2[Relevancy Classifier<br/>SBERT + SVM]
+        C3{Match?}
+    end
+
+    subgraph Storage
+        D1[(Raw Container)]
+        D2[(Processed Container)]
+        D3[(State Container)]
+    end
+
+    S1 --> I1 --> I5 --> D1
+    S2 --> I2 --> I4 --> I5
+    I2 --> I3 --> I5
+    I5 --> D1
+    D1 --> C1 --> C3
+    C3 -->|Brand Match| D2
+    C3 -->|No Match| C2
+    C2 -->|Relevant| D2
+    C2 -->|Not Relevant| X[Discarded]
+    I2 --> D3
+</div></code></pre>
+<h3 id="24-deployment-architecture">2.4 Deployment Architecture</h3>
+<pre><code class="language-mermaid"><div class="mermaid">graph TB
+    subgraph Azure Cloud
+        subgraph App Service Plan
+            AS[Azure App Service<br/>PRISM Backend<br/>Docker Container]
+            TS[Azure App Service<br/>Translation Service<br/>Planned]
+        end
+
+        subgraph Data Layer
+            CDB[(Azure Cosmos DB<br/>SocialMediaListeningData)]
+        end
+
+        subgraph Microsoft 365
+            SPO[SharePoint Online<br/>Planned]
+        end
+
+        subgraph Identity
+            AAD[Azure AD<br/>App Registration<br/>Planned]
+        end
+    end
+
+    subgraph External
+        KW[KWatch]
+        GG[Google Alerts]
+        USR[Users / Browsers]
+        ES[Email Service<br/>ACS / SendGrid / SMTP<br/>Planned]
+    end
+
+    KW -->|HTTPS Webhook| AS
+    AS -->|HTTPS RSS Fetch| GG
+    AS -->|Cosmos SDK| CDB
+    AS -.->|HTTP| TS
+    AS -.->|Graph API| SPO
+    AS -.->|OAuth 2.0| AAD
+    AS -.->|"Email API\nAdverse + Operational Alerts"| ES
+    USR -->|HTTPS| AS
+
+    style TS stroke-dasharray: 5 5
+    style SPO stroke-dasharray: 5 5
+    style AAD stroke-dasharray: 5 5
+    style ES stroke-dasharray: 5 5
+</div></code></pre>
+<p><strong>Deployment Methods:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Environment</th>
+<th>Configuration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Docker Container</td>
+<td>Linux App Service</td>
+<td><code>Dockerfile</code> - Multi-stage build with model pre-download</td>
+</tr>
+<tr>
+<td>IIS/iisnode</td>
+<td>Windows App Service</td>
+<td><code>web.config</code> - Maps requests to Node.js via iisnode</td>
+</tr>
+<tr>
+<td>Direct</td>
+<td>Local Development</td>
+<td><code>npm run dev</code> - nodemon with auto-reload</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-low-level-design-lld">3. Low-Level Design (LLD)</h2>
+<h3 id="31-module-decomposition">3.1 Module Decomposition</h3>
+<p>The backend is organized into five functional layers, each consisting of one or more modules:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Module</th>
+<th>File(s)</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Entry Point</strong></td>
+<td>Server</td>
+<td><code>server.js</code></td>
+<td>Application bootstrap, middleware setup, scheduler initialization</td>
+</tr>
+<tr>
+<td><strong>Ingestion</strong></td>
+<td>Webhook Handler</td>
+<td><code>routes/webhook.js</code></td>
+<td>KWatch payload validation and queuing</td>
+</tr>
+<tr>
+<td></td>
+<td>KWatch Queue</td>
+<td><code>services/kwatchQueue.js</code></td>
+<td>In-memory queue, batch processing, dedup, DB insertion</td>
+</tr>
+<tr>
+<td></td>
+<td>Google Alerts Scraper</td>
+<td><code>services/googleAlertsService.js</code></td>
+<td>RSS scraping, URL extraction, content fetch, state management</td>
+</tr>
+<tr>
+<td><strong>Classification</strong></td>
+<td>Brand Classifier</td>
+<td><code>services/brandClassifier.js</code></td>
+<td>CSV parsing, AST compilation, rule-based matching</td>
+</tr>
+<tr>
+<td></td>
+<td>Query Parser</td>
+<td><code>utils/parser.js</code></td>
+<td>Tokenization, AST parsing, rule evaluation</td>
+</tr>
+<tr>
+<td></td>
+<td>Relevancy Classifier</td>
+<td><code>utils/relevancyClassifier.js</code></td>
+<td>SBERT embedding, SVM inference</td>
+</tr>
+<tr>
+<td></td>
+<td>Classification Service</td>
+<td><code>services/classificationService.js</code></td>
+<td>Two-stage orchestration with fallback logic</td>
+</tr>
+<tr>
+<td></td>
+<td>Worker Pool</td>
+<td><code>services/classificationWorkerPool.js</code></td>
+<td>Child process management, IPC, round-robin</td>
+</tr>
+<tr>
+<td></td>
+<td>Worker Process</td>
+<td><code>workers/classificationWorkerProcess.js</code></td>
+<td>Classifier initialization and job execution</td>
+</tr>
+<tr>
+<td><strong>API</strong></td>
+<td>Routes</td>
+<td><code>routes/*.js</code></td>
+<td>REST endpoint handlers</td>
+</tr>
+<tr>
+<td></td>
+<td>Dashboard</td>
+<td><code>public/index.html</code></td>
+<td>Static SPA frontend</td>
+</tr>
+<tr>
+<td><strong>Configuration</strong></td>
+<td>Database</td>
+<td><code>config/database.js</code></td>
+<td>Cosmos DB client singleton</td>
+</tr>
+<tr>
+<td></td>
+<td>Brand Queries</td>
+<td><code>config/BrandQueries.csv</code></td>
+<td>Rule definitions</td>
+</tr>
+<tr>
+<td></td>
+<td>RSS Feeds</td>
+<td><code>config/alerts_rss_feeds.json</code></td>
+<td>Feed URL registry</td>
+</tr>
+<tr>
+<td></td>
+<td>Blocklist</td>
+<td><code>config/alerts_not_websites.json</code></td>
+<td>Domain exclusions</td>
+</tr>
+<tr>
+<td></td>
+<td>Model Config</td>
+<td><code>models/model_config.json</code></td>
+<td>ML hyperparameters</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="32-kwatch-ingestion-module">3.2 KWatch Ingestion Module</h3>
+<p><strong>Files:</strong> <code>routes/webhook.js</code>, <code>services/kwatchQueue.js</code></p>
+<p><strong>Responsibilities:</strong></p>
+<ul>
+<li>Receive and validate webhook payloads</li>
+<li>Generate content-based document IDs (MD5)</li>
+<li>Manage the in-memory queue with batch draining</li>
+<li>Handle deduplication with duplicate recovery</li>
+<li>Insert raw documents to Cosmos DB</li>
+<li>Submit classification jobs to the worker pool</li>
+<li>Handle classification results and insert processed documents</li>
+</ul>
+<p><strong>Key Design Decisions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Immediate HTTP 200 response with <code>setImmediate()</code> scheduling</td>
+<td>Prevents webhook timeout; KWatch expects fast acknowledgment</td>
+</tr>
+<tr>
+<td>In-memory queue (not persistent)</td>
+<td>Simplicity; acceptable data loss risk for a monitoring system since sources can be re-scraped</td>
+</tr>
+<tr>
+<td>MD5 for content hashing</td>
+<td>Fast, deterministic, collision-acceptable for dedup (not cryptographic use)</td>
+</tr>
+<tr>
+<td>Duplicate recovery with new ID</td>
+<td>Preserves all data; marks duplicates for downstream awareness</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Result Handling:</strong> When the worker pool returns a classification result for a KWatch item:</p>
+<ul>
+<li>If <code>matched = true</code>: Build a processed document combining all original fields with classification fields (topic, subTopic, queryName, internalId, relevantByModel, isDuplicate), and insert into KWatchProcessedData.</li>
+<li>If <code>matched = false</code>: The item is not stored in the processed container (it remains in raw only).</li>
+</ul>
+<hr>
+<h3 id="33-google-alerts-scraper-module">3.3 Google Alerts Scraper Module</h3>
+<p><strong>File:</strong> <code>services/googleAlertsService.js</code></p>
+<p><strong>Responsibilities:</strong></p>
+<ul>
+<li>Schedule and execute RSS feed scraping cycles</li>
+<li>Track per-feed state for incremental scraping</li>
+<li>Extract real article URLs from Google redirect links</li>
+<li>Fetch full article text via Mozilla Readability</li>
+<li>Apply website blocklist filtering</li>
+<li>Deduplicate articles by URL hash</li>
+<li>Insert raw documents and submit classification jobs</li>
+<li>Handle classification results and insert processed documents</li>
+</ul>
+<p><strong>Key Design Decisions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2-hour scrape interval</td>
+<td>Balances freshness vs. Google rate limits; configurable</td>
+</tr>
+<tr>
+<td>Concurrency of 10 feeds per batch</td>
+<td>Limits concurrent HTTP connections to avoid throttling</td>
+</tr>
+<tr>
+<td>Topmost-link-hash state tracking</td>
+<td>Efficient O(1) comparison to detect new entries without storing all seen URLs</td>
+</tr>
+<tr>
+<td>Readability with JSDOM</td>
+<td>Accurate content extraction without browser dependency; handles most article layouts</td>
+</tr>
+<tr>
+<td>10s fetch timeout per article</td>
+<td>Prevents slow sites from stalling the pipeline</td>
+</tr>
+<tr>
+<td>100-char minimum for full content</td>
+<td>Filters out extraction failures that return only navigation text or boilerplate</td>
+</tr>
+</tbody>
+</table>
+<p><strong>URL Extraction Design:</strong>
+Google Alerts RSS entries use redirect URLs of the form:</p>
+<pre class="hljs"><code><div>https://www.google.com/url?rct=j&amp;sa=t&amp;url=&lt;encoded_actual_url&gt;&amp;ct=ga&amp;...
+</div></code></pre>
+<p>The system uses the <code>URL</code> constructor to parse the redirect URL and extracts the <code>url</code> query parameter, which contains the actual article URL.</p>
+<p><strong>Result Handling:</strong> When the worker pool returns a classification result for a Google Alerts item:</p>
+<ul>
+<li>If <code>matched = true</code>: Build a processed document combining all raw fields with classification fields plus a <code>classifiedAt</code> timestamp, and insert into GoogleAlertsProcessedData.</li>
+<li>If <code>matched = false</code>: The item remains in raw only.</li>
+</ul>
+<hr>
+<h3 id="34-brand-classifier-module">3.4 Brand Classifier Module</h3>
+<p><strong>Files:</strong> <code>services/brandClassifier.js</code>, <code>utils/parser.js</code></p>
+<p><strong>Responsibilities:</strong></p>
+<ul>
+<li>Parse the BrandQueries CSV file at initialization</li>
+<li>Compile each query string into an AST</li>
+<li>Evaluate ASTs against normalized/tokenized text</li>
+<li>Handle special cases (Portuguese language override)</li>
+<li>Return the first matching classification</li>
+</ul>
+<h4 id="341-query-language-grammar-bnf">3.4.1 Query Language Grammar (BNF)</h4>
+<pre class="hljs"><code><div>&lt;expression&gt;  ::= &lt;or-expr&gt;
+&lt;or-expr&gt;     ::= &lt;and-expr&gt; ( &quot;OR&quot; &lt;and-expr&gt; )*
+&lt;and-expr&gt;    ::= &lt;not-expr&gt; ( &quot;AND&quot;? &lt;not-expr&gt; )*
+&lt;not-expr&gt;    ::= &quot;NOT&quot; &lt;primary&gt; | &lt;primary&gt;
+&lt;primary&gt;     ::= &quot;(&quot; &lt;expression&gt; &quot;)&quot;
+                 | &lt;near-expr&gt;
+                 | &lt;term&gt;
+&lt;near-expr&gt;   ::= &lt;term&gt; &quot;NEAR/&quot; &lt;integer&gt; &lt;term&gt;
+&lt;term&gt;        ::= &lt;quoted-phrase&gt; | &lt;wildcard&gt; | &lt;mention&gt; | &lt;hashtag&gt; | &lt;word&gt;
+&lt;quoted-phrase&gt; ::= '&quot;' &lt;word&gt; ( ' ' &lt;word&gt; )* '&quot;'
+&lt;wildcard&gt;    ::= &lt;word&gt; &quot;*&quot;
+&lt;mention&gt;     ::= &quot;@&quot; &lt;word&gt;
+&lt;hashtag&gt;     ::= &quot;#&quot; &lt;word&gt;
+&lt;word&gt;        ::= [a-z0-9@#]+
+</div></code></pre>
+<h4 id="342-ast-node-types">3.4.2 AST Node Types</h4>
+<table>
+<thead>
+<tr>
+<th>Node Type</th>
+<th>Fields</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AND</code></td>
+<td><code>children[]</code></td>
+<td>All children must match</td>
+</tr>
+<tr>
+<td><code>OR</code></td>
+<td><code>children[]</code></td>
+<td>At least one child must match</td>
+</tr>
+<tr>
+<td><code>NOT</code></td>
+<td><code>child</code></td>
+<td>Child must not match (negation)</td>
+</tr>
+<tr>
+<td><code>NEAR</code></td>
+<td><code>left</code>, <code>right</code>, <code>distance</code></td>
+<td>Both terms within N tokens</td>
+</tr>
+<tr>
+<td><code>TERM</code></td>
+<td><code>value</code></td>
+<td>Single word token match</td>
+</tr>
+<tr>
+<td><code>PHRASE</code></td>
+<td><code>words[]</code></td>
+<td>Exact sequence of words</td>
+</tr>
+<tr>
+<td><code>WILDCARD</code></td>
+<td><code>prefix</code></td>
+<td>Matches tokens starting with prefix</td>
+</tr>
+</tbody>
+</table>
+<h4 id="343-rule-evaluation-algorithm">3.4.3 Rule Evaluation Algorithm</h4>
+<ol>
+<li>
+<p><strong>Text Normalization:</strong></p>
+<ul>
+<li>Convert to lowercase</li>
+<li>NFD Unicode decomposition (remove diacritics: é → e, ñ → n)</li>
+<li>Replace non-alphanumeric characters (except @ and #) with spaces</li>
+<li>Collapse multiple spaces</li>
+</ul>
+</li>
+<li>
+<p><strong>Tokenization:</strong> Split normalized text into an array of tokens.</p>
+</li>
+<li>
+<p><strong>NOT-First Evaluation:</strong></p>
+<ul>
+<li>Extract all NOT nodes from the AST</li>
+<li>If any NOT node's child matches the tokens, the entire rule fails immediately</li>
+<li>This short-circuits early for rules with exclusion clauses</li>
+</ul>
+</li>
+<li>
+<p><strong>Positive Evaluation:</strong></p>
+<ul>
+<li>Evaluate the remaining positive clauses (AND, OR, NEAR, TERM, PHRASE, WILDCARD)</li>
+<li>For NEAR/n: find positions of both terms in the token array, check if any pair is within n positions <em>(Updated Requirement: Consider equivalent to AND)</em></li>
+<li>For WILDCARD: check if any token starts with the prefix</li>
+<li>For PHRASE: check if the exact sequence of words appears consecutively</li>
+</ul>
+</li>
+<li>
+<p><strong>Final Decision:</strong></p>
+<ul>
+<li>If any NOT matched: reject</li>
+<li>If positive clauses exist and matched: accept</li>
+<li>If only NOT clauses (no positive): accept (negation-only queries match when exclusion terms are absent)</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="35-relevancy-classifier-module">3.5 Relevancy Classifier Module</h3>
+<p><strong>File:</strong> <code>utils/relevancyClassifier.js</code></p>
+<p><strong>Responsibilities:</strong></p>
+<ul>
+<li>Load the SBERT embedding model and ONNX SVM model at initialization</li>
+<li>Generate 384-dimensional embeddings for input text</li>
+<li>Run SVM inference to produce relevancy probability</li>
+<li>Apply threshold-based decision with Stryker-specific adjustment</li>
+</ul>
+<h4 id="351-embedding-pipeline">3.5.1 Embedding Pipeline</h4>
+<ol>
+<li>Input text is passed to the SBERT model (<code>Xenova/all-MiniLM-L6-v2</code>)</li>
+<li>The model performs tokenization, encoding, and mean pooling internally</li>
+<li>Output: a normalized 384-dimensional Float32Array embedding vector</li>
+</ol>
+<h4 id="352-svm-inference">3.5.2 SVM Inference</h4>
+<ol>
+<li>The embedding vector is reshaped to a <code>[1, 384]</code> ONNX tensor</li>
+<li>The tensor is passed to the SVM model via <code>onnxruntime-node</code></li>
+<li>Output: probability array <code>[P(Not Related), P(Mention)]</code></li>
+<li>The <code>P(Mention)</code> value (index 1) is used as the relevancy score</li>
+</ol>
+<h4 id="353-threshold-strategy">3.5.3 Threshold Strategy</h4>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Threshold</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Text contains &quot;stryker&quot;</td>
+<td>0.55</td>
+<td>Higher threshold to filter out tangential brand-name mentions (sports, pop culture)</td>
+</tr>
+<tr>
+<td>All other text</td>
+<td>0.40</td>
+<td>Lower threshold to maximize recall for non-brand-specific content</td>
+</tr>
+</tbody>
+</table>
+<p>The dual-threshold design is driven by the observation that texts mentioning &quot;Stryker&quot; by name often have higher base model scores even when not medically relevant (e.g., sports, entertainment).</p>
+<hr>
+<h3 id="36-classification-orchestration-module">3.6 Classification Orchestration Module</h3>
+<p><strong>File:</strong> <code>services/classificationService.js</code></p>
+<p><strong>Responsibilities:</strong></p>
+<ul>
+<li>Coordinate the two-stage classification pipeline</li>
+<li>Implement the brand-first, relevancy-fallback logic</li>
+<li>Extract subTopic from query strings for relevancy-only matches</li>
+<li>Provide a unified classification result structure</li>
+</ul>
+<p><strong>Orchestration Logic:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Condition</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Text is empty</td>
+<td>Return <code>{ matched: false }</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Brand rule matches</td>
+<td>Run relevancy model for annotation → Return <code>{ matched: true, method: 'BrandQuery' }</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>No brand match, relevancy says relevant</td>
+<td>Extract subTopic from query → Return <code>{ matched: true, method: 'RelevancyClassification' }</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>No brand match, relevancy says not relevant</td>
+<td>Return <code>{ matched: false }</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>SubTopic Extraction:</strong> For relevancy-only matches, the subTopic is derived from the item's <code>query</code> field by taking all characters before the first period (<code>.</code>). For example, <code>&quot;Gamma3.Medical&quot;</code> → <code>&quot;Gamma3&quot;</code>. If no period exists, the entire query is used.</p>
+<hr>
+<h3 id="37-worker-pool-module">3.7 Worker Pool Module</h3>
+<p><strong>Files:</strong> <code>services/classificationWorkerPool.js</code>, <code>workers/classificationWorkerProcess.js</code></p>
+<p><strong>Responsibilities:</strong></p>
+<ul>
+<li>Fork and manage N child processes</li>
+<li>Load classifiers within each worker process</li>
+<li>Distribute jobs via round-robin IPC</li>
+<li>Track per-job callbacks and metrics</li>
+<li>Handle worker crashes with automatic respawn</li>
+</ul>
+<h4 id="371-ipc-protocol">3.7.1 IPC Protocol</h4>
+<p><strong>Parent → Worker Messages:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Fields</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>classify</code></td>
+<td><code>jobId</code>, <code>data</code></td>
+<td>Submit a classification job</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Worker → Parent Messages:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Fields</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ready</code></td>
+<td>-</td>
+<td>Worker initialization complete</td>
+</tr>
+<tr>
+<td><code>result</code></td>
+<td><code>jobId</code>, <code>success</code>, <code>result</code>, <code>error</code></td>
+<td>Classification result or error</td>
+</tr>
+</tbody>
+</table>
+<h4 id="372-job-distribution-round-robin">3.7.2 Job Distribution (Round-Robin)</h4>
+<p>The pool maintains a <code>nextWorkerIndex</code> counter. When a job is submitted:</p>
+<ol>
+<li>Starting from <code>nextWorkerIndex</code>, scan workers for one that is <code>ready</code> and not <code>busy</code>.</li>
+<li>If found: Mark as busy, send the job via IPC, store the callback in a pending jobs map.</li>
+<li>Advance <code>nextWorkerIndex = (selectedIndex + 1) % workerCount</code>.</li>
+<li>If no available worker: Add the job to an internal queue (bounded by max queue size).</li>
+</ol>
+<h4 id="373-crash-recovery">3.7.3 Crash Recovery</h4>
+<p>When a worker process exits with a non-zero code:</p>
+<ol>
+<li>Increment <code>workerCrashes</code> metric.</li>
+<li>Fail any pending job for that worker with an error callback.</li>
+<li>Fork a new child process in the same slot.</li>
+<li>The new worker loads classifiers and sends <code>ready</code> when initialized.</li>
+<li>The pool resumes distributing jobs to the replacement worker.</li>
+</ol>
+<p>Workers that exit with code 0 (graceful) during shutdown are not restarted.</p>
+<h4 id="374-backpressure-handling">3.7.4 Backpressure Handling</h4>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>All workers busy, queue &lt; max</td>
+<td>Job added to internal queue</td>
+</tr>
+<tr>
+<td>All workers busy, queue = max</td>
+<td><code>submitJob()</code> returns <code>null</code>; caller decides whether to log and skip or retry</td>
+</tr>
+<tr>
+<td>Worker becomes free</td>
+<td>Dequeue next job from internal queue and send to worker</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="38-api-layer-design">3.8 API Layer Design</h3>
+<p><strong>File:</strong> <code>routes/index.js</code> (aggregator), <code>routes/*.js</code> (individual route files)</p>
+<p><strong>Route Registration:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Route File</th>
+<th>Prefix</th>
+<th>Endpoints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>webhook.js</code></td>
+<td><code>/api/webhook</code></td>
+<td>POST <code>/kwatch</code></td>
+</tr>
+<tr>
+<td><code>kwatch.js</code></td>
+<td><code>/api/kwatch</code></td>
+<td>GET <code>/</code>, GET <code>/processed</code></td>
+</tr>
+<tr>
+<td><code>googleAlerts.js</code></td>
+<td><code>/api/google-alerts</code></td>
+<td>GET <code>/</code>, GET <code>/processed</code>, GET <code>/state</code>, POST <code>/trigger</code></td>
+</tr>
+<tr>
+<td><code>classify.js</code></td>
+<td><code>/api/classify</code></td>
+<td>POST <code>/</code>, GET <code>/status</code></td>
+</tr>
+<tr>
+<td><code>health.js</code></td>
+<td><code>/api/health</code></td>
+<td>GET <code>/</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Common Patterns:</strong></p>
+<ul>
+<li>All data retrieval endpoints support <code>page</code> and <code>limit</code> query parameters</li>
+<li>Pagination is implemented via Cosmos DB <code>OFFSET</code> and <code>LIMIT</code> SQL queries</li>
+<li>Total counts are retrieved via separate <code>COUNT</code> queries</li>
+<li>Error responses follow a consistent <code>{ error: string }</code> format</li>
+</ul>
+<hr>
+<h3 id="39-dashboard-module">3.9 Dashboard Module</h3>
+<p><strong>File:</strong> <code>public/index.html</code></p>
+<p><strong>Design:</strong> Single HTML file with embedded CSS and JavaScript (no build tooling). Dark-themed responsive layout.</p>
+<p><strong>Architecture:</strong></p>
+<ul>
+<li>Fetches data from <code>/api/kwatch</code> and <code>/api/kwatch/processed</code> endpoints</li>
+<li>User can toggle between Raw and Processed views via a keyboard shortcut (Ctrl+K)</li>
+<li>Auto-refreshes data every 2 minutes using <code>setInterval</code></li>
+<li>Pagination handled client-side by updating the <code>page</code> query parameter</li>
+</ul>
+<hr>
+<h3 id="310-remaining-planned-modules">3.10 Remaining Planned Modules</h3>
+<h4 id="3101-translation-service-integration">3.10.1 Translation Service Integration</h4>
+<p><strong>Integration Point:</strong> Between ingestion and classification.</p>
+<p><strong>Design Concept:</strong></p>
+<ul>
+<li>After an item is ingested (raw document created), detect its language using the existing <code>franc</code> or <code>langdetect</code> library.</li>
+<li>If the language is non-English and one of the 23 supported languages, send an HTTP request to the Translation Service.</li>
+<li>Store the English translation in a <code>translatedContent</code> field on the raw document.</li>
+<li>When submitting to the worker pool for classification, provide both the original text and the translated text.</li>
+<li>The brand classifier evaluates both texts (original may match multilingual rules; translation enables English-only rules to match).</li>
+<li>The relevancy classifier runs on the English translation for better accuracy (the SBERT model is English-trained).</li>
+</ul>
+<p><strong>Cold Start Architecture Options (Under Evaluation):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+<th>Trade-off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Always-on warm pool</td>
+<td>All 7 high-freq models pre-loaded; 3 conditional slots</td>
+<td>Higher memory cost, lowest latency</td>
+</tr>
+<tr>
+<td>Queue-based async</td>
+<td>Translation requests queued; items processed when model ready</td>
+<td>Adds latency, decoupled from pipeline</td>
+</tr>
+<tr>
+<td>Health-check gating</td>
+<td>Caller waits for model readiness with timeout</td>
+<td>Block-and-wait, simpler logic</td>
+</tr>
+<tr>
+<td>Lazy init with fallback</td>
+<td>Load on demand; timeout to untranslated text</td>
+<td>Graceful degradation, some items miss translation</td>
+</tr>
+</tbody>
+</table>
+<h4 id="3102-not-words-filter-module">3.10.2 NOT Words Filter Module</h4>
+<p><strong>Integration Point:</strong> After relevancy classification, before processed document insertion.</p>
+<p><strong>Design Concept:</strong></p>
+<ul>
+<li>Load a config file (JSON) at startup that maps keyword/feed names to arrays of exclusion words.</li>
+<li>After the classification service returns <code>method: 'RelevancyClassification'</code>, look up the item's <code>query</code>/<code>feedName</code> in the config.</li>
+<li>Perform case-insensitive substring search for each NOT word in the item's text.</li>
+<li>If any NOT word is found: override the classification result to <code>matched: false</code> (item not stored in processed container).</li>
+</ul>
+<h4 id="3103-sharepoint-publisher-module">3.10.3 SharePoint Publisher Module</h4>
+<p><strong>Integration Point:</strong> After processed document insertion.</p>
+<p><strong>Design Concept:</strong></p>
+<ul>
+<li>Register an Azure AD application with <code>Sites.ReadWrite.All</code> permission.</li>
+<li>On successful classification result + processed document insertion, map the document to the unified SharePoint schema.</li>
+<li>Acquire an OAuth 2.0 access token using client credentials flow (tenant ID, client ID, client secret).</li>
+<li>POST the unified document as a new list item to the configured SharePoint list using the Microsoft Graph API.</li>
+<li>On success: Update the processed document in Cosmos DB with <code>publishedToSharePoint: true</code> and <code>publishedAt</code>.</li>
+<li>On failure: Log the error. The document retains <code>publishedToSharePoint: false</code> and can be retried by a scheduled sweep.</li>
+</ul>
+<p><strong>API Call Pattern:</strong></p>
+<pre class="hljs"><code><div>POST https://graph.microsoft.com/v1.0/sites/{site-id}/lists/{list-id}/items
+Authorization: Bearer {access-token}
+Content-Type: application/json
+
+{
+  &quot;fields&quot;: {
+    &quot;id&quot;: &quot;...&quot;,
+    &quot;platform&quot;: &quot;...&quot;,
+    &quot;query&quot;: &quot;...&quot;,
+    ...
+  }
+}
+</div></code></pre>
+<h4 id="3104-adverse-event-notifier-module">3.10.4 Adverse Event Notifier Module</h4>
+<p><strong>Integration Point:</strong> After classification, when topic matches death-related criteria.</p>
+<p><strong>Design Concept:</strong></p>
+<ul>
+<li>After a classification result is obtained, check if the topic/subTopic indicates a death-related adverse event.</li>
+<li>If the trigger condition is met, construct a notification payload containing the item details, classification, and source link.</li>
+<li>Send an email to configured recipients via the chosen email delivery mechanism (TBD: SMTP, Azure Communication Services, or SendGrid).</li>
+<li>Track notification status to prevent duplicate alerts for the same item.</li>
+</ul>
+<hr>
+<h4 id="3105-operational-alert-email-system">3.10.5 Operational Alert Email System</h4>
+<p><strong>Integration Point:</strong> Monitoring hooks distributed across <code>services/kwatchQueue.js</code>, <code>services/googleAlertsService.js</code>, <code>services/classificationWorkerPool.js</code>, and <code>config/database.js</code>.</p>
+<p><strong>Design Concept:</strong></p>
+<p>A lightweight <code>OperationalAlertService</code> module fires outbound emails when internal pipeline health metrics cross configured thresholds. Unlike the adverse event notifier (content-driven), this module is entirely infrastructure-driven and operates independently of classification results.</p>
+<p><strong>Trigger Points and Detection Strategy:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Detection Location</th>
+<th>Detection Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Queue nearing full (≥ 80%)</td>
+<td><code>kwatchQueue.js</code> — item enqueue path</td>
+<td>Compare <code>queue.length</code> against <code>MAX_CLASSIFICATION_QUEUE_SIZE * 0.8</code> on each enqueue</td>
+</tr>
+<tr>
+<td>Queue full — item dropped</td>
+<td><code>kwatchQueue.js</code> — item enqueue path</td>
+<td><code>submitJob()</code> returns <code>null</code>; alert immediately</td>
+</tr>
+<tr>
+<td>High feed failure rate (≥ 10%)</td>
+<td><code>googleAlertsService.js</code> — end of scrape cycle</td>
+<td>Compare <code>failedFeeds / totalFeeds</code> after cycle completion</td>
+</tr>
+<tr>
+<td>Complete scrape cycle failure</td>
+<td><code>googleAlertsService.js</code> — end of scrape cycle</td>
+<td><code>processedFeeds === 0</code> after a cycle that had configured feeds</td>
+</tr>
+<tr>
+<td>Scrape cycle timeout</td>
+<td><code>googleAlertsService.js</code> — cycle timer</td>
+<td><code>setTimeout</code> watchdog set to 2× expected max duration; fires if cycle has not completed</td>
+</tr>
+<tr>
+<td>Worker crash storm (≥ 3 in 5 min)</td>
+<td><code>classificationWorkerPool.js</code> — <code>exit</code> handler</td>
+<td>Maintain a rolling timestamp array of crashes; alert when window count ≥ threshold</td>
+</tr>
+<tr>
+<td>All workers unavailable (≥ 30 s)</td>
+<td><code>classificationWorkerPool.js</code> — queue drain loop</td>
+<td>Track last time a ready worker was found; fire if gap exceeds threshold</td>
+</tr>
+<tr>
+<td>Repeated Cosmos DB failures (≥ 5)</td>
+<td><code>config/database.js</code> or call sites</td>
+<td>Maintain a per-container consecutive-failure counter; reset on success</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Alert Deduplication:</strong></p>
+<p>Each trigger maintains a <code>lastAlertTime</code> timestamp. Before sending, the service checks whether <code>now - lastAlertTime &lt; ALERT_COOLDOWN_MS</code> (default: 30 minutes, configurable). If within cooldown, the alert is suppressed and only logged locally. The cooldown resets when the condition clears (e.g., queue drops below the threshold) and re-triggers.</p>
+<p><strong>Email Payload Structure:</strong></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"triggerId"</span>: <span class="hljs-string">"OA-01"</span>,
+  <span class="hljs-attr">"title"</span>: <span class="hljs-string">"KWatch queue nearing capacity"</span>,
+  <span class="hljs-attr">"severity"</span>: <span class="hljs-string">"warning"</span>,
+  <span class="hljs-attr">"detectedAt"</span>: <span class="hljs-string">"&lt;ISO 8601 timestamp&gt;"</span>,
+  <span class="hljs-attr">"environment"</span>: <span class="hljs-string">"&lt;NODE_ENV&gt;"</span>,
+  <span class="hljs-attr">"details"</span>: {
+    <span class="hljs-attr">"currentQueueSize"</span>: <span class="hljs-number">820</span>,
+    <span class="hljs-attr">"maxQueueSize"</span>: <span class="hljs-number">1000</span>,
+    <span class="hljs-attr">"utilizationPercent"</span>: <span class="hljs-number">82</span>
+  },
+  <span class="hljs-attr">"remediation"</span>: <span class="hljs-string">"Increase MAX_CLASSIFICATION_QUEUE_SIZE, add classification workers, or upgrade App Service plan."</span>
+}
+</div></code></pre>
+<p><strong>Shared Infrastructure with Adverse Event Notifier:</strong></p>
+<p>Both modules use the same underlying email delivery client (SMTP / Azure Communication Services / SendGrid — TBD). A shared <code>EmailService</code> singleton handles token acquisition, connection pooling, and send retries, so delivery configuration (credentials, <code>from</code> address, retry policy) is maintained in one place.</p>
+<p><strong>Configuration (Environment Variables):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ALERT_EMAIL_RECIPIENTS</code></td>
+<td>Comma-separated list of operator email addresses</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>ALERT_COOLDOWN_MS</code></td>
+<td>Minimum ms between repeated alerts for the same trigger</td>
+<td><code>1800000</code> (30 min)</td>
+</tr>
+<tr>
+<td><code>ALERT_QUEUE_THRESHOLD_PCT</code></td>
+<td>Queue utilization % that triggers OA-01</td>
+<td><code>80</code></td>
+</tr>
+<tr>
+<td><code>ALERT_FEED_FAILURE_PCT</code></td>
+<td>Feed failure % per cycle that triggers OA-03</td>
+<td><code>10</code></td>
+</tr>
+<tr>
+<td><code>ALERT_WORKER_CRASH_WINDOW_MS</code></td>
+<td>Rolling window for crash-storm detection (OA-06)</td>
+<td><code>300000</code> (5 min)</td>
+</tr>
+<tr>
+<td><code>ALERT_WORKER_CRASH_COUNT</code></td>
+<td>Crash count within window to trigger OA-06</td>
+<td><code>3</code></td>
+</tr>
+<tr>
+<td><code>ALERT_DB_FAILURE_COUNT</code></td>
+<td>Consecutive DB failures to trigger OA-08</td>
+<td><code>5</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4-database-design">4. Database Design</h2>
+<h3 id="41-database-overview">4.1 Database Overview</h3>
+<p><strong>Database Engine:</strong> Azure Cosmos DB (NoSQL / Document API)</p>
+<p><strong>Database Name:</strong> <code>SocialMediaListeningData</code> (configurable via <code>COSMOS_KWATCH_DATABASE</code> env var)</p>
+<p><strong>Container Summary:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Partition Key</th>
+<th>Document Count Profile</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KWatchRawData</td>
+<td><code>/platform</code> + <code>/id</code> (hierarchical)</td>
+<td>Growing (all incoming items)</td>
+<td>Raw webhook payloads</td>
+</tr>
+<tr>
+<td>KWatchProcessedData</td>
+<td><code>/platform</code> + <code>/id</code> (hierarchical)</td>
+<td>Growing (classified items only)</td>
+<td>Classified KWatch items</td>
+</tr>
+<tr>
+<td>GoogleAlertsRawData</td>
+<td><code>/id</code></td>
+<td>Growing (all scraped articles)</td>
+<td>Raw scraped articles</td>
+</tr>
+<tr>
+<td>GoogleAlertsProcessedData</td>
+<td><code>/id</code></td>
+<td>Growing (classified items only)</td>
+<td>Classified Google Alerts articles</td>
+</tr>
+<tr>
+<td>GoogleAlertsState</td>
+<td><code>/id</code></td>
+<td>Fixed (one per feed, ~50-100 docs)</td>
+<td>Per-feed scrape state tracking</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="42-container-kwatchrawdata">4.2 Container: KWatchRawData</h3>
+<p><strong>Partition Key:</strong> <code>/platform</code> (hierarchical with <code>/id</code>)
+<strong>Throughput:</strong> Shared (auto-scale recommended)</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Source</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Generated</td>
+<td>MD5 hash of <code>content</code> (primary dedup key). For duplicate-recovered items, this is <code>MD5(platform + datetime + author + timestamp)</code> - a unique composite key to avoid collisions</td>
+</tr>
+<tr>
+<td><code>platform</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Webhook payload</td>
+<td>Source social media platform identifier (e.g., <code>&quot;twitter&quot;</code>, <code>&quot;reddit&quot;</code>, <code>&quot;linkedin&quot;</code>, <code>&quot;facebook&quot;</code>, <code>&quot;instagram&quot;</code>)</td>
+</tr>
+<tr>
+<td><code>query</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Webhook payload</td>
+<td>The search keyword or topic that triggered this mention in KWatch</td>
+</tr>
+<tr>
+<td><code>datetime</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Webhook payload</td>
+<td>Publication timestamp of the original social media post in ISO 8601 format</td>
+</tr>
+<tr>
+<td><code>link</code></td>
+<td>String (URL)</td>
+<td>Yes</td>
+<td>Webhook payload</td>
+<td>Direct URL to the original post on the source platform</td>
+</tr>
+<tr>
+<td><code>author</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Webhook payload</td>
+<td>Username or account identifier of the post author</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Webhook payload</td>
+<td>Post title or headline. Defaults to empty string <code>&quot;&quot;</code> if not provided by KWatch</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Webhook payload</td>
+<td>Full text body of the social media post</td>
+</tr>
+<tr>
+<td><code>sentiment</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Webhook payload</td>
+<td>Pre-classified sentiment value from KWatch. Defaults to <code>&quot;neutral&quot;</code> if not provided</td>
+</tr>
+<tr>
+<td><code>receivedAt</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Server-generated</td>
+<td>Server-side timestamp recording when the webhook was received by PRISM</td>
+</tr>
+<tr>
+<td><code>isDuplicate</code></td>
+<td>Boolean</td>
+<td>Yes</td>
+<td>System-generated</td>
+<td><code>false</code> for first-time items. <code>true</code> for items that had an ID collision (duplicate content) and were re-inserted with a new unique ID</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="43-container-kwatchprocesseddata">4.3 Container: KWatchProcessedData</h3>
+<p><strong>Partition Key:</strong> <code>/platform</code> (hierarchical with <code>/id</code>)
+<strong>Throughput:</strong> Shared (auto-scale recommended)</p>
+<p>This container stores only items that were successfully classified (matched by brand rules or relevancy model). Items that matched neither are not stored here.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Source</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Same document ID as the corresponding raw item</td>
+</tr>
+<tr>
+<td><code>platform</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Source platform identifier</td>
+</tr>
+<tr>
+<td><code>query</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Triggering search keyword</td>
+</tr>
+<tr>
+<td><code>datetime</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Original post publication timestamp</td>
+</tr>
+<tr>
+<td><code>link</code></td>
+<td>String (URL)</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>URL to the source post</td>
+</tr>
+<tr>
+<td><code>author</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Post author</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Post title</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Post full text</td>
+</tr>
+<tr>
+<td><code>sentiment</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Sentiment value</td>
+</tr>
+<tr>
+<td><code>receivedAt</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Original reception timestamp</td>
+</tr>
+<tr>
+<td><code>topic</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Classification</td>
+<td>Primary classification category assigned by the brand classifier (e.g., <code>&quot;Ankle Joint&quot;</code>, <code>&quot;Competitors&quot;</code>) or <code>&quot;General-RelevancyClassification&quot;</code> for relevancy-only matches</td>
+</tr>
+<tr>
+<td><code>subTopic</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Classification</td>
+<td>Secondary classification category (e.g., <code>&quot;GRAVITY Synchfix&quot;</code>, <code>&quot;Depuy-Synthes&quot;</code>) or extracted from query field for relevancy-only matches</td>
+</tr>
+<tr>
+<td><code>queryName</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Classification</td>
+<td>Language of the matching brand query rule, or <code>&quot;RelevancyClassification&quot;</code> for relevancy fallback matches</td>
+</tr>
+<tr>
+<td><code>internalId</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Classification</td>
+<td>UUID of the matching brand query rule from <code>BrandQueries.csv</code>, or the fixed placeholder <code>&quot;74747474747474747474747474747474&quot;</code> for relevancy-only matches</td>
+</tr>
+<tr>
+<td><code>relevantByModel</code></td>
+<td>Boolean</td>
+<td>Yes</td>
+<td>ML Model</td>
+<td>Whether the SBERT+SVM relevancy model considers this item relevant. Set regardless of which classification method was authoritative</td>
+</tr>
+<tr>
+<td><code>isDuplicate</code></td>
+<td>Boolean</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Whether this was a duplicate-recovered item</td>
+</tr>
+<tr>
+<td><code>publishedToSharePoint</code></td>
+<td>Boolean</td>
+<td>No</td>
+<td>Planned</td>
+<td>Whether the item was successfully published to SharePoint. Default: <code>false</code></td>
+</tr>
+<tr>
+<td><code>publishedAt</code></td>
+<td>String (ISO 8601) / null</td>
+<td>No</td>
+<td>Planned</td>
+<td>Timestamp of successful SharePoint publication. <code>null</code> if not yet published</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="44-container-googlealertsrawdata">4.4 Container: GoogleAlertsRawData</h3>
+<p><strong>Partition Key:</strong> <code>/id</code>
+<strong>Throughput:</strong> Shared (auto-scale recommended)</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Source</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Generated</td>
+<td>MD5 hash of <code>extractedUrl</code> - ensures one document per unique article URL across all feeds</td>
+</tr>
+<tr>
+<td><code>platform</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Constant</td>
+<td>Always <code>&quot;google-alerts&quot;</code> - identifies the data source</td>
+</tr>
+<tr>
+<td><code>feedName</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Config</td>
+<td>Name of the Google Alerts RSS feed from <code>alerts_rss_feeds.json</code> (e.g., <code>&quot;ADAPT 2.1 for Gamma3 Stryker&quot;</code>)</td>
+</tr>
+<tr>
+<td><code>keyword</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Config</td>
+<td>Same as <code>feedName</code> - preserves the alert keyword for reference</td>
+</tr>
+<tr>
+<td><code>query</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Derived</td>
+<td>Same as <code>keyword</code> - used for classification compatibility (classification service expects a <code>query</code> field)</td>
+</tr>
+<tr>
+<td><code>googleLink</code></td>
+<td>String (URL)</td>
+<td>Yes</td>
+<td>RSS Entry</td>
+<td>Original Google Alerts redirect URL from the RSS feed entry (format: <code>https://www.google.com/url?...</code>)</td>
+</tr>
+<tr>
+<td><code>extractedUrl</code></td>
+<td>String (URL)</td>
+<td>Yes</td>
+<td>Extracted</td>
+<td>Actual article URL extracted from the Google redirect link's <code>url</code> query parameter</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>RSS Entry</td>
+<td>Article title from the RSS feed, with HTML tags stripped and entities decoded</td>
+</tr>
+<tr>
+<td><code>contentSnippet</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>RSS Entry</td>
+<td>Article summary/snippet from the RSS feed description, with HTML tags stripped and entities decoded</td>
+</tr>
+<tr>
+<td><code>fullContent</code></td>
+<td>String / null</td>
+<td>No</td>
+<td>Fetched</td>
+<td>Full article text extracted via Mozilla Readability from the actual article webpage. <code>null</code> if extraction failed or was not attempted</td>
+</tr>
+<tr>
+<td><code>contentSource</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>System</td>
+<td>Indicates which content was used for classification: <code>&quot;full&quot;</code> if <code>fullContent</code> was available, <code>&quot;snippet&quot;</code> if only <code>contentSnippet</code> was used</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Derived</td>
+<td>The actual text content used for classification - equals <code>fullContent</code> if available, otherwise <code>contentSnippet</code></td>
+</tr>
+<tr>
+<td><code>publishedAt</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>RSS Entry</td>
+<td>Article publication date from the RSS feed entry in ISO 8601 format</td>
+</tr>
+<tr>
+<td><code>scrapedAt</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Server-generated</td>
+<td>Timestamp recording when PRISM scraped and stored this article</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="45-container-googlealertsprocesseddata">4.5 Container: GoogleAlertsProcessedData</h3>
+<p><strong>Partition Key:</strong> <code>/id</code>
+<strong>Throughput:</strong> Shared (auto-scale recommended)</p>
+<p>This container stores only articles that were successfully classified. Articles matching neither brand rules nor the relevancy model are not stored here.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Source</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Same document ID as the corresponding raw article</td>
+</tr>
+<tr>
+<td><code>platform</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Always <code>&quot;google-alerts&quot;</code></td>
+</tr>
+<tr>
+<td><code>feedName</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Source feed name</td>
+</tr>
+<tr>
+<td><code>keyword</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Alert keyword</td>
+</tr>
+<tr>
+<td><code>googleLink</code></td>
+<td>String (URL)</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Original Google redirect URL</td>
+</tr>
+<tr>
+<td><code>extractedUrl</code></td>
+<td>String (URL)</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Actual article URL</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Article title</td>
+</tr>
+<tr>
+<td><code>contentSnippet</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>RSS feed snippet</td>
+</tr>
+<tr>
+<td><code>fullContent</code></td>
+<td>String / null</td>
+<td>No</td>
+<td>Copied from raw</td>
+<td>Full extracted article text</td>
+</tr>
+<tr>
+<td><code>contentSource</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Content source indicator (<code>&quot;full&quot;</code> or <code>&quot;snippet&quot;</code>)</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Text used for classification</td>
+</tr>
+<tr>
+<td><code>publishedAt</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Article publication date</td>
+</tr>
+<tr>
+<td><code>scrapedAt</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Copied from raw</td>
+<td>Scraping timestamp</td>
+</tr>
+<tr>
+<td><code>topic</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Classification</td>
+<td>Primary classification category from brand rules or <code>&quot;General-RelevancyClassification&quot;</code></td>
+</tr>
+<tr>
+<td><code>subTopic</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Classification</td>
+<td>Secondary classification category</td>
+</tr>
+<tr>
+<td><code>queryName</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Classification</td>
+<td>Language of the matching brand query rule, or <code>&quot;RelevancyClassification&quot;</code> for relevancy fallback matches</td>
+</tr>
+<tr>
+<td><code>internalId</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Classification</td>
+<td>UUID of matching rule or fixed placeholder for relevancy matches</td>
+</tr>
+<tr>
+<td><code>relevantByModel</code></td>
+<td>Boolean</td>
+<td>Yes</td>
+<td>ML Model</td>
+<td>ML relevancy model assessment</td>
+</tr>
+<tr>
+<td><code>classifiedAt</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Server-generated</td>
+<td>Timestamp when classification was completed and the processed document was created</td>
+</tr>
+<tr>
+<td><code>publishedToSharePoint</code></td>
+<td>Boolean</td>
+<td>No</td>
+<td>Planned</td>
+<td>Whether the item was published to SharePoint</td>
+</tr>
+<tr>
+<td><code>publishedAt_SP</code></td>
+<td>String (ISO 8601) / null</td>
+<td>No</td>
+<td>Planned</td>
+<td>Timestamp of SharePoint publication (field named differently to avoid collision with RSS <code>publishedAt</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="46-container-googlealertsstate">4.6 Container: GoogleAlertsState</h3>
+<p><strong>Partition Key:</strong> <code>/id</code>
+<strong>Throughput:</strong> Shared (minimal - low volume)</p>
+<p>This container stores one document per configured RSS feed, tracking the scraping state for incremental processing.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Source</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Generated</td>
+<td>MD5 hash of <code>feedName</code> - ensures one state document per feed</td>
+</tr>
+<tr>
+<td><code>feedName</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Config</td>
+<td>Human-readable name of the Google Alerts RSS feed</td>
+</tr>
+<tr>
+<td><code>feedUrl</code></td>
+<td>String (URL)</td>
+<td>Yes</td>
+<td>Config</td>
+<td>Full URL of the RSS feed</td>
+</tr>
+<tr>
+<td><code>lastLinkHash</code></td>
+<td>String / null</td>
+<td>Yes</td>
+<td>Computed</td>
+<td>MD5 hash of the topmost (newest) entry's link from the last successful scrape. <code>null</code> if the feed was empty</td>
+</tr>
+<tr>
+<td><code>lastScrapedAt</code></td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Server-generated</td>
+<td>Timestamp of the last scrape cycle for this feed</td>
+</tr>
+<tr>
+<td><code>entryCount</code></td>
+<td>Integer</td>
+<td>Yes</td>
+<td>RSS Feed</td>
+<td>Total number of entries present in the feed at the time of last scrape</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="47-unified-sharepoint-document-schema-planned">4.7 Unified SharePoint Document Schema (Planned)</h3>
+<p>This is not a Cosmos DB container but rather the schema of the list items published to SharePoint Online:</p>
+<table>
+<thead>
+<tr>
+<th>SharePoint Column</th>
+<th>Type</th>
+<th>KWatch Source</th>
+<th>Google Alerts Source</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>String</td>
+<td><code>item.id</code></td>
+<td><code>item.id</code></td>
+<td>PRISM document ID</td>
+</tr>
+<tr>
+<td>platform</td>
+<td>String</td>
+<td><code>item.platform</code></td>
+<td><code>&quot;google-alerts&quot;</code></td>
+<td>Source platform</td>
+</tr>
+<tr>
+<td>query</td>
+<td>String</td>
+<td><code>item.query</code></td>
+<td><code>item.feedName</code></td>
+<td>Triggering keyword or feed</td>
+</tr>
+<tr>
+<td>datetime</td>
+<td>String</td>
+<td><code>item.datetime</code></td>
+<td><code>item.publishedAt</code></td>
+<td>Original publication time</td>
+</tr>
+<tr>
+<td>link</td>
+<td>String</td>
+<td><code>item.link</code></td>
+<td><code>item.extractedUrl</code></td>
+<td>Source URL</td>
+</tr>
+<tr>
+<td>author</td>
+<td>String</td>
+<td><code>item.author</code></td>
+<td><code>&quot;N/A&quot;</code></td>
+<td>Post author</td>
+</tr>
+<tr>
+<td>title</td>
+<td>String</td>
+<td><code>item.title</code></td>
+<td><code>item.title</code></td>
+<td>Content title</td>
+</tr>
+<tr>
+<td>content</td>
+<td>String</td>
+<td><code>item.content</code></td>
+<td><code>item.content</code></td>
+<td>Text body</td>
+</tr>
+<tr>
+<td>sentiment</td>
+<td>String</td>
+<td><code>item.sentiment</code></td>
+<td><code>&quot;neutral&quot;</code></td>
+<td>Sentiment value</td>
+</tr>
+<tr>
+<td>topic</td>
+<td>String</td>
+<td><code>item.topic</code></td>
+<td><code>item.topic</code></td>
+<td>Classification topic</td>
+</tr>
+<tr>
+<td>subtopic</td>
+<td>String</td>
+<td><code>item.subTopic</code></td>
+<td><code>item.subTopic</code></td>
+<td>Classification subtopic</td>
+</tr>
+<tr>
+<td>relevantByModel</td>
+<td>Boolean</td>
+<td><code>item.relevantByModel</code></td>
+<td><code>item.relevantByModel</code></td>
+<td>ML relevancy flag</td>
+</tr>
+<tr>
+<td>isDuplicate</td>
+<td>Boolean</td>
+<td><code>item.isDuplicate</code></td>
+<td><code>false</code></td>
+<td>Duplicate flag</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="48-partition-key-strategy--justification">4.8 Partition Key Strategy &amp; Justification</h3>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Partition Key</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KWatchRawData</td>
+<td><code>/platform</code> (hierarchical with <code>/id</code>)</td>
+<td>Groups items by platform for efficient per-platform queries. Hierarchical partitioning with <code>/id</code> enables efficient point reads</td>
+</tr>
+<tr>
+<td>KWatchProcessedData</td>
+<td><code>/platform</code> (hierarchical with <code>/id</code>)</td>
+<td>Same rationale as raw - downstream queries often filter by platform</td>
+</tr>
+<tr>
+<td>GoogleAlertsRawData</td>
+<td><code>/id</code></td>
+<td>Each article is independent; partitioning by ID distributes load evenly. Point reads by URL hash are common</td>
+</tr>
+<tr>
+<td>GoogleAlertsProcessedData</td>
+<td><code>/id</code></td>
+<td>Same as raw - even distribution, efficient point reads</td>
+</tr>
+<tr>
+<td>GoogleAlertsState</td>
+<td><code>/id</code></td>
+<td>Low document count (~50-100). Partitioning by ID is sufficient for this volume</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="49-indexing-considerations">4.9 Indexing Considerations</h3>
+<p>Azure Cosmos DB automatically indexes all fields by default. The current design relies on this default behavior. Specific indexing policies that may be optimized in production:</p>
+<table>
+<thead>
+<tr>
+<th>Optimization</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Exclude <code>content</code> and <code>fullContent</code> from indexing</td>
+<td>Large text fields increase index storage and RU consumption for writes. These fields are not used in WHERE clauses</td>
+</tr>
+<tr>
+<td>Include composite index on <code>(platform, datetime)</code></td>
+<td>Speeds up queries that filter by platform and sort by date</td>
+</tr>
+<tr>
+<td>Include composite index on <code>(topic, subTopic)</code></td>
+<td>Speeds up classification-based queries</td>
+</tr>
+<tr>
+<td>Range index on <code>scrapedAt</code> / <code>receivedAt</code></td>
+<td>Efficient time-range queries for operational monitoring</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5-detailed-flows">5. Detailed Flows</h2>
+<h3 id="51-kwatch-end-to-end-flow">5.1 KWatch End-to-End Flow</h3>
+<p>This flow traces a single KWatch webhook payload from reception through classification to final storage.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+    A[KWatch sends POST /api/webhook/kwatch] --> B{Validate required fields}
+    B -->|Missing fields| B1[Return HTTP 400]
+    B -->|Valid| C[Return HTTP 200 immediately]
+    C --> D[setImmediate: async processing]
+    D --> E[Generate ID = MD5 of content]
+    E --> F[Create raw document with receivedAt timestamp]
+    F --> G_CHK{Queue at max capacity?}
+    G_CHK -->|Yes| G_DROP[Reject item<br/>Trigger OA-02: Queue full alert]
+    G_CHK -->|No| G[Push to in-memory queue]
+    G --> G_WARN{Queue ≥ 80% of max capacity?}
+    G_WARN -->|Yes - Planned| G_ALERT[Trigger OA-01: Queue nearing full alert]
+    G_WARN -->|No| H{Queue interval triggered?<br/>Every 60 seconds}
+    G_ALERT --> H
+    H -->|No| H
+    H -->|Yes| I{isProcessingQueue?}
+    I -->|Yes| J[Skip, wait for next interval]
+    I -->|No| K[Dequeue batch of up to 10 items]
+
+    K --> L[For each item: attempt Cosmos DB insert]
+    L --> M{Insert result?}
+    M -->|201 Created| N[Count as success]
+    M -->|409 Conflict| O[Generate new unique ID]
+    M -->|HTTP Error| M_ERR[Log error, increment DB failure counter<br/>Trigger OA-08 if ≥ 5 consecutive failures]
+    O --> P[Set isDuplicate = true]
+    P --> Q[Re-insert with new ID]
+    Q --> N
+
+    N --> R[Submit to Worker Pool for classification]
+    R --> S{Classification result?}
+    S -->|matched = true| T[Build processed document:<br/>raw fields + topic, subTopic,<br/>queryName, internalId,<br/>relevantByModel, isDuplicate]
+    S -->|matched = false| U[No processed doc created<br/>Item stays in raw only]
+    T --> V[Insert into KWatchProcessedData]
+    V --> W{409 Conflict?}
+    W -->|Yes| X[Already exists, skip]
+    W -->|No| Y[Classification stored successfully]
+</div></code></pre>
+<hr>
+<h3 id="52-google-alerts-end-to-end-flow">5.2 Google Alerts End-to-End Flow</h3>
+<p>This flow traces the complete RSS scraping cycle from scheduled trigger through classification.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+    A[Scrape cycle triggered<br/>Every 2 hours or manual] --> B{isScrapingInProgress?}
+    B -->|Yes| C[Skip cycle]
+    B -->|No| D[Load all feed states from Cosmos DB]
+
+    D --> E[For each feed in config<br/>Concurrency: 10]
+    E --> F[Fetch RSS feed via rss-parser]
+    F -->|Parse error / timeout| F_ERR[Log failure<br/>Increment failedFeedCount]
+    F -->|Success| G{Feed has entries?}
+    G -->|No| H[Save state: entryCount=0, lastLinkHash=null]
+    G -->|Yes| I[Hash topmost entry link]
+    I --> J{Hash matches stored lastLinkHash?}
+    J -->|Yes| K[No new entries, skip feed]
+    J -->|No or first scrape| L[Walk entries newest→oldest<br/>Collect until known hash found]
+
+    L --> M[Clean HTML from titles & snippets]
+    M --> N[Save new state: updated lastLinkHash]
+    N --> O[Add new entries to processing queue]
+
+    O --> P[For each queue item:]
+    P --> Q[Extract real URL from Google redirect]
+    Q --> R{URL extraction OK?}
+    R -->|No| S[Skip item with warning]
+    R -->|Yes| T{URL in blocklist?}
+    T -->|Yes| U[Skip blocked domain]
+    T -->|No| V[Check for duplicate: point read by MD5 of URL]
+    V --> W{Already exists?}
+    W -->|Yes| X[Skip duplicate]
+    W -->|No| Y[Fetch full article via Readability]
+    Y --> Z{Full content extracted?}
+    Z -->|Yes, ≥100 chars| AA[contentSource = full]
+    Z -->|No| AB[contentSource = snippet]
+
+    AA --> AC[Build raw document]
+    AB --> AC
+    AC --> AD[Insert into GoogleAlertsRawData]
+    AD --> AE{409 race condition?}
+    AE -->|Yes| AF[Skip duplicate]
+    AE -->|No| AG[Submit to Worker Pool]
+    AG --> AH{Classification result?}
+    AH -->|matched = true| AI[Build processed document<br/>+ classifiedAt timestamp]
+    AH -->|matched = false| AJ[Not stored in processed]
+    AI --> AK[Insert into GoogleAlertsProcessedData]
+    AK --> CYCLE_END_CHK{End of cycle:<br/>failedFeedCount ≥ 10% of total feeds?}
+    CYCLE_END_CHK -->|Yes - Planned| ALERT_OA03[Trigger OA-03: High RSS feed failure rate alert]
+    CYCLE_END_CHK -->|No| CYCLE_DONE[Cycle complete<br/>Reset isScrapingInProgress]
+    ALERT_OA03 --> CYCLE_DONE
+    F_ERR --> CYCLE_END_CHK
+</div></code></pre>
+<hr>
+<h3 id="53-classification-pipeline-flow">5.3 Classification Pipeline Flow</h3>
+<p>This flow details the two-stage classification decision logic executed within each worker process.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+    A[Input: item with title, content, query] --> B[Combine: text = title + content]
+    B --> C{Text empty?}
+    C -->|Yes| D[Return matched=false]
+    C -->|No| E[Stage 1: Brand Classification]
+
+    E --> F[Normalize text: lowercase,<br/>remove diacritics, tokenize]
+    F --> G[Evaluate 1300+ brand query ASTs]
+    G --> H{Any rule matched?}
+
+    H -->|Yes| I{Portuguese override needed?}
+    I -->|Yes, Portuguese detected| J[Skip this rule,<br/>try next rule]
+    J --> G
+    I -->|No| K[Record: topic, subTopic,<br/>queryName, internalId]
+    K --> L[Run relevancy model for annotation]
+    L --> M[Set relevantByModel flag]
+    M --> N[Return matched=true<br/>method=BrandQuery]
+
+    H -->|No rules matched| O[Stage 2: Relevancy Fallback]
+    O --> P{Relevancy model ready?}
+    P -->|No| Q[Return matched=false]
+    P -->|Yes| R[Generate SBERT embedding<br/>384-dim vector]
+    R --> S[Run SVM ONNX inference]
+    S --> T[Get P_Mention probability]
+    T --> U{Text contains stryker?}
+    U -->|Yes| V[threshold = 0.55]
+    U -->|No| W[threshold = 0.40]
+    V --> X{P_Mention >= threshold?}
+    W --> X
+    X -->|No| Y[Return matched=false]
+    X -->|Yes| Z[Extract subTopic from query<br/>text before first period]
+    Z --> AA[Return matched=true<br/>method=RelevancyClassification<br/>topic=General-RelevancyClassification]
+</div></code></pre>
+<hr>
+<h3 id="54-brand-query-evaluation-flow">5.4 Brand Query Evaluation Flow</h3>
+<p>This flow details how a single brand query AST is evaluated against tokenized text.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+    A[Input: AST root node + token array] --> B[Phase 1: Extract NOT nodes]
+    B --> C[For each NOT node:]
+    C --> D[Evaluate child against tokens]
+    D --> E{Child matched?}
+    E -->|Yes| F[FORBIDDEN: Rule fails immediately]
+    E -->|No| G[Continue to next NOT node]
+    G --> C
+
+    G --> H[Phase 2: Evaluate positive clauses]
+    H --> I{Node type?}
+
+    I -->|AND| J[Evaluate all children<br/>ALL must match]
+    I -->|OR| K[Evaluate all children<br/>ANY must match]
+    I -->|NEAR/n| L[Find positions of left term<br/>Find positions of right term<br/>Check any pair within n tokens; Updated Req: Treat as AND]
+    I -->|TERM| M[Search tokens for exact match]
+    I -->|PHRASE| N[Search for consecutive<br/>word sequence in tokens]
+    I -->|WILDCARD| O[Search tokens starting<br/>with prefix]
+
+    J --> P{All children matched?}
+    K --> Q{Any child matched?}
+    L --> R{Proximity satisfied?}
+    M --> S{Token found?}
+    N --> T{Sequence found?}
+    O --> U{Prefix match found?}
+
+    P --> V{Phase 3: Final decision}
+    Q --> V
+    R --> V
+    S --> V
+    T --> V
+    U --> V
+
+    V --> W{Any NOT matched?}
+    W -->|Yes| X[Result: NOT MATCHED]
+    W -->|No| Y{Has positive clauses?}
+    Y -->|Yes| Z{Positive matched?}
+    Z -->|Yes| AA[Result: MATCHED]
+    Z -->|No| AB[Result: NOT MATCHED]
+    Y -->|No, negation-only| AC[Result: MATCHED<br/>No forbidden terms found]
+</div></code></pre>
+<hr>
+<h3 id="55-worker-pool-lifecycle">5.5 Worker Pool Lifecycle</h3>
+<pre><code class="language-mermaid"><div class="mermaid">stateDiagram-v2
+    [*] --> Initializing: Pool.initialize()
+
+    state Initializing {
+        [*] --> Forking: Fork N child processes
+        Forking --> WaitingReady: Workers loading classifiers
+        WaitingReady --> AllReady: All workers sent ready
+        WaitingReady --> Timeout: 120s exceeded
+    }
+
+    AllReady --> Active: Pool ready for jobs
+    Timeout --> Failed: Initialization failed
+
+    state Active {
+        [*] --> Idle: No pending jobs
+        Idle --> Processing: Job submitted
+        Processing --> Idle: Result received
+
+        state Processing {
+            [*] --> SelectWorker: Round-robin scan
+            SelectWorker --> SendJob: Found available worker
+            SelectWorker --> QueueJob: All workers busy
+            QueueJob --> CheckLimit: Check queue size
+            CheckLimit --> Queued: Under limit
+            CheckLimit --> Rejected: At max capacity
+            SendJob --> WaitResult: Job sent via IPC
+            WaitResult --> ResultReceived: Worker responds
+        }
+    }
+
+    Active --> CrashRecovery: Worker exits non-zero
+
+    state CrashRecovery {
+        [*] --> RecordCrash: Fail pending job for crashed worker
+        RecordCrash --> CrashStormCheck: Record crash timestamp in rolling window
+        CrashStormCheck --> SendOA06: ≥3 crashes in 5-min window
+        CrashStormCheck --> RespawnWorker: Below threshold
+        SendOA06 --> RespawnWorker: Trigger OA-06 email alert
+        RespawnWorker --> [*]: Fork new child process, await ready signal
+    }
+
+    CrashRecovery --> Active: New worker spawned and ready
+
+    note right of Active
+        OA-07: A watchdog timer tracks how long
+        the pool has had zero ready workers.
+        If ≥ configured threshold (default 30s),
+        the Operational Alert System fires an
+        OA-07 email alert.
+    end note
+
+    Active --> ShuttingDown: SIGTERM / SIGINT
+    ShuttingDown --> [*]: All workers terminated
+</div></code></pre>
+<hr>
+<h3 id="56-sharepoint-publishing-flow-planned">5.6 SharePoint Publishing Flow (Planned)</h3>
+<pre><code class="language-mermaid"><div class="mermaid">sequenceDiagram
+    participant WP as Worker Pool
+    participant DB as Cosmos DB
+    participant SP as SharePoint Publisher
+    participant AAD as Azure AD
+    participant Graph as Microsoft Graph API
+    participant SPL as SharePoint List
+
+    WP->>DB: Insert processed document
+    WP->>SP: Trigger publish for document
+
+    SP->>SP: Map document to unified schema
+    SP->>AAD: Request access token<br/>(client credentials flow)
+    AAD-->>SP: Access token
+
+    SP->>Graph: POST /sites/{id}/lists/{id}/items<br/>Authorization: Bearer {token}
+    Graph->>SPL: Create list item
+
+    alt Success
+        SPL-->>Graph: 201 Created
+        Graph-->>SP: Success response
+        SP->>DB: Update document:<br/>publishedToSharePoint = true<br/>publishedAt = now
+    else Failure
+        Graph-->>SP: Error response
+        SP->>SP: Log error<br/>publishedToSharePoint remains false
+    end
+</div></code></pre>
+<hr>
+<h3 id="57-translation-service-integration-flow-planned">5.7 Translation Service Integration Flow (Planned)</h3>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+    A[Raw item ingested<br/>KWatch or Google Alerts] --> B[Detect language<br/>using franc/langdetect]
+    B --> C{Language?}
+    C -->|English| D[Skip translation<br/>translatedContent = null]
+    C -->|Supported non-English| E[Send to Translation Service]
+    C -->|Unsupported| F[Skip translation<br/>translatedContent = null]
+
+    E --> G{Translation Service available?}
+    G -->|No / Timeout| H[Proceed with original text only<br/>translatedContent = null]
+    G -->|Yes| I{Model loaded?}
+    I -->|High-freq model, always ready| J[Translate immediately]
+    I -->|Low-freq model, not loaded| K[Load model into conditional slot<br/>Evict LRU if needed]
+    K --> L{Load successful?}
+    L -->|Yes| J
+    L -->|No / Timeout| H
+
+    J --> M[Return English translation]
+    M --> N[Store translatedContent on raw document]
+
+    N --> O[Submit to Classification]
+    D --> O
+    F --> O
+    H --> O
+
+    O --> P[Brand Classifier evaluates<br/>BOTH original + translated text]
+    O --> Q[Relevancy Classifier evaluates<br/>English translation or original if no translation]
+</div></code></pre>
+<hr>
+<h3 id="58-operational-alert-email-flow-planned">5.8 Operational Alert Email Flow (Planned)</h3>
+<p>This flow covers how a monitoring hook anywhere in the pipeline triggers an outbound operational alert email, including cooldown suppression.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+    A["Monitoring hook fires inside pipeline component\n(kwatchQueue / googleAlertsService / workerPool / database.js)"] --> B{Identify trigger type}
+
+    B -->|Queue ≥ 80% full| T01[OA-01: Queue nearing capacity]
+    B -->|Queue full - item dropped| T02[OA-02: Queue full alert]
+    B -->|Feed failure rate ≥ 10%| T03[OA-03: High RSS feed failure rate]
+    B -->|All feeds failed or 0 entries| T04[OA-04: Complete cycle failure]
+    B -->|Cycle runtime exceeded 2x max| T05[OA-05: Scrape cycle timeout]
+    B -->|≥3 worker crashes in 5-min window| T06[OA-06: Worker crash storm]
+    B -->|No ready worker for ≥ 30s| T07[OA-07: All workers unavailable]
+    B -->|≥5 consecutive DB write failures| T08[OA-08: Repeated DB failures]
+
+    T01 --> C{Cooldown check:
+now - lastAlertTime < ALERT_COOLDOWN_MS?}
+    T02 --> C
+    T03 --> C
+    T04 --> C
+    T05 --> C
+    T06 --> C
+    T07 --> C
+    T08 --> C
+
+    C -->|Within cooldown window| D[Suppress alert
+Log locally only]
+    C -->|Cooldown elapsed or first occurrence| E[Construct alert payload:
+triggerId, title, severity,
+detectedAt, environment,
+details object, remediation hint]
+
+    E --> F[Acquire send credentials
+from shared EmailService singleton]
+    F --> G[Send via configured provider
+ACS / SendGrid / SMTP]
+    G --> H{Send successful?}
+    H -->|Yes| I[Update lastAlertTime for trigger ID
+Log: alert sent successfully]
+    H -->|No| J[Log delivery failure
+Do NOT block calling pipeline]
+</div></code></pre>
+<hr>
+<h2 id="6-configuration-design">6. Configuration Design</h2>
+<h3 id="61-brandqueriescsv-format--fields">6.1 BrandQueries.csv Format &amp; Fields</h3>
+<p><strong>File:</strong> <code>config/BrandQueries.csv</code>
+<strong>Format:</strong> Standard CSV with double-quote escaping for multi-line/complex values.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Topic</td>
+<td>Primary classification category</td>
+<td><code>Ankle Joint</code></td>
+</tr>
+<tr>
+<td>Sub topic</td>
+<td>Secondary classification category</td>
+<td><code>GRAVITY Synchfix</code></td>
+</tr>
+<tr>
+<td>Query name</td>
+<td>Language of query</td>
+<td><code>english</code></td>
+</tr>
+<tr>
+<td>Internal ID</td>
+<td>UUID for tracking</td>
+<td><code>a1b2c3d4-e5f6-...</code></td>
+</tr>
+<tr>
+<td>Query</td>
+<td>Boolean expression in custom query language</td>
+<td><code>(&quot;gravity synchfix&quot; OR &quot;synchfix&quot;) AND (ankle OR foot) NOT (stock OR NYSE)</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Loading Behavior:</strong></p>
+<ul>
+<li>Parsed at startup within each worker process.</li>
+<li>Supports multi-line quoted values (a single query can span multiple CSV rows when enclosed in quotes).</li>
+<li>Malformed queries are logged with their row number and skipped (do not prevent other queries from loading).</li>
+<li>Current count: ~1300+ rules across multiple languages (English, French, German, Italian, Portuguese, Spanish).</li>
+</ul>
+<hr>
+<h3 id="62-rss-feed-configuration">6.2 RSS Feed Configuration</h3>
+<p><strong>File:</strong> <code>config/alerts_rss_feeds.json</code>
+<strong>Format:</strong> JSON object mapping feed names to RSS feed URLs.</p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"ADAPT 2.1 for Gamma3 Stryker"</span>: <span class="hljs-string">"https://www.google.com/alerts/feeds/..."</span>,
+  <span class="hljs-attr">"Aequalis Fracture Stryker"</span>: <span class="hljs-string">"https://www.google.com/alerts/feeds/..."</span>,
+  <span class="hljs-attr">"Gamma3 Stryker"</span>: <span class="hljs-string">"https://www.google.com/alerts/feeds/..."</span>,
+  ...
+}
+</div></code></pre>
+<p><strong>Usage:</strong></p>
+<ul>
+<li>Keys serve as feed names, used as <code>feedName</code>/<code>keyword</code>/<code>query</code> in scraped documents.</li>
+<li>Values are Google Alerts RSS feed URLs.</li>
+<li>New feeds can be added by appending entries to this JSON file - no code changes required.</li>
+<li>Names typically follow the pattern: <code>&quot;&lt;Product/Topic&gt; Stryker&quot;</code>.</li>
+</ul>
+<hr>
+<h3 id="63-not-websites-blocklist">6.3 NOT Websites Blocklist</h3>
+<p><strong>File:</strong> <code>config/alerts_not_websites.json</code>
+<strong>Format:</strong> JSON array of domain strings.</p>
+<pre class="hljs"><code><div>[<span class="hljs-string">"stryker.com"</span>, <span class="hljs-string">"wikipedia.org"</span>]
+</div></code></pre>
+<p><strong>Matching Logic:</strong></p>
+<ul>
+<li>Exact domain match: <code>stryker.com</code> blocks URLs with hostname <code>stryker.com</code>.</li>
+<li>Subdomain match: <code>stryker.com</code> also blocks <code>www.stryker.com</code>, <code>blog.stryker.com</code>, etc.</li>
+<li>New domains can be added to the array without code changes.</li>
+</ul>
+<hr>
+<h3 id="64-model-configuration">6.4 Model Configuration</h3>
+<p><strong>File:</strong> <code>models/model_config.json</code></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"model_type"</span>: <span class="hljs-string">"SVM_RBF"</span>,
+  <span class="hljs-attr">"embedding_model"</span>: <span class="hljs-string">"Xenova/all-MiniLM-L6-v2"</span>,
+  <span class="hljs-attr">"embedding_dim"</span>: <span class="hljs-number">384</span>,
+  <span class="hljs-attr">"threshold"</span>: <span class="hljs-number">0.40</span>,
+  <span class="hljs-attr">"stryker_threshold"</span>: <span class="hljs-number">0.55</span>,
+  <span class="hljs-attr">"classes"</span>: [<span class="hljs-string">"Not Related"</span>, <span class="hljs-string">"Mention"</span>],
+  <span class="hljs-attr">"class_labels"</span>: [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>],
+  <span class="hljs-attr">"metrics"</span>: {
+    <span class="hljs-attr">"auc_roc"</span>: <span class="hljs-number">0.9685841238270093</span>,
+    <span class="hljs-attr">"recall_at_threshold"</span>: <span class="hljs-number">0.99</span>,
+    <span class="hljs-attr">"precision_at_threshold"</span>: <span class="hljs-number">0.9041095890410958</span>
+  }
+}
+</div></code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>model_type</code></td>
+<td>Algorithm type for the classifier (SVM with RBF kernel)</td>
+</tr>
+<tr>
+<td><code>embedding_model</code></td>
+<td>HuggingFace model ID for generating text embeddings</td>
+</tr>
+<tr>
+<td><code>embedding_dim</code></td>
+<td>Dimensionality of the output embedding vector (384 for MiniLM-L6-v2)</td>
+</tr>
+<tr>
+<td><code>threshold</code></td>
+<td>Default probability threshold for classifying text as relevant</td>
+</tr>
+<tr>
+<td><code>stryker_threshold</code></td>
+<td>Elevated threshold applied when input text contains the word &quot;stryker&quot;</td>
+</tr>
+<tr>
+<td><code>classes</code></td>
+<td>Human-readable class names corresponding to model outputs</td>
+</tr>
+<tr>
+<td><code>class_labels</code></td>
+<td>Numeric class identifiers (0 = Not Related, 1 = Mention)</td>
+</tr>
+<tr>
+<td><code>metrics</code></td>
+<td>Model evaluation metrics from training (AUC-ROC, recall, precision at chosen threshold)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="65-environment-variables-reference">6.5 Environment Variables Reference</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>COSMOS_ENDPOINT</code></td>
+<td>Yes</td>
+<td>-</td>
+<td>Azure Cosmos DB account endpoint URL</td>
+</tr>
+<tr>
+<td><code>COSMOS_KEY</code></td>
+<td>Yes</td>
+<td>-</td>
+<td>Azure Cosmos DB primary access key</td>
+</tr>
+<tr>
+<td><code>COSMOS_KWATCH_DATABASE</code></td>
+<td>Yes</td>
+<td>-</td>
+<td>Database name for all containers</td>
+</tr>
+<tr>
+<td><code>COSMOS_KWATCH_CONTAINER</code></td>
+<td>Yes</td>
+<td>-</td>
+<td>Container name for KWatch raw data</td>
+</tr>
+<tr>
+<td><code>COSMOS_KWATCH_PROCESSED_CONTAINER</code></td>
+<td>Yes</td>
+<td>-</td>
+<td>Container name for KWatch processed data</td>
+</tr>
+<tr>
+<td><code>COSMOS_GOOGLE_ALERTS_RAW_CONTAINER</code></td>
+<td>No</td>
+<td><code>GoogleAlertsRawData</code></td>
+<td>Container name for Google Alerts raw data</td>
+</tr>
+<tr>
+<td><code>COSMOS_GOOGLE_ALERTS_PROCESSED_CONTAINER</code></td>
+<td>No</td>
+<td><code>GoogleAlertsProcessedData</code></td>
+<td>Container name for Google Alerts processed data</td>
+</tr>
+<tr>
+<td><code>COSMOS_GOOGLE_ALERTS_STATE_CONTAINER</code></td>
+<td>No</td>
+<td><code>GoogleAlertsState</code></td>
+<td>Container name for feed state tracking</td>
+</tr>
+<tr>
+<td><code>CLASSIFICATION_WORKERS</code></td>
+<td>No</td>
+<td><code>2</code></td>
+<td>Number of child processes in the classification worker pool</td>
+</tr>
+<tr>
+<td><code>MAX_CLASSIFICATION_QUEUE_SIZE</code></td>
+<td>No</td>
+<td><code>1000</code></td>
+<td>Maximum number of pending jobs in the worker pool queue</td>
+</tr>
+<tr>
+<td><code>PORT</code></td>
+<td>No</td>
+<td><code>3000</code></td>
+<td>HTTP server listening port</td>
+</tr>
+<tr>
+<td><code>GOOGLE_ALERTS_SCRAPE_INTERVAL</code></td>
+<td>No</td>
+<td><code>7200000</code> (2 hrs)</td>
+<td>Interval in milliseconds between RSS scrape cycles</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Future Environment Variables (Planned):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TRANSLATION_SERVICE_URL</code></td>
+<td>Base URL of the Translation Service</td>
+</tr>
+<tr>
+<td><code>SHAREPOINT_TENANT_ID</code></td>
+<td>Azure AD tenant ID for SharePoint authentication</td>
+</tr>
+<tr>
+<td><code>SHAREPOINT_CLIENT_ID</code></td>
+<td>Azure AD app registration client ID</td>
+</tr>
+<tr>
+<td><code>SHAREPOINT_CLIENT_SECRET</code></td>
+<td>Azure AD app registration client secret</td>
+</tr>
+<tr>
+<td><code>SHAREPOINT_SITE_ID</code></td>
+<td>SharePoint site ID for list publishing</td>
+</tr>
+<tr>
+<td><code>SHAREPOINT_LIST_ID</code></td>
+<td>SharePoint list ID for document publishing</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-deployment-design">7. Deployment Design</h2>
+<h3 id="71-docker-multi-stage-build">7.1 Docker Multi-Stage Build</h3>
+<p>The application is containerized using a multi-stage Docker build for production deployment:</p>
+<p><strong>Stage: Production Image</strong></p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>FROM node:20-bookworm</code></td>
+<td>Debian-based Node.js 20 image with native build tools</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Install <code>python3</code>, <code>make</code>, <code>g++</code></td>
+<td>Required for building native ONNX Runtime bindings</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>npm ci --only=production</code></td>
+<td>Install production dependencies only (deterministic)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Run <code>scripts/download-models.js</code></td>
+<td>Pre-download HuggingFace SBERT model into <code>.hf-cache/</code> directory</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Copy application source code</td>
+<td>Application files excluding dev dependencies</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>EXPOSE 3000</code></td>
+<td>Declare container port</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>CMD [&quot;node&quot;, &quot;server.js&quot;]</code></td>
+<td>Start the application</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Optimization:</strong> The SBERT model (~90MB) is downloaded during the Docker build phase and baked into the image. This eliminates the first-request latency that would otherwise occur when the model is downloaded at runtime.</p>
+<hr>
+<h3 id="72-azure-app-service-configuration">7.2 Azure App Service Configuration</h3>
+<p><strong>Linux (Docker): (Current)</strong></p>
+<ul>
+<li>Deploy the Docker image to Azure Container Registry (ACR).</li>
+<li>Configure the App Service to pull from ACR.</li>
+<li>Set environment variables in App Service Configuration &gt; Application Settings.</li>
+<li>The <code>/api/health</code> endpoint serves as the health probe.</li>
+</ul>
+<p><strong>Windows (IIS/iisnode):</strong></p>
+<ul>
+<li>Uses <code>web.config</code> for IIS configuration.</li>
+<li>iisnode module handles running Node.js behind IIS.</li>
+<li>Configuration: single iisnode process, max 1024 concurrent requests, auto-restart on JS/YML file changes.</li>
+<li>Logging enabled via iisnode devErrorsEnabled.</li>
+</ul>
+<hr>
+<h3 id="73-iis-windows-configuration">7.3 IIS (Windows) Configuration</h3>
+<p>The <code>web.config</code> file configures IIS to proxy requests to the Node.js application via iisnode:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Handler</td>
+<td>iisnode for <code>server.js</code></td>
+<td>Routes all requests through Node.js</td>
+</tr>
+<tr>
+<td>URL Rewrite</td>
+<td><code>/*</code> → <code>server.js</code></td>
+<td>Single entry point routing</td>
+</tr>
+<tr>
+<td>Static Files</td>
+<td>Excluded from rewrite</td>
+<td>CSS, JS, images served directly by IIS</td>
+</tr>
+<tr>
+<td>Node Processes</td>
+<td>1</td>
+<td>Single process (worker pool handles parallelism internally)</td>
+</tr>
+<tr>
+<td>Max Concurrent Requests</td>
+<td>1024</td>
+<td>Connection limit per iisnode process</td>
+</tr>
+<tr>
+<td>Watch Files</td>
+<td><code>*.js;*.yml</code></td>
+<td>Auto-restart on file changes</td>
+</tr>
+<tr>
+<td>Logging</td>
+<td>Enabled</td>
+<td>iisnode error logging for diagnostics</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="74-scaling-considerations">7.4 Scaling Considerations</h3>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Current Design</th>
+<th>Scaling Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Classification Throughput</td>
+<td>2 worker processes (configurable)</td>
+<td>Increase <code>CLASSIFICATION_WORKERS</code> env var. Each additional worker adds ~500MB memory for model loading</td>
+</tr>
+<tr>
+<td>Queue Capacity</td>
+<td>1000 item max</td>
+<td>Increase <code>MAX_CLASSIFICATION_QUEUE_SIZE</code>. Consider persistent queue (Azure Service Bus) for guaranteed delivery</td>
+</tr>
+<tr>
+<td>RSS Feed Volume</td>
+<td>200+ feeds, 10 concurrent</td>
+<td>Add feeds to JSON config. Increase concurrency if feed count grows significantly</td>
+</tr>
+<tr>
+<td>Database Throughput</td>
+<td>Shared throughput (auto-scale)</td>
+<td>Configure dedicated throughput per container for high-volume containers. Enable autoscale with max RU/s</td>
+</tr>
+<tr>
+<td>Horizontal Scaling</td>
+<td>Single instance</td>
+<td>Requires external coordination: separate RSS feeds across instances, use distributed locking for dedup. Not currently designed for this</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>End of SDD Document</em></p>
+
+</body>
+</html>

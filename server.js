@@ -34,6 +34,24 @@ app.get('/', (req, res) => {
   });
 });
 
+// SRS Route
+app.get('/srs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/SRS.html'), (err) => {
+    if (err) {
+      res.status(500).send('SRS file not found. Please deploy SRS file to /public/SRS.html.');
+    }
+  });
+});
+
+// SDD Route
+app.get('/sdd', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/SDD.html'), (err) => {
+    if (err) {
+      res.status(500).send('SDD file not found. Please deploy SDD file to /public/SDD.html.');
+    }
+  });
+});
+
 // Initialize worker pool and start server
 async function startServer() {
   // Initialize Classification Worker Pool

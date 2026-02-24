@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SRS.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="software-requirements-specification-srs">Software Requirements Specification (SRS)</h1>
+<h2 id="prism-platform-for-real-time-insights--social-monitoring">PRISM: Platform for Real-time Insights &amp; Social Monitoring</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document Version</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>Draft</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>2026-02-22</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#1-introduction">Introduction</a></li>
+<li><a href="#2-overall-description">Overall Description</a></li>
+<li><a href="#3-functional-requirements-1-data-ingestion">Functional Requirements 1: Data Ingestion</a></li>
+<li><a href="#4-functional-requirements-2-classification">Functional Requirements 2: Classification</a></li>
+<li><a href="#5-functional-requirements-3-data-access--monitoring">Functional Requirements 3: Data Access &amp; Monitoring</a></li>
+<li><a href="#6-non-functional-requirements">Non-Functional Requirements</a></li>
+<li><a href="#7-external-interface-requirements">External Interface Requirements</a></li>
+</ol>
+<hr>
+<h2 id="1-introduction">1. Introduction</h2>
+<h3 id="11-purpose">1.1 Purpose</h3>
+<p>This document specifies the software requirements for backend of <strong>PRISM (Platform for Real-time Insights &amp; Social Monitoring)</strong>, a system that ingests social media mentions and web articles from multiple sources, classifies them using a combination of rule-based and machine learning techniques, and stores the results for downstream consumption. The document serves as the authoritative reference for all functional and non-functional requirements, covering both currently implemented features and planned future enhancements.</p>
+<h3 id="12-scope">1.2 Scope</h3>
+<p>PRISM is a server-side application designed to:</p>
+<ul>
+<li>Receive real-time social media mentions via webhook integrations (KWatch)</li>
+<li>Scrape and monitor web articles via Google Alerts RSS feeds</li>
+<li>Classify ingested content against a configurable set of brand queries using a rule-based boolean query engine</li>
+<li>Assess content relevancy using a trained machine learning model (SBERT + SVM)</li>
+<li>Store raw and classified data in Azure Cosmos DB for retrieval and analysis</li>
+<li>Expose REST APIs for data retrieval, on-demand classification, and system health monitoring</li>
+<li>Provide a lightweight dashboard for operational visibility</li>
+<li>Push data into SharePoint lists for downstream presentation</li>
+</ul>
+<p>The system is scoped to the backend data pipeline ending at pushing data to presentation layer (SharePoint). Frontend analytics, dashboards, and end-user reporting tools are outside the scope of this document.</p>
+<h3 id="13-definitions-acronyms-and-abbreviations">1.3 Definitions, Acronyms, and Abbreviations</h3>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PRISM</td>
+<td>Platform for Real-time Insights &amp; Social Monitoring</td>
+</tr>
+<tr>
+<td>KWatch</td>
+<td>Third-party social media monitoring service that delivers mentions (Facebook, Youtube, Reddit, Twitter/X) via webhooks</td>
+</tr>
+<tr>
+<td>Google Alerts</td>
+<td>Google's content monitoring service that provides RSS feeds for tracked keywords</td>
+</tr>
+<tr>
+<td>AST</td>
+<td>Abstract Syntax Tree, an intermediate representation of parsed brand queries</td>
+</tr>
+<tr>
+<td>SBERT</td>
+<td>Sentence-BERT, a transformer model for generating sentence-level text embeddings</td>
+</tr>
+<tr>
+<td>SVM</td>
+<td>Support Vector Machine, a supervised learning model used for binary classification</td>
+</tr>
+<tr>
+<td>ONNX</td>
+<td>Open Neural Network Exchange, a portable ML model format used for SVM inference</td>
+</tr>
+<tr>
+<td>NEAR/n</td>
+<td>Proximity operator in the query language requiring two terms to appear within n tokens</td>
+</tr>
+<tr>
+<td>Cosmos DB</td>
+<td>Azure Cosmos DB, Microsoft's globally distributed NoSQL database service</td>
+</tr>
+<tr>
+<td>Readability</td>
+<td>Mozilla's Readability library for extracting article content from web pages</td>
+</tr>
+<tr>
+<td>IPC</td>
+<td>Inter-Process Communication, messaging protocol between parent and child processes</td>
+</tr>
+<tr>
+<td>RBF</td>
+<td>Radial Basis Function, kernel function used in the SVM classifier</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-references">1.4 References</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Reference</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Azure Cosmos DB Documentation</td>
+<td>NoSQL database platform documentation</td>
+</tr>
+<tr>
+<td>2</td>
+<td>HuggingFace Transformers.js</td>
+<td>JavaScript library for running transformer models</td>
+</tr>
+<tr>
+<td>3</td>
+<td>ONNX Runtime</td>
+<td>Cross-platform ML inference engine</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Mozilla Readability</td>
+<td>Content extraction library</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Microsoft Graph API</td>
+<td>API for SharePoint and Microsoft 365 integration</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Argos Translate</td>
+<td>Open-source neural machine translation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="15-document-overview">1.5 Document Overview</h3>
+<ul>
+<li><strong>Section 2</strong> provides a high-level product overview, including context, constraints, and assumptions.</li>
+<li><strong>Sections 3–5</strong> detail the functional requirements organized by domain: data ingestion, classification, and data access/monitoring.</li>
+<li><strong>Section 6</strong> specifies planned future features that are not yet implemented.</li>
+<li><strong>Section 7</strong> covers non-functional requirements including performance, security, and deployment.</li>
+<li><strong>Section 8</strong> describes external system interfaces.</li>
+</ul>
+<hr>
+<h2 id="2-overall-description">2. Overall Description</h2>
+<h3 id="21-product-perspective">2.1 Product Perspective</h3>
+<p>PRISM operates as a backend data pipeline within a broader social media monitoring ecosystem. It sits between upstream data sources (KWatch webhooks, Google Alerts RSS feeds) and downstream consumers (SharePoint lists, analytics dashboards, compliance teams).</p>
+<p>The system is deployed as a standalone Node.js application on Azure App Service, backed by Azure Cosmos DB for persistence. It is designed for single-instance deployment with internal parallelism achieved through a child-process worker pool.</p>
+<p><strong>System Context:</strong></p>
+<pre class="hljs"><code><div>┌─────────────────────────────────────────────────────┐
+│                  External Sources                   │
+│  ┌───────────┐  ┌────────────────┐  ┌─────────────┐ │
+│  │  KWatch   │  │ Google Alerts  │  │ Translation │ │
+│  │ (Webhook) │  │  (RSS Feeds)   │  │  Service    │ │
+│  └─────┬─────┘  └───────┬────────┘  └──────┬──────┘ │
+└────────┼────────────────┼──────────────────┼────────┘
+         │                │                  │
+         ▼                ▼                  ▼
+┌─────────────────────────────────────────────────────┐
+│                    PRISM Backend                    │
+│  Ingestion → Classification → Storage → Publishing  │
+└──────────────────────┬──────────────────────────────┘
+                       │
+         ┌─────────────┼─────────────┐
+         ▼             ▼             ▼
+   ┌──────────┐  ┌──────────┐  ┌───────────┐
+   │ Cosmos DB│  │SharePoint│  │ Dashboard │
+   │ (Storage)│  │  Lists   │  │  (Read)   │
+   └──────────┘  └──────────┘  └───────────┘
+</div></code></pre>
+<h3 id="22-product-functions">2.2 Product Functions</h3>
+<p>At a high level, PRISM provides the following capabilities:</p>
+<ol>
+<li><strong>Multi-Source Data Ingestion</strong> - Receives social media mentions via KWatch webhooks and scrapes web articles via Google Alerts RSS feeds on a scheduled basis.</li>
+<li><strong>Content Enrichment</strong> - Extracts full article text from web pages using Mozilla Readability, cleans and normalizes content for classification.</li>
+<li><strong>Deduplication</strong> - Detects and handles duplicate content across both data sources using content-hash and URL-hash strategies.</li>
+<li><strong>Brand Classification</strong> - Evaluates ingested content against 400+ configurable boolean queries to identify brand mentions, competitor activity, and topic categorization.</li>
+<li><strong>Relevancy Classification</strong> - Uses a trained SBERT+SVM model to assess whether content is relevant to the monitoring domain, serving as a fallback when no brand query matches.</li>
+<li><strong>Parallel Processing</strong> - Distributes classification workload across a child-process worker pool for throughput and isolation.</li>
+<li><strong>Data Persistence</strong> - Stores both raw and classified data in Azure Cosmos DB with separate containers for each source and processing stage.</li>
+<li><strong>REST API</strong> - Exposes endpoints for data retrieval, on-demand classification, manual scrape triggers, and system health checks.</li>
+<li><strong>Operational Dashboard</strong> - Provides a lightweight web interface for viewing ingested data, classification results, and queue status.</li>
+</ol>
+<h3 id="23-user-characteristics">2.3 User Characteristics</h3>
+<table>
+<thead>
+<tr>
+<th>User Role</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data Analyst</td>
+<td>Consumes classified data from Cosmos DB or SharePoint lists for reporting and analysis</td>
+</tr>
+<tr>
+<td>System Operator</td>
+<td>Monitors system health; Maintains brand query rules (BrandQueries.csv), RSS feed lists, and blocklist configurations; trains/updates ML models</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-constraints-development--deployment">2.4 Constraints (Development &amp; Deployment)</h3>
+<table>
+<thead>
+<tr>
+<th>Constraint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C-01</td>
+<td>The system must run on Azure App Service (Linux or Windows via IIS)</td>
+</tr>
+<tr>
+<td>C-02</td>
+<td>Azure Cosmos DB is the sole persistence layer (NoSQL document store)</td>
+</tr>
+<tr>
+<td>C-03</td>
+<td>ONNX Runtime requires native bindings, preventing the use of Node.js Worker Threads (child processes must be used instead)</td>
+</tr>
+<tr>
+<td>C-04</td>
+<td>Google Alerts RSS feeds are rate-limited and may return stale data; the system must handle incremental scraping</td>
+</tr>
+<tr>
+<td>C-05</td>
+<td>Brand query rules are maintained externally in CSV format and loaded at startup</td>
+</tr>
+<tr>
+<td>C-06</td>
+<td>The SBERT embedding model (all-MiniLM-L6-v2) must be pre-downloaded during Docker build to avoid runtime latency</td>
+</tr>
+</tbody>
+</table>
+<h3 id="25-assumptions-and-dependencies">2.5 Assumptions and Dependencies</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Assumption / Dependency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A-01</td>
+<td>KWatch will deliver webhook payloads in the expected JSON format with required fields (platform, query, datetime, link, author, content)</td>
+</tr>
+<tr>
+<td>A-02</td>
+<td>Google Alerts RSS feeds remain accessible at their configured URLs and follow standard RSS 2.0/Atom format</td>
+</tr>
+<tr>
+<td>A-03</td>
+<td>Azure Cosmos DB provides sufficient throughput (RU/s) for the expected ingestion and query volume</td>
+</tr>
+<tr>
+<td>A-04</td>
+<td>The SBERT model and SVM ONNX model are pre-trained and provided as static artifacts; retraining is outside runtime scope</td>
+</tr>
+<tr>
+<td>A-05</td>
+<td>Network connectivity to external article URLs is available for Readability-based content extraction</td>
+</tr>
+<tr>
+<td>A-06</td>
+<td>The Translation Service (future) will be deployed as a separate Azure App Service accessible via HTTP</td>
+</tr>
+<tr>
+<td>A-07</td>
+<td>SharePoint Online (future) will be accessible via Microsoft Graph API with appropriate app registration credentials</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-functional-requirements-1-data-ingestion">3. Functional Requirements 1: Data Ingestion</h2>
+<h3 id="31-fr-ing-01-kwatch-webhook-reception-status-implemented">3.1 FR-ING-01: KWatch Webhook Reception (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall expose an HTTP POST endpoint (<code>/api/webhook/kwatch</code>) that receives social media mention payloads from KWatch. Upon receiving a valid payload, the system shall immediately return an HTTP 200 response and schedule asynchronous processing to avoid blocking the webhook caller.</p>
+<p><strong>Required Payload Fields:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>String</td>
+<td>Yes</td>
+<td>Source platform identifier (e.g., &quot;twitter&quot;, &quot;reddit&quot;, &quot;linkedin&quot;)</td>
+</tr>
+<tr>
+<td>query</td>
+<td>String</td>
+<td>Yes</td>
+<td>The search query or keyword that triggered the mention (e.g. &quot;Keyword: stryker&quot;)</td>
+</tr>
+<tr>
+<td>datetime</td>
+<td>String (ISO 8601)</td>
+<td>Yes</td>
+<td>Publication timestamp of the original post</td>
+</tr>
+<tr>
+<td>link</td>
+<td>String (URL)</td>
+<td>Yes</td>
+<td>Direct URL to the source post</td>
+</tr>
+<tr>
+<td>author</td>
+<td>String</td>
+<td>Yes</td>
+<td>Author or account name of the post</td>
+</tr>
+<tr>
+<td>content</td>
+<td>String</td>
+<td>Yes</td>
+<td>Full text body of the post</td>
+</tr>
+<tr>
+<td>title</td>
+<td>String</td>
+<td>No</td>
+<td>Post title or headline (defaults to empty string)</td>
+</tr>
+<tr>
+<td>sentiment</td>
+<td>String</td>
+<td>No</td>
+<td>Pre-classified sentiment value (defaults to &quot;neutral&quot;)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>The endpoint shall return HTTP 400 if any required field is missing.</li>
+<li>The endpoint shall return HTTP 200 and enqueue the item for processing without waiting for classification to complete.</li>
+<li>The system shall append a server-side <code>receivedAt</code> timestamp (ISO 8601) to each received document.</li>
+</ul>
+<hr>
+<h3 id="32-fr-ing-02-kwatch-queue-processing-status-implemented">3.2 FR-ING-02: KWatch Queue Processing (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall maintain an in-memory queue for received KWatch items and process them in batches at a fixed interval. This decouples ingestion rate from processing throughput and allows burst absorption.</p>
+<p><strong>Batch Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Configurable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Batch Size</td>
+<td>10 items</td>
+<td>No (hardcoded)</td>
+</tr>
+<tr>
+<td>Batch Interval</td>
+<td>60 seconds</td>
+<td>No (hardcoded)</td>
+</tr>
+<tr>
+<td>Max Queue Size</td>
+<td>1000 items</td>
+<td>Yes (<code>MAX_CLASSIFICATION_QUEUE_SIZE</code> env var)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Processing Flow per Batch:</strong></p>
+<ol>
+<li>Dequeue up to 10 items from the in-memory queue.</li>
+<li>Attempt to insert each item as a raw document into Cosmos DB (KWatchRawData container).</li>
+<li>For each successfully inserted or duplicate-recovered item, submit a classification job to the worker pool.</li>
+<li>Log batch results (insertions, failures, duplicates, jobs submitted).</li>
+</ol>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>The queue shall not process a new batch while the previous batch is still in progress (mutual exclusion).</li>
+<li>If the queue exceeds the maximum size, new items shall be rejected with appropriate logging (Address this by updating queue size, increasing classification workers, or upgrading app service plan).</li>
+</ul>
+<hr>
+<h3 id="33-fr-ing-03-kwatch-deduplication-status-implemented">3.3 FR-ING-03: KWatch Deduplication (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall detect duplicate KWatch items using content-based hashing and implement a recovery strategy that preserves all received items while marking duplicates.</p>
+<p><strong>Deduplication Strategy:</strong></p>
+<ol>
+<li><strong>Primary ID Generation:</strong> Each item's document ID is computed as <code>MD5(content)</code>. Items with identical content will produce the same ID.</li>
+<li><strong>Conflict Detection:</strong> When a Cosmos DB insert returns HTTP 409 (Conflict), the item is identified as a duplicate.</li>
+<li><strong>Duplicate Recovery:</strong> A new unique ID is generated using <code>MD5(platform + datetime + author + timestamp)</code> and the document is re-inserted with:
+<ul>
+<li>A new unique document ID</li>
+<li>The <code>isDuplicate</code> flag set to <code>true</code></li>
+</ul>
+</li>
+<li><strong>Classification Continuity:</strong> Both original and duplicate-recovered items proceed through classification.</li>
+</ol>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Duplicate items shall be stored with <code>isDuplicate: true</code> and a unique regenerated ID.</li>
+<li>The original content hash remains traceable for audit purposes.</li>
+<li>No data shall be silently dropped due to duplication.</li>
+</ul>
+<hr>
+<h3 id="34-fr-ing-04-google-alerts-rss-feed-scraping-status-implemented">3.4 FR-ING-04: Google Alerts RSS Feed Scraping (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall periodically scrape a configured set of Google Alerts RSS feeds to discover new web articles matching monitored keywords. The scraper runs on a fixed schedule and processes all configured feeds in parallel batches.</p>
+<p><strong>Scraper Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Configurable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scrape Interval</td>
+<td>2 hours (7,200,000 ms)</td>
+<td>Yes (<code>GOOGLE_ALERTS_SCRAPE_INTERVAL</code> env var)</td>
+</tr>
+<tr>
+<td>Feed Concurrency</td>
+<td>10 feeds per batch</td>
+<td>No (hardcoded)</td>
+</tr>
+<tr>
+<td>RSS Fetch Timeout</td>
+<td>15 seconds</td>
+<td>No (hardcoded)</td>
+</tr>
+<tr>
+<td>Feed Count</td>
+<td>202 feeds</td>
+<td>Yes (via <code>alerts_rss_feeds.json</code> config)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Scraping Flow per Cycle:</strong></p>
+<ol>
+<li>Load all feed state documents from Cosmos DB (GoogleAlertsState container).</li>
+<li>For each configured feed from alerts config json (processed in parallel batches of 10):
+<ul>
+<li>Fetch and parse the RSS feed.</li>
+<li>Compare the topmost entry's link hash against the stored <code>lastLinkHash</code> from state.</li>
+<li>If unchanged, skip the feed (no new entries).</li>
+<li>If new entries exist, extract only entries newer than the known hash.</li>
+<li>Clean HTML tags and decode entities from titles and content snippets.</li>
+<li>Save the new topmost link hash to the state container for the next cycle.</li>
+</ul>
+</li>
+<li>Collect all new entries into a processing queue and proceed to content extraction and classification.</li>
+</ol>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>The scraper shall not start a new cycle while a previous cycle is still running (mutual exclusion).</li>
+<li>Feeds that fail to parse shall be logged and skipped without affecting other feeds.</li>
+<li>The scraper shall start automatically at server startup and can also be triggered manually via API.</li>
+</ul>
+<hr>
+<h3 id="35-fr-ing-05-google-alerts-url-extraction--validation-status-implemented">3.5 FR-ING-05: Google Alerts URL Extraction &amp; Validation (Status: Implemented)</h3>
+<p><strong>Description:</strong> Google Alerts RSS entries contain redirect URLs (format: <code>https://www.google.com/url?rct=j&amp;sa=t&amp;url=&lt;actual_url&gt;&amp;ct=ga</code>). The system shall extract the actual article URL from the <code>url</code> query parameter of the Google redirect link.</p>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>The system shall parse the <code>url</code> query parameter from the Google redirect URL.</li>
+<li>If URL extraction fails (malformed link or missing parameter), the entry shall be skipped with a warning log.</li>
+<li>The extracted URL shall be validated as a well-formed URL before further processing.</li>
+</ul>
+<hr>
+<h3 id="36-fr-ing-06-full-text-article-extraction-readability-status-implemented">3.6 FR-ING-06: Full-Text Article Extraction (Readability) (Status: Implemented)</h3>
+<p><strong>Description:</strong> For each Google Alerts entry with a valid extracted URL, the system shall attempt to fetch the full article page and extract its text content using Mozilla's Readability library. This provides richer content for classification than the RSS snippet alone.</p>
+<p><strong>Extraction Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fetch Timeout</td>
+<td>10 seconds</td>
+</tr>
+<tr>
+<td>Minimum Content Length</td>
+<td>100 characters</td>
+</tr>
+<tr>
+<td>Content Type Requirement</td>
+<td><code>text/html</code></td>
+</tr>
+<tr>
+<td>User-Agent</td>
+<td>Standard browser User-Agent string</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Extraction Flow:</strong></p>
+<ol>
+<li>Fetch the article page with a 10-second timeout and browser-like headers.</li>
+<li>Verify the response is HTTP 2xx and content type includes <code>text/html</code>.</li>
+<li>Parse the HTML with JSDOM and run Readability to extract the article body.</li>
+<li>Collapse whitespace and trim the result.</li>
+<li>If the extracted text is 100+ characters, use it as <code>fullContent</code>; otherwise discard it.</li>
+</ol>
+<p><strong>Content Source Selection:</strong></p>
+<ul>
+<li>If <code>fullContent</code> is successfully extracted: <code>contentSource = 'full'</code>, <code>content = fullContent</code></li>
+<li>If extraction fails or yields insufficient text: <code>contentSource = 'snippet'</code>, <code>content = contentSnippet</code></li>
+</ul>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Fetch failures (timeouts, non-HTML responses, parse errors) shall be handled gracefully without stopping the pipeline.</li>
+<li>The <code>contentSource</code> field shall accurately reflect which source was used for classification.</li>
+</ul>
+<hr>
+<h3 id="37-fr-ing-07-website-blocklist-filtering-status-implemented">3.7 FR-ING-07: Website Blocklist Filtering (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall maintain a configurable blocklist of website domains. Articles from blocked domains shall be excluded from processing to prevent noise (e.g., the company's own website, Wikipedia).</p>
+<p><strong>Current Blocklist:</strong> <code>stryker.com</code>, <code>wikipedia.org</code></p>
+<p><strong>Matching Rules:</strong></p>
+<ul>
+<li>Exact domain match (e.g., <code>stryker.com</code> blocks <code>stryker.com</code>)</li>
+<li>Subdomain match (e.g., <code>stryker.com</code> also blocks <code>www.stryker.com</code>, <code>blog.stryker.com</code>)</li>
+</ul>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Blocked articles shall be logged and counted but not inserted into raw or processed containers.</li>
+<li>The blocklist shall be configurable via the <code>alerts_not_websites.json</code> configuration file without code changes.</li>
+</ul>
+<hr>
+<h3 id="38-fr-ing-08-google-alerts-deduplication-status-implemented">3.8 FR-ING-08: Google Alerts Deduplication (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall detect duplicate Google Alerts articles using URL-based hashing to prevent re-processing articles that appear across multiple feeds or scraping cycles.</p>
+<p><strong>Deduplication Strategy:</strong></p>
+<ol>
+<li><strong>ID Generation:</strong> Document ID is computed as <code>MD5(extractedUrl)</code>.</li>
+<li><strong>Point Read Check:</strong> Before inserting a raw document, the system performs a Cosmos DB point read by this ID.</li>
+<li><strong>If Found:</strong> The article is skipped as a duplicate (counted in metrics).</li>
+<li><strong>If Not Found (404):</strong> The article proceeds to insertion and classification.</li>
+<li><strong>Race Condition Handling:</strong> If a concurrent insert causes a 409 Conflict during the create operation, the item is treated as a duplicate and skipped.</li>
+</ol>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Duplicate articles shall not be re-inserted or re-classified.</li>
+<li>The dedup check shall use Cosmos DB point reads (1 RU cost) for efficiency.</li>
+</ul>
+<hr>
+<h3 id="39-fr-ing-09-google-alerts-feed-state-management-status-implemented">3.9 FR-ING-09: Google Alerts Feed State Management (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall track the scraping state of each Google Alerts RSS feed to enable incremental scraping, only processing entries that are newer than the last known entry.</p>
+<p><strong>State Document Fields:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>MD5 hash of the feed name (partition key)</td>
+</tr>
+<tr>
+<td>feedName</td>
+<td>Human-readable name of the Google Alerts feed</td>
+</tr>
+<tr>
+<td>feedUrl</td>
+<td>RSS feed URL</td>
+</tr>
+<tr>
+<td>lastLinkHash</td>
+<td>MD5 hash of the topmost (newest) entry's link from the last successful scrape</td>
+</tr>
+<tr>
+<td>lastScrapedAt</td>
+<td>ISO 8601 timestamp of the last scrape</td>
+</tr>
+<tr>
+<td>entryCount</td>
+<td>Total number of entries in the feed at last scrape</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Incremental Logic:</strong></p>
+<ol>
+<li>On each scrape cycle, compare the current topmost entry's link hash with the stored <code>lastLinkHash</code>.</li>
+<li>If they match, the feed has no new entries, so skip it.</li>
+<li>If they differ, walk entries from newest to oldest, collecting entries until the known hash is encountered.</li>
+<li>After processing, upsert the state document with the new topmost hash.</li>
+</ol>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>State shall be persisted in the GoogleAlertsState container and survive server restarts.</li>
+<li>A feed scraped for the first time (no existing state) shall process all current entries.</li>
+<li>Empty feeds shall have their state saved with <code>lastLinkHash: null</code> and <code>entryCount: 0</code>.</li>
+</ul>
+<hr>
+<h3 id="310-fr-ing-10-multilingual-translation-support-status-planned">3.10 FR-ING-10: Multilingual Translation Support (Status: Planned)</h3>
+<p><strong>Description:</strong> The system shall support translation of non-English content into English for classification and analysis. A separate Translation Service will be deployed as an independent Azure App Service, running Argos Translate models for 23 supported languages.</p>
+<p><strong>Translation Service Architecture:</strong></p>
+<ul>
+<li><strong>High-Frequency Models (7):</strong> Always loaded in memory for instant translation (languages selected based on volume analysis).</li>
+<li><strong>Conditional Model Slots (3):</strong> Dynamically loaded on demand for the remaining 16 languages. When a request arrives for an unloaded language, the least-recently-used slot is evicted and the requested model is loaded.</li>
+<li><strong>Cold Start Handling (WIP):</strong> The architecture for handling cold start latency during model loading is under evaluation. Options under consideration include:
+<ul>
+<li>Always-on warm pool with all high-frequency models pre-loaded</li>
+<li>Queue-based async translation with retry and eventual consistency</li>
+<li>Health-check gating where translation requests wait until the model is ready</li>
+<li>Lazy initialization with request-level timeout and fallback to untranslated text</li>
+</ul>
+</li>
+</ul>
+<p><strong>Integration with PRISM Pipeline:</strong></p>
+<ol>
+<li>For every ingested item (KWatch or Google Alerts), detect the language of the content.</li>
+<li>If the content is not in English and the detected language is one of the 23 supported languages, send a translation request to the Translation Service.</li>
+<li>Store the English translation as an additional field (<code>translatedContent</code>) in both raw and processed documents.</li>
+<li>Run the classification pipeline on <strong>both</strong> the original text and the English translation separately.</li>
+<li>Use the original language classification for topic/brand matching (existing multilingual queries) and the English translation for relevancy model assessment.</li>
+</ol>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Non-English items that cannot be translated (unsupported language or service unavailable) shall proceed through the pipeline using their original text only.</li>
+<li>Translation latency shall not block the ingestion pipeline; if the Translation Service is unavailable, items shall be processed without translation.</li>
+<li>The <code>translatedContent</code> field shall be null for English-language content and for items where translation failed or was unavailable.</li>
+</ul>
+<hr>
+<h2 id="4-functional-requirements-2-classification">4. Functional Requirements 2: Classification</h2>
+<h3 id="41-fr-cls-01-brand-classification-rule-based-ast-status-implemented">4.1 FR-CLS-01: Brand Classification (Rule-Based AST) (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall evaluate ingested content against a library of brand query rules to identify brand mentions, competitor activity, and topic categorizations. Each rule is a boolean expression written in a custom query language, parsed at startup into an Abstract Syntax Tree (AST), and evaluated against the normalized text of each item.</p>
+<p><strong>Rule Source:</strong> Brand query rules are defined in a CSV file (<code>BrandQueries.csv</code>) with the following columns:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Topic</td>
+<td>Primary classification category (e.g., &quot;Ankle Joint&quot;, &quot;Competitors&quot;, &quot;External Fixation&quot;)</td>
+</tr>
+<tr>
+<td>Sub topic</td>
+<td>Secondary classification category (e.g., &quot;GRAVITY Synchfix&quot;, &quot;Depuy-Synthes&quot;, &quot;Hoffmann&quot;)</td>
+</tr>
+<tr>
+<td>Query name</td>
+<td>Language identifier for the rule</td>
+</tr>
+<tr>
+<td>Internal ID</td>
+<td>UUID for internal tracking and traceability</td>
+</tr>
+<tr>
+<td>Query</td>
+<td>Boolean expression in the custom query language</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rule Count:</strong> 400+ rules loaded and compiled at startup.</p>
+<p><strong>Evaluation Process:</strong></p>
+<ol>
+<li>Text is normalized: lowercased, diacritics decomposed (NFD), punctuation replaced with spaces, only alphanumerics and @/# preserved.</li>
+<li>The normalized text is tokenized into an array of terms.</li>
+<li>Each query's AST is evaluated against the token array.</li>
+<li>The first matching query determines the classification (topic, sub-topic, query name, internal ID).</li>
+<li>If no query matches, the item falls through to the relevancy classifier.</li>
+</ol>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>All well-formed queries in the CSV shall be parsed into ASTs at startup; malformed queries shall be logged and skipped.</li>
+<li>Matching shall be case-insensitive and diacritics-insensitive.</li>
+<li>The first matching rule wins (order-dependent evaluation).</li>
+</ul>
+<hr>
+<h3 id="42-fr-cls-02-query-language-operators-status-implemented">4.2 FR-CLS-02: Query Language Operators (Status: Implemented)</h3>
+<p><strong>Description:</strong> The brand query language shall support the following operators for expressing complex matching conditions:</p>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Syntax</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AND</td>
+<td><code>term1 AND term2</code></td>
+<td>Both terms must be present in the text</td>
+</tr>
+<tr>
+<td>OR</td>
+<td><code>term1 OR term2</code></td>
+<td>At least one of the terms must be present</td>
+</tr>
+<tr>
+<td>NOT</td>
+<td><code>NOT term</code></td>
+<td>The term must not be present in the text; if a NOT clause matches, the entire rule is rejected</td>
+</tr>
+<tr>
+<td>NEAR/n</td>
+<td><code>term1 NEAR/n term2</code></td>
+<td>Both terms must be present and appear within n tokens of each other</td>
+</tr>
+<tr>
+<td>Quoted Phrase</td>
+<td><code>&quot;exact phrase&quot;</code></td>
+<td>The exact multi-word sequence must appear in the text</td>
+</tr>
+<tr>
+<td>Wildcard</td>
+<td><code>term*</code></td>
+<td>Matches any token that starts with the given prefix</td>
+</tr>
+<tr>
+<td>Parentheses</td>
+<td><code>(expr)</code></td>
+<td>Groups sub-expressions for precedence control</td>
+</tr>
+<tr>
+<td>Mentions</td>
+<td><code>@username</code></td>
+<td>Matches @-prefixed tokens (social media mentions)</td>
+</tr>
+<tr>
+<td>Hashtags</td>
+<td><code>#hashtag</code></td>
+<td>Matches #-prefixed tokens (social media hashtags)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Operator Precedence:</strong> NOT &gt; AND &gt; OR (parentheses override precedence).</p>
+<p><strong>Evaluation Order:</strong></p>
+<ol>
+<li>NOT clauses are checked first - if any NOT clause matches, the entire rule immediately fails.</li>
+<li>Positive clauses (AND, OR, NEAR, terms) are then evaluated.</li>
+<li>A rule with only NOT clauses (no positive terms) matches if none of the NOT terms are found.</li>
+</ol>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>All operators listed above shall be supported and correctly parsed.</li>
+<li>Nested expressions with mixed operators and parentheses shall evaluate correctly.</li>
+<li>NEAR/n shall count token distance accurately.</li>
+</ul>
+<p><strong>Updated Acceptance Critera:</strong></p>
+<ul>
+<li>Based on historical data testing, the NEAR/n operator has been reduced to AND operator (equivalent to NEAR/inf).</li>
+</ul>
+<hr>
+<h3 id="43-fr-cls-03-relevancy-classification-sbert--svm-status-implemented">4.3 FR-CLS-03: Relevancy Classification (SBERT + SVM) (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall use a trained machine learning pipeline to assess whether content is relevant to the monitoring domain. The pipeline consists of a Sentence-BERT embedding model followed by a Support Vector Machine (SVM) classifier.</p>
+<p><strong>Model Specifications:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Specification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Embedding Model</td>
+<td>Xenova/all-MiniLM-L6-v2 (Sentence-BERT)</td>
+</tr>
+<tr>
+<td>Embedding Dimension</td>
+<td>384</td>
+</tr>
+<tr>
+<td>Classifier</td>
+<td>SVM with RBF kernel (ONNX format)</td>
+</tr>
+<tr>
+<td>Output Classes</td>
+<td>&quot;Not Related&quot; (0), &quot;Mention&quot; (1)</td>
+</tr>
+<tr>
+<td>Default Threshold</td>
+<td>0.40 (probability &gt;= threshold → relevant)</td>
+</tr>
+<tr>
+<td>Stryker-specific Threshold</td>
+<td>0.55 (applied when text contains &quot;stryker&quot;)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Model Performance Metrics:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AUC-ROC</td>
+<td>0.9686</td>
+</tr>
+<tr>
+<td>Recall at Threshold</td>
+<td>0.99</td>
+</tr>
+<tr>
+<td>Precision at Threshold</td>
+<td>0.904</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dual Threshold Logic:</strong></p>
+<ul>
+<li>If the input text contains the word &quot;stryker&quot; (case-insensitive), the higher threshold (0.55) is applied to reduce false positives from general mentions of the brand name.</li>
+<li>For all other text, the standard threshold (0.40) is used to maximize recall.</li>
+</ul>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>The model shall be loaded at worker process startup and remain in memory for the lifetime of the process.</li>
+<li>The embedding model shall be pre-downloaded at Docker build time to avoid first-request latency.</li>
+<li>If the relevancy classifier fails to initialize, the system shall continue operating with brand classification only.</li>
+</ul>
+<hr>
+<h3 id="44-fr-cls-04-classification-orchestration--fallback-logic-status-implemented">4.4 FR-CLS-04: Classification Orchestration &amp; Fallback Logic (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall orchestrate a two-stage classification pipeline that first attempts brand classification, then falls back to relevancy classification, with the following decision logic:</p>
+<p><strong>Decision Flow:</strong></p>
+<ol>
+<li>
+<p><strong>Prepare Text:</strong> Concatenate <code>title</code> and <code>content</code> fields, trim whitespace. If empty, return no match.</p>
+</li>
+<li>
+<p><strong>Stage 1 - Brand Classification:</strong></p>
+<ul>
+<li>Evaluate the text against all brand query rules.</li>
+<li>If a brand rule matches:
+<ul>
+<li>Record the topic, sub-topic, query name, and internal ID.</li>
+<li>Additionally run the relevancy classifier to annotate the <code>relevantByModel</code> flag (informational only; the brand match is authoritative).</li>
+<li>Return classification with method <code>BrandQuery</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Stage 2 - Relevancy Fallback (only if Stage 1 did not match):</strong></p>
+<ul>
+<li>Run the relevancy classifier on the text.</li>
+<li>If relevant (probability &gt;= threshold):
+<ul>
+<li>Assign a synthetic classification:
+<ul>
+<li>topic: <code>General-RelevancyClassification</code></li>
+<li>subTopic: Extracted from the item's <code>query</code> field (text before first period)</li>
+<li>queryName: <code>RelevancyClassification</code></li>
+<li>internalId: <code>74747474747474747474747474747474</code> (fixed placeholder)</li>
+</ul>
+</li>
+<li>Return classification with method <code>RelevancyClassification</code>.</li>
+</ul>
+</li>
+<li>If not relevant: Return no match (item is not stored in the processed container).</li>
+</ul>
+</li>
+</ol>
+<p><strong>Classification Output Structure:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>matched</td>
+<td>Boolean</td>
+<td>Whether any classifier matched</td>
+</tr>
+<tr>
+<td>method</td>
+<td>String or null</td>
+<td><code>'BrandQuery'</code>, <code>'RelevancyClassification'</code>, or <code>null</code></td>
+</tr>
+<tr>
+<td>classification.topic</td>
+<td>String</td>
+<td>Primary classification category</td>
+</tr>
+<tr>
+<td>classification.subTopic</td>
+<td>String</td>
+<td>Secondary classification category</td>
+</tr>
+<tr>
+<td>classification.queryName</td>
+<td>String</td>
+<td>Name of the matching rule</td>
+</tr>
+<tr>
+<td>classification.internalId</td>
+<td>String</td>
+<td>UUID of the matching rule</td>
+</tr>
+<tr>
+<td>relevantByModel</td>
+<td>Boolean</td>
+<td>Whether the relevancy ML model considers this item relevant</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Items that match neither brand rules nor the relevancy model shall not be stored in processed containers.</li>
+<li>The <code>relevantByModel</code> flag shall always reflect the ML model's assessment, regardless of which stage was authoritative.</li>
+<li>Brand classification takes priority over relevancy classification when both could match.</li>
+</ul>
+<hr>
+<h3 id="45-fr-cls-05-worker-pool-management-status-implemented">4.5 FR-CLS-05: Worker Pool Management (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall distribute classification workload across a pool of child processes to achieve parallelism and isolation. Child processes (not worker threads) are used because the ONNX Runtime native bindings are incompatible with Node.js Worker Threads.</p>
+<p><strong>Worker Pool Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Configurable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker Count</td>
+<td>2</td>
+<td>Yes (<code>CLASSIFICATION_WORKERS</code> env var)</td>
+</tr>
+<tr>
+<td>Max Queue Size</td>
+<td>1000</td>
+<td>Yes (<code>MAX_CLASSIFICATION_QUEUE_SIZE</code> env var)</td>
+</tr>
+<tr>
+<td>Init Timeout</td>
+<td>120 seconds</td>
+<td>No (hardcoded)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Worker Pool Behavior:</strong></p>
+<ol>
+<li><strong>Initialization:</strong> The pool forks N child processes at startup. Each worker loads the brand classifier and relevancy classifier. Workers signal readiness via IPC message <code>{ type: 'ready' }</code>.</li>
+<li><strong>Job Distribution:</strong> Jobs are distributed via round-robin across available (non-busy) workers.</li>
+<li><strong>IPC Protocol:</strong> Jobs are sent as <code>{ type: 'classify', jobId, data }</code>. Results are returned as <code>{ type: 'result', jobId, success, result, error }</code>.</li>
+<li><strong>Crash Recovery:</strong> If a worker exits with a non-zero code, it is automatically respawned and re-initialized.</li>
+<li><strong>Backpressure:</strong> If the internal job queue exceeds the max size, new submissions are rejected with a null return.</li>
+<li><strong>Graceful Shutdown:</strong> On SIGTERM/SIGINT, all workers are terminated and pending jobs are abandoned.</li>
+</ol>
+<p><strong>Metrics Tracked:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>jobsSubmitted</td>
+<td>Total jobs submitted to the pool</td>
+</tr>
+<tr>
+<td>jobsCompleted</td>
+<td>Total jobs completed successfully</td>
+</tr>
+<tr>
+<td>jobsFailed</td>
+<td>Total jobs that returned errors</td>
+</tr>
+<tr>
+<td>workerCrashes</td>
+<td>Total worker restarts due to crashes</td>
+</tr>
+<tr>
+<td>processingTimes</td>
+<td>Rolling window of last 1000 job durations (for averaging)</td>
+</tr>
+<tr>
+<td>queueDepth</td>
+<td>Current number of pending jobs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>All workers shall be ready before the system begins accepting webhook data (120s timeout).</li>
+<li>A crashed worker shall be automatically replaced without manual intervention.</li>
+<li>Job submissions shall return immediately (non-blocking); results are delivered via callback.</li>
+</ul>
+<hr>
+<h3 id="46-fr-cls-06-portuguese-language-detection-override-status-implemented">4.6 FR-CLS-06: Portuguese Language Detection Override (Status: Implemented)</h3>
+<p><strong>Description:</strong> Certain brand queries are written in French for French-language content (e.g., &quot;Fixos&quot; product line). When evaluating such queries, Portuguese-language content can produce false positive matches due to lexical similarity between French and Portuguese. The system shall detect Portuguese-language text using the <code>franc</code> library and skip the match for affected queries.</p>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Portuguese language detection shall be applied only to queries that are flagged as susceptible (currently: Fixos-related French queries).</li>
+<li>If Portuguese is detected, the current brand rule match is skipped and evaluation continues to the next rule.</li>
+<li>The detection does not prevent the item from being classified by other rules or the relevancy fallback.</li>
+<li>This false positive system should remain extendible incase new mismatches are identified in the future.</li>
+</ul>
+<hr>
+<h3 id="47-fr-cls-07-relevancy-not-words-filter-status-planned">4.7 FR-CLS-07: Relevancy NOT Words Filter (Status: Planned)</h3>
+<p><strong>Description:</strong> For items that are classified as relevant by the relevancy ML model (i.e., items that went through the relevancy fallback path), the system shall apply an additional filtering step using a configurable list of exclusion words. If any exclusion word for the corresponding keyword/feed is found in the item's text, the item shall be excluded from processed output.</p>
+<p><strong>Purpose:</strong> The relevancy ML model may produce false positives for certain keywords. For example, if the original keyword is &quot;Stryker,&quot; the model might flag content about &quot;Stryker&quot; football players or the comic book character. NOT words like &quot;football,&quot; &quot;comics,&quot; etc., filter out these false positives.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li>A JSON or CSV configuration file mapping each keyword/feed name to a set of exclusion words.</li>
+<li>Example:<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"Stryker"</span>: [<span class="hljs-string">"football"</span>, <span class="hljs-string">"comics"</span>, <span class="hljs-string">"marvel"</span>, <span class="hljs-string">"movie"</span>, <span class="hljs-string">"nfl"</span>],
+  <span class="hljs-attr">"Gamma3"</span>: [<span class="hljs-string">"radiation"</span>, <span class="hljs-string">"gamma ray"</span>, <span class="hljs-string">"hulk"</span>]
+}
+</div></code></pre>
+</li>
+</ul>
+<p><strong>Filter Logic:</strong></p>
+<ol>
+<li>After the relevancy model classifies an item as relevant (method = <code>RelevancyClassification</code>):</li>
+<li>Look up the item's <code>query</code> or <code>feedName</code> in the NOT words configuration.</li>
+<li>If any configured NOT word is found in the item's text (case-insensitive match):
+<ul>
+<li>Mark the item as not relevant.</li>
+<li>Do not store it in the processed container.</li>
+</ul>
+</li>
+<li>If no NOT word matches, proceed normally.</li>
+</ol>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>The filter shall only apply to items classified via the <code>RelevancyClassification</code> method, not to <code>BrandQuery</code> matches.</li>
+<li>The NOT words configuration shall be loadable at startup from a config file without code changes.</li>
+<li>Matching shall be case-insensitive.</li>
+</ul>
+<hr>
+<h2 id="5-functional-requirements-3-data-access--monitoring">5. Functional Requirements 3: Data Access &amp; Monitoring</h2>
+<h3 id="51-fr-api-01-kwatch-data-retrieval-api-status-implemented">5.1 FR-API-01: KWatch Data Retrieval API (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall expose REST endpoints for retrieving raw and processed KWatch data with pagination support.</p>
+<p><strong>Endpoints:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/kwatch</code></td>
+<td>Retrieve paginated raw KWatch items</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/kwatch/processed</code></td>
+<td>Retrieve paginated processed KWatch items</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Query Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>page</td>
+<td>Integer</td>
+<td>1</td>
+<td>Page number (1-indexed)</td>
+</tr>
+<tr>
+<td>limit</td>
+<td>Integer</td>
+<td>10</td>
+<td>Items per page</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Structure:</strong></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"items"</span>: [ <span class="hljs-comment">/* array of documents */</span> ],
+  <span class="hljs-attr">"pagination"</span>: {
+    <span class="hljs-attr">"page"</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">"limit"</span>: <span class="hljs-number">10</span>,
+    <span class="hljs-attr">"totalItems"</span>: <span class="hljs-number">150</span>,
+    <span class="hljs-attr">"totalPages"</span>: <span class="hljs-number">15</span>
+  },
+  <span class="hljs-attr">"queueStatus"</span>: {
+    <span class="hljs-attr">"pending"</span>: <span class="hljs-number">3</span>,
+    <span class="hljs-attr">"processing"</span>: <span class="hljs-literal">false</span>
+  }
+}
+</div></code></pre>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Both endpoints shall support pagination via <code>page</code> and <code>limit</code> query parameters.</li>
+<li>The response shall include the current queue status (pending count and processing flag).</li>
+<li>Items shall be ordered by Cosmos DB default ordering (insertion order).</li>
+</ul>
+<hr>
+<h3 id="52-fr-api-02-google-alerts-data-retrieval-api-status-implemented">5.2 FR-API-02: Google Alerts Data Retrieval API (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall expose REST endpoints for retrieving raw and processed Google Alerts data, feed state information, and manual scrape control.</p>
+<p><strong>Endpoints:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/google-alerts</code></td>
+<td>Retrieve paginated raw Google Alerts articles</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/google-alerts/processed</code></td>
+<td>Retrieve paginated processed Google Alerts articles</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/google-alerts/state</code></td>
+<td>Retrieve all feed state documents and scraper status</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/google-alerts/trigger</code></td>
+<td>Manually trigger a scrape cycle</td>
+</tr>
+</tbody>
+</table>
+<p><strong>State Response Structure:</strong></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"feeds"</span>: [ <span class="hljs-comment">/* array of feed state documents */</span> ],
+  <span class="hljs-attr">"scraperStatus"</span>: {
+    <span class="hljs-attr">"isRunning"</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">"lastScrapeAt"</span>: <span class="hljs-string">"2026-02-22T10:00:00.000Z"</span>,
+    <span class="hljs-attr">"lastScrapeStats"</span>: { <span class="hljs-comment">/* cycle metrics */</span> },
+    <span class="hljs-attr">"nextScrapeInMs"</span>: <span class="hljs-number">3600000</span>,
+    <span class="hljs-attr">"totalFeeds"</span>: <span class="hljs-number">50</span>,
+    <span class="hljs-attr">"blockedWebsites"</span>: [<span class="hljs-string">"stryker.com"</span>, <span class="hljs-string">"wikipedia.org"</span>]
+  }
+}
+</div></code></pre>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Data retrieval endpoints shall support the same pagination as KWatch APIs.</li>
+<li>The state endpoint shall include both per-feed state and aggregate scraper status.</li>
+<li>The trigger endpoint shall start an async scrape and return immediately with confirmation.</li>
+</ul>
+<hr>
+<h3 id="53-fr-api-03-on-demand-classification-api-status-implemented">5.3 FR-API-03: On-Demand Classification API (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall expose an API endpoint for classifying arbitrary text on demand, independent of the ingestion pipeline. This enables testing and ad-hoc analysis.</p>
+<p><strong>Endpoints:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/classify</code></td>
+<td>Classify arbitrary text</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/classify/status</code></td>
+<td>Get worker pool status</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request Body (Classify):</strong></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"text"</span>: <span class="hljs-string">"optional - used if provided"</span>,
+  <span class="hljs-attr">"title"</span>: <span class="hljs-string">"optional - concatenated with content"</span>,
+  <span class="hljs-attr">"content"</span>: <span class="hljs-string">"optional - primary text for classification"</span>
+}
+</div></code></pre>
+<p><strong>Response (Classify):</strong></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"matched"</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">"method"</span>: <span class="hljs-string">"BrandQuery"</span>,
+  <span class="hljs-attr">"classification"</span>: {
+    <span class="hljs-attr">"topic"</span>: <span class="hljs-string">"Ankle Joint"</span>,
+    <span class="hljs-attr">"subTopic"</span>: <span class="hljs-string">"GRAVITY Synchfix"</span>,
+    <span class="hljs-attr">"queryName"</span>: <span class="hljs-string">"Gravity Synchfix"</span>,
+    <span class="hljs-attr">"internalId"</span>: <span class="hljs-string">"abc-def-123"</span>
+  },
+  <span class="hljs-attr">"relevantByModel"</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">"textLength"</span>: <span class="hljs-number">245</span>
+}
+</div></code></pre>
+<p><strong>Response (Status):</strong></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"initialized"</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">"workerCount"</span>: <span class="hljs-number">2</span>,
+  <span class="hljs-attr">"workers"</span>: [
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-number">0</span>, <span class="hljs-attr">"ready"</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">"busy"</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">"ready"</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">"busy"</span>: <span class="hljs-literal">false</span> }
+  ]
+}
+</div></code></pre>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>At least one of <code>text</code>, <code>title</code>, or <code>content</code> must be provided; otherwise return HTTP 400.</li>
+<li>The endpoint shall use the same classification pipeline as the ingestion flow.</li>
+</ul>
+<hr>
+<h3 id="54-fr-api-04-health--monitoring-api-status-implemented">5.4 FR-API-04: Health &amp; Monitoring API (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall expose a health check endpoint that reports the operational status of all subsystems along with key performance metrics.</p>
+<p><strong>Endpoint:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/health</code></td>
+<td>System health and metrics</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response Fields:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>status</td>
+<td>Overall system status (&quot;healthy&quot;)</td>
+</tr>
+<tr>
+<td>uptime</td>
+<td>Server uptime in seconds</td>
+</tr>
+<tr>
+<td>workerPool.initialized</td>
+<td>Whether the worker pool is ready</td>
+</tr>
+<tr>
+<td>workerPool.workerCount</td>
+<td>Number of active workers</td>
+</tr>
+<tr>
+<td>workerPool.metrics</td>
+<td>Job counts, crash counts, avg processing time, queue depth</td>
+</tr>
+<tr>
+<td>kwatchQueue.pending</td>
+<td>Number of items waiting in the KWatch queue</td>
+</tr>
+<tr>
+<td>kwatchQueue.processing</td>
+<td>Whether a batch is currently being processed</td>
+</tr>
+<tr>
+<td>googleAlerts.isRunning</td>
+<td>Whether a scrape cycle is in progress</td>
+</tr>
+<tr>
+<td>googleAlerts.lastScrapeAt</td>
+<td>Timestamp of last completed scrape</td>
+</tr>
+<tr>
+<td>googleAlerts.totalFeeds</td>
+<td>Number of configured RSS feeds</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>The endpoint shall always return HTTP 200 (even if subsystems are degraded) with accurate status information.</li>
+<li>Response time shall be under 100ms (no database queries required).</li>
+</ul>
+<hr>
+<h3 id="55-fr-api-05-dashboard-status-implemented">5.5 FR-API-05: Dashboard (Status: Implemented)</h3>
+<p><strong>Description:</strong> The system shall serve a single-page web dashboard for operational visibility. The dashboard provides a read-only view of ingested data, classification results, and system status.</p>
+<p><strong>Dashboard Features:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data Views</td>
+<td>Toggle between KWatch Raw and KWatch Processed views (keyboard shortcut: Ctrl+K)</td>
+</tr>
+<tr>
+<td>Pagination</td>
+<td>Navigate through items with 10 items per page</td>
+</tr>
+<tr>
+<td>Statistics</td>
+<td>Display total item count, current page, and last updated timestamp</td>
+</tr>
+<tr>
+<td>Queue Status</td>
+<td>Show pending items and processing state</td>
+</tr>
+<tr>
+<td>Platform Indicators</td>
+<td>Display platform-specific identifiers for each item (Reddit, Twitter, LinkedIn, etc.)</td>
+</tr>
+<tr>
+<td>Sentiment Display</td>
+<td>Show sentiment classification for processed items</td>
+</tr>
+<tr>
+<td>Source Links</td>
+<td>Direct links to original source articles</td>
+</tr>
+<tr>
+<td>Classification Details</td>
+<td>Display topic, sub-topic, and matching query for classified items</td>
+</tr>
+<tr>
+<td>Auto-Refresh</td>
+<td>Automatically refresh data every 2 minutes</td>
+</tr>
+<tr>
+<td>Dark Theme</td>
+<td>Dark-themed responsive design suitable for monitoring screens</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>The dashboard shall be served as static files from the <code>/public</code> directory.</li>
+<li>All data shall be fetched from the existing REST APIs (no direct database access).</li>
+<li>The UI shall be responsive and functional on both desktop and mobile browsers.</li>
+</ul>
+<hr>
+<h3 id="56-fr-api-06-adverse-event-notification-system-status-planned">5.6 FR-API-06: Adverse Event Notification System (Status: Planned)</h3>
+<p><strong>Description:</strong> The system shall send automated email notifications when a classified item's topic indicates a death-related adverse event involving competitor products. Specifically, if the brand classification assigns the topic &quot;Competitors&quot; with a sub-topic indicating death-related events (e.g., &quot;Death Related Event Notification&quot;), an email alert shall be triggered to designated recipients.</p>
+<p><strong>Trigger Condition:</strong></p>
+<ul>
+<li>Classification topic: Death-related events involving competitors (exact topic/sub-topic names to be finalized).</li>
+</ul>
+<p><strong>Notification Content:</strong></p>
+<ul>
+<li>Source platform and link to original post</li>
+<li>Classification details (topic, sub-topic, query name)</li>
+<li>Content snippet or summary</li>
+<li>Timestamp of the original post</li>
+</ul>
+<p><strong>Architecture:</strong> To be determined. Email delivery mechanism (SMTP, Azure Communication Services, SendGrid, etc.) and recipient management are under evaluation.</p>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Notifications shall be sent in near-real-time after classification (within minutes, not hours).</li>
+<li>Duplicate notifications for the same item shall be prevented.</li>
+<li>Notification failures shall be logged but shall not block the classification pipeline.</li>
+</ul>
+<hr>
+<h3 id="57-fr-api-07-sharepoint-list-publishing-status-planned">5.7 FR-API-07: SharePoint List Publishing (Status: Planned)</h3>
+<p><strong>Description:</strong> The system shall publish every successfully processed document (from both KWatch and Google Alerts) to a SharePoint Online list using the Microsoft Graph API. An Azure AD app registration will provide the necessary credentials.</p>
+<p><strong>Unified Document Schema:</strong></p>
+<p>The following fields shall be mapped from processed KWatch and Google Alerts documents into a single unified structure for the SharePoint list:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Source (KWatch)</th>
+<th>Source (Google Alerts)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>String</td>
+<td>item.id</td>
+<td>item.id</td>
+<td>Unique document identifier</td>
+</tr>
+<tr>
+<td>platform</td>
+<td>String</td>
+<td>item.platform</td>
+<td><code>'google-alerts'</code></td>
+<td>Source platform</td>
+</tr>
+<tr>
+<td>query</td>
+<td>String</td>
+<td>item.query</td>
+<td>item.feedName</td>
+<td>Keyword or feed name that triggered the item</td>
+</tr>
+<tr>
+<td>datetime</td>
+<td>String (ISO 8601)</td>
+<td>item.datetime</td>
+<td>item.publishedAt</td>
+<td>Original publication timestamp</td>
+</tr>
+<tr>
+<td>link</td>
+<td>String (URL)</td>
+<td>item.link</td>
+<td>item.extractedUrl</td>
+<td>URL to the original content</td>
+</tr>
+<tr>
+<td>author</td>
+<td>String</td>
+<td>item.author</td>
+<td><code>'N/A'</code></td>
+<td>Author of the content (not available for Google Alerts)</td>
+</tr>
+<tr>
+<td>title</td>
+<td>String</td>
+<td>item.title</td>
+<td>item.title</td>
+<td>Title of the content</td>
+</tr>
+<tr>
+<td>content</td>
+<td>String</td>
+<td>item.content</td>
+<td>item.content</td>
+<td>Full text body (or snippet)</td>
+</tr>
+<tr>
+<td>sentiment</td>
+<td>String</td>
+<td>item.sentiment</td>
+<td><code>'neutral'</code></td>
+<td>Sentiment classification</td>
+</tr>
+<tr>
+<td>topic</td>
+<td>String</td>
+<td>item.topic</td>
+<td>item.topic</td>
+<td>Primary classification category</td>
+</tr>
+<tr>
+<td>subtopic</td>
+<td>String</td>
+<td>item.subTopic</td>
+<td>item.subTopic</td>
+<td>Secondary classification category</td>
+</tr>
+<tr>
+<td>relevantByModel</td>
+<td>Boolean</td>
+<td>item.relevantByModel</td>
+<td>item.relevantByModel</td>
+<td>Whether the ML model considers this relevant</td>
+</tr>
+<tr>
+<td>isDuplicate</td>
+<td>Boolean</td>
+<td>item.isDuplicate</td>
+<td><code>false</code></td>
+<td>Whether this was a duplicate item</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Processed Container Additions:</strong></p>
+<p>Two new fields shall be added to existing processed containers (KWatchProcessedData and GoogleAlertsProcessedData):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>publishedToSharePoint</td>
+<td>Boolean</td>
+<td>Whether the item was successfully published to the SharePoint list</td>
+</tr>
+<tr>
+<td>publishedAt</td>
+<td>String (ISO 8601) or null</td>
+<td>Timestamp of successful publication; null if not yet published</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Publishing Flow:</strong></p>
+<ol>
+<li>After a document is successfully classified and stored in the processed container, initiate a SharePoint publish request.</li>
+<li>Map the processed document fields to the unified schema.</li>
+<li>Call the Microsoft Graph API to create a new list item in the configured SharePoint list.</li>
+<li>On success: Update the processed document with <code>publishedToSharePoint: true</code> and <code>publishedAt: &lt;timestamp&gt;</code>.</li>
+<li>On failure: Log the error; the item remains in the processed container with <code>publishedToSharePoint: false</code> for retry.</li>
+</ol>
+<p><strong>Authentication:</strong></p>
+<ul>
+<li>Azure AD app registration with application permissions for Microsoft Graph API.</li>
+<li>Credentials: Client ID, Client Secret (or certificate), Tenant ID - stored as environment variables.</li>
+<li>Required Graph API permission: <code>Sites.ReadWrite.All</code> or <code>Sites.Manage.All</code>.</li>
+</ul>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+<li>Every classified document from both KWatch and Google Alerts pipelines shall be published to SharePoint.</li>
+<li>Publishing failures shall not block or delay the classification pipeline.</li>
+<li>Documents that fail to publish shall be identifiable via the <code>publishedToSharePoint: false</code> flag for manual retry.</li>
+<li>The unified schema shall be consistent regardless of whether the source is KWatch or Google Alerts.</li>
+</ul>
+<hr>
+<h2 id="6-non-functional-requirements">6. Non-Functional Requirements</h2>
+<h3 id="61-nfr-01-performance">6.1 NFR-01: Performance</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Webhook Response Time</td>
+<td>&lt; 50ms (immediate HTTP 200, async processing)</td>
+</tr>
+<tr>
+<td>Classification Throughput</td>
+<td>Support processing 10 items per 60-second batch cycle</td>
+</tr>
+<tr>
+<td>Health API Response Time</td>
+<td>&lt; 100ms (no database queries)</td>
+</tr>
+<tr>
+<td>RSS Scrape Cycle Completion</td>
+<td>&lt; 15 minutes for 50+ feeds (including content fetch)</td>
+</tr>
+<tr>
+<td>Content Fetch Timeout</td>
+<td>10 seconds per article (abort after)</td>
+</tr>
+<tr>
+<td>Worker Initialization</td>
+<td>&lt; 120 seconds for all workers to reach ready state</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-nfr-02-scalability">6.2 NFR-02: Scalability</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker Scaling</td>
+<td>The number of classification workers shall be configurable via environment variable without code changes</td>
+</tr>
+<tr>
+<td>Queue Capacity</td>
+<td>The maximum queue size shall be configurable to handle burst traffic</td>
+</tr>
+<tr>
+<td>Feed Scaling</td>
+<td>New RSS feeds can be added by updating the JSON config file without code changes</td>
+</tr>
+<tr>
+<td>Rule Scaling</td>
+<td>New brand queries can be added to the CSV without code changes; the system loads all rules at startup</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63-nfr-03-reliability--fault-tolerance">6.3 NFR-03: Reliability &amp; Fault Tolerance</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker Crash Recovery</td>
+<td>Crashed worker processes shall be automatically restarted without manual intervention</td>
+</tr>
+<tr>
+<td>Graceful Shutdown</td>
+<td>On SIGTERM/SIGINT, the system shall stop accepting new items, finish in-progress work where possible, and terminate workers cleanly</td>
+</tr>
+<tr>
+<td>Pipeline Isolation</td>
+<td>Failure to process a single item shall not affect other items in the same batch</td>
+</tr>
+<tr>
+<td>RSS Feed Resilience</td>
+<td>A failing RSS feed shall not prevent other feeds from being scraped</td>
+</tr>
+<tr>
+<td>Database Conflict Handling</td>
+<td>Cosmos DB 409 conflicts shall be handled gracefully (duplicate recovery for KWatch, skip for Google Alerts)</td>
+</tr>
+<tr>
+<td>Scraper Mutual Exclusion</td>
+<td>Only one scrape cycle shall run at a time to prevent duplicate processing</td>
+</tr>
+</tbody>
+</table>
+<h3 id="64-nfr-04-security">6.4 NFR-04: Security</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Secret Management</td>
+<td>Database credentials, API keys, and service secrets shall be stored in environment variables, never in code or config files</td>
+</tr>
+<tr>
+<td>CORS</td>
+<td>Cross-origin request handling shall be enabled via configurable CORS middleware</td>
+</tr>
+<tr>
+<td>Input Validation</td>
+<td>All webhook payloads shall be validated for required fields before processing</td>
+</tr>
+<tr>
+<td>No Authentication (Current)</td>
+<td>The current system does not implement API authentication (acceptable for internal/VPN-only deployment)</td>
+</tr>
+<tr>
+<td>SharePoint Auth (Future)</td>
+<td>SharePoint integration shall use OAuth 2.0 client credentials flow via Azure AD app registration</td>
+</tr>
+</tbody>
+</table>
+<h3 id="65-nfr-05-maintainability">6.5 NFR-05: Maintainability</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modular Architecture</td>
+<td>The system shall maintain separation between ingestion, classification, storage, and API layers</td>
+</tr>
+<tr>
+<td>Config-Driven Rules</td>
+<td>Brand queries, RSS feeds, blocklists, and model parameters shall be configurable without code changes</td>
+</tr>
+<tr>
+<td>Structured Logging</td>
+<td>All pipeline stages shall produce structured log messages with consistent prefixes (e.g., <code>[KWatchQueue]</code>, <code>[GoogleAlerts]</code>, <code>[Worker-N]</code>)</td>
+</tr>
+<tr>
+<td>Test Coverage</td>
+<td>Core services (classification, worker pool, queue) shall have unit and integration test coverage</td>
+</tr>
+</tbody>
+</table>
+<h3 id="66-nfr-06-deployment">6.6 NFR-06: Deployment</h3>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Docker Support</td>
+<td>The system shall be deployable as a Docker container with all models pre-baked into the image</td>
+</tr>
+<tr>
+<td>Azure App Service</td>
+<td>The system shall run on Azure App Service (both Linux containers and Windows via IIS/iisnode)</td>
+</tr>
+<tr>
+<td>Single-Instance Design</td>
+<td>The system is designed for single-instance deployment; horizontal scaling requires external coordination</td>
+</tr>
+<tr>
+<td>Health Monitoring</td>
+<td>The <code>/api/health</code> endpoint shall be usable as an Azure App Service health probe</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-external-interface-requirements">7. External Interface Requirements</h2>
+<h3 id="71-kwatch-webhook-interface">7.1 KWatch Webhook Interface</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protocol</td>
+<td>HTTP/HTTPS</td>
+</tr>
+<tr>
+<td>Method</td>
+<td>POST</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>/api/webhook/kwatch</code></td>
+</tr>
+<tr>
+<td>Content Type</td>
+<td><code>application/json</code></td>
+</tr>
+<tr>
+<td>Direction</td>
+<td>Inbound (KWatch → PRISM)</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>None (network-level security assumed)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Payload:</strong> See Section 3.1 for field definitions.</p>
+<h3 id="72-google-alerts-rss-interface">7.2 Google Alerts RSS Interface</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protocol</td>
+<td>HTTPS</td>
+</tr>
+<tr>
+<td>Format</td>
+<td>RSS 2.0 / Atom</td>
+</tr>
+<tr>
+<td>Direction</td>
+<td>Outbound (PRISM → Google)</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>None (public feeds)</td>
+</tr>
+<tr>
+<td>Rate Limiting</td>
+<td>Controlled by scrape interval (2 hours default)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Data Extracted:</strong> Feed entries with title, link (Google redirect URL), description/snippet, publication date.</p>
+<h3 id="73-azure-cosmos-db-interface">7.3 Azure Cosmos DB Interface</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protocol</td>
+<td>HTTPS (Cosmos DB REST API via SDK)</td>
+</tr>
+<tr>
+<td>SDK</td>
+<td><code>@azure/cosmos</code> v4.9.0</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>Primary key (endpoint + key from environment variables)</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>Single database (configurable name)</td>
+</tr>
+<tr>
+<td>Containers</td>
+<td>5 containers (see Section 4 of SDD for schemas)</td>
+</tr>
+<tr>
+<td>Operations</td>
+<td>Create (insert), Read (point read, query), Upsert (state documents)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="74-microsoft-graph-api-interface-future---sharepoint">7.4 Microsoft Graph API Interface (Future - SharePoint)</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protocol</td>
+<td>HTTPS</td>
+</tr>
+<tr>
+<td>API Version</td>
+<td>Microsoft Graph v1.0</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>OAuth 2.0 Client Credentials (Azure AD app registration)</td>
+</tr>
+<tr>
+<td>Direction</td>
+<td>Outbound (PRISM → SharePoint Online)</td>
+</tr>
+<tr>
+<td>Operations</td>
+<td>Create list items</td>
+</tr>
+<tr>
+<td>Required Permissions</td>
+<td><code>Sites.ReadWrite.All</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Credentials Required:</strong> Tenant ID, Client ID, Client Secret - stored as environment variables.</p>
+<h3 id="75-translation-service-interface-future">7.5 Translation Service Interface (Future)</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protocol</td>
+<td>HTTP/HTTPS</td>
+</tr>
+<tr>
+<td>Direction</td>
+<td>Outbound (PRISM → Translation Service)</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>Internal service communication (to be determined)</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>Separate Azure App Service</td>
+</tr>
+<tr>
+<td>Engine</td>
+<td>Argos Translate (open-source neural MT)</td>
+</tr>
+<tr>
+<td>Supported Languages</td>
+<td>23 languages → English</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Request:</strong> Source text + source language code.
+<strong>Response:</strong> Translated English text.</p>
+<hr>
+<p><em>End of SRS Document</em></p>
+
+</body>
+</html>
