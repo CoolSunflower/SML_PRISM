@@ -1,7 +1,7 @@
 # docker build --no-cache -t adarshtesting1/sml-backend:latest .
 # docker push adarshtesting1/sml-backend:latest
 
-# Use Node.js 18 LTS on Linux
+# Use Node.js 20 LTS on Linux
 FROM node:20-bookworm
 
 # Install system dependencies for native modules
@@ -18,22 +18,23 @@ WORKDIR /app
 ENV HF_HOME=/app/.hf-cache
 ENV TRANSFORMERS_CACHE=/app/.hf-cache
 
-# Copy package files
+# Backend dependencies
 COPY package*.json ./
-
-# Install production dependencies
 RUN npm ci --only=production
 
-# Copy model configuration and download script
+# Pre-download HuggingFace models
 COPY models/model_config.json ./models/
 COPY scripts/download-models.js ./scripts/
-
-# Pre-download HuggingFace models during build
-# Clean any existing cache first
 RUN rm -rf /app/.hf-cache /app/node_modules/@huggingface/transformers/.cache && \
     node scripts/download-models.js
 
-# Copy remaining application files
+# Frontend build
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm ci
+COPY frontend/ ./frontend/
+RUN cd frontend && npm run build
+
+# Copy remaining application files 
 COPY . .
 
 # Expose port (Azure App Service uses PORT env var)

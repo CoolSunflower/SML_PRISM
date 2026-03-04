@@ -18,6 +18,7 @@ const {
 } = require('../config/database');
 const workerPool = require('./classificationWorkerPool');
 const { computeSentiment } = require('../utils/sentimentAnalyzer');
+const analyticsService = require('./analyticsService');
 
 const RSS_FEEDS = require('../config/alerts_rss_feeds.json');
 const NOT_WEBSITES = require('../config/alerts_not_websites.json');
@@ -263,6 +264,7 @@ async function handleClassificationResult(err, result, item) {
 
   try {
     await googleAlertsProcessedContainer.items.create(processedDoc);
+    analyticsService.recordProcessedItem('googleAlerts', processedDoc);
     console.log(`[GoogleAlerts] Classified ${item.id} via ${result.method}: "${cls.topic}/${cls.subTopic}"`);
   } catch (dbErr) {
     if (dbErr.code === 409) {
@@ -343,6 +345,7 @@ async function processQueue(queue) {
 
     try {
       await googleAlertsRawContainer.items.create(rawDoc);
+      analyticsService.recordRawItem('googleAlerts', rawDoc);
       rawInserted++;
     } catch (dbErr) {
       if (dbErr.code === 409) {

@@ -7,6 +7,8 @@ const itemsRoutes = require('./items'); // Testing routes
 const healthRoutes = require('./health');
 const classifyRoutes = require('./classify');
 const googleAlertsRoutes = require('./googleAlerts');
+const analyticsRoutes = require('./analytics');
+const filtersRoutes = require('./filters');
 
 // Mount routes
 router.use('/webhook', webhookRoutes);
@@ -15,5 +17,7 @@ router.use('/items', itemsRoutes);
 router.use('/health', healthRoutes);
 router.use('/classify', classifyRoutes);
 router.use('/google-alerts', googleAlertsRoutes);
+router.use('/analytics', analyticsRoutes);
+router.use('/filters', filtersRoutes);
 
 module.exports = router;

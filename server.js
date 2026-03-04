@@ -11,6 +11,7 @@ const routes = require('./routes');
 const { startQueueProcessor } = require('./services/kwatchQueue');
 const workerPool = require('./services/classificationWorkerPool');
 const { startGoogleAlertsScraper, stopGoogleAlertsScraper } = require('./services/googleAlertsService');
+const analyticsService = require('./services/analyticsService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,15 +25,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
 app.use('/api', routes);
-
-// Root route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'), (err) => {
-    if (err) {
-      res.status(500).send('Frontend not found. Please deploy frontend files to /public folder.');
-    }
-  });
-});
 
 // SRS Route
 app.get('/srs', (req, res) => {
@@ -52,6 +44,15 @@ app.get('/sdd', (req, res) => {
   });
 });
 
+// SPA catch-all: serve index.html for all non-API, non-static routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'), (err) => {
+    if (err) {
+      res.status(500).send('Frontend not found. Run "npm run build:frontend" to build the UI.');
+    }
+  });
+});
+
 // Initialize worker pool and start server
 async function startServer() {
   // Initialize Classification Worker Pool
@@ -66,13 +67,23 @@ async function startServer() {
     console.log('[Server] Continuing without classification workers');
   }
 
+  // Initialize Analytics (load from Cosmos DB — runs once at startup)
+  console.log('[Server] Loading analytics data...');
+  try {
+    await analyticsService.initialize();
+    console.log('[Server] Analytics data loaded');
+  } catch (err) {
+    console.error('[Server] Analytics initialization failed:', err.message);
+    console.log('[Server] Continuing without cached analytics');
+  }
+
   // Start queue processor for KWatch
   startQueueProcessor();
   console.log('[Server] KWatch queue processor started');
 
-  // Start Google Alerts RSS scraper (runs every 2 hours, initial scrape on startup)
-  startGoogleAlertsScraper();
-  console.log('[Server] Google Alerts scraper started');
+  // // Start Google Alerts RSS scraper (runs every 2 hours, initial scrape on startup)
+  // startGoogleAlertsScraper();
+  // console.log('[Server] Google Alerts scraper started');
 
   app.listen(PORT, () => {
     const poolMetrics = workerPool.getMetrics();

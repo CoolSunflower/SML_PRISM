@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { kwatchContainer, kwatchProcessedContainer } = require('../config/database');
 const workerPool = require('./classificationWorkerPool');
+const analyticsService = require('./analyticsService');
 
 // In-memory queue for handling webhook notifications
 const kwatchQueue = [];
@@ -55,6 +56,7 @@ async function handleClassificationResult(err, result, item) {
 
   try {
     await kwatchProcessedContainer.items.create(processedDocument);
+    analyticsService.recordProcessedItem('kwatch', processedDocument);
     console.log(`[KWatchQueue] Item ${item.id} classified via ${result.method}: "${classification.topic}/${classification.subTopic}"`);
   } catch (dbErr) {
     if (dbErr.code === 409) {
@@ -112,6 +114,13 @@ async function processKWatchQueue() {
 
     const successful = results.filter(r => r.status === 'fulfilled').length + duplicateInsertedCount;
     const failed = results.filter((r, idx) => r.status === 'rejected' && !handledDuplicateIndexes.has(idx)).length + duplicateInsertFailedCount;
+
+    // Track raw inserts in analytics
+    for (let i = 0; i < results.length; i++) {
+      if (results[i].status === 'fulfilled' || handledDuplicateIndexes.has(i)) {
+        analyticsService.recordRawItem('kwatch', batch[i]);
+      }
+    }
 
     // Step 2: Submit classification jobs to worker pool
     let jobsSubmitted = 0;

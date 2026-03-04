@@ -5,14 +5,17 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "dev": "nodemon --ignore frontend/ server.js",
     "test": "jest --runInBand --detectOpenHandles",
     "test:watch": "jest --watch --runInBand",
     "test:workers": "jest test/classificationWorkerPool.test.js --runInBand --detectOpenHandles",
     "test:integration": "jest test/kwatch-integration.test.js --runInBand --detectOpenHandles --forceExit",
     "migrate:fetch": "node scripts/1-fetch-raw-data.js",
     "migrate:test": "node scripts/2-test-classification.js",
-    "migrate:push": "node scripts/3-push-to-database.js"
+    "migrate:push": "node scripts/3-push-to-database.js",
+    "install:frontend": "cd frontend && npm install",
+    "build:frontend": "cd frontend && npm run build",
+    "dev:frontend": "cd frontend && npm run dev"
   },
   "keywords": [
     "azure",

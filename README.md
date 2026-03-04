@@ -1,6 +1,6 @@
-# Social Media Listening - Backend
+# Social Media Listening
 
-Express.js backend that ingests social media mentions from multiple sources, classifies them using a two-stage ML pipeline (rule-based brand matching + SBERT/SVM relevancy model), and stores results in Azure Cosmos DB.
+Express.js backend + React frontend for monitoring social media mentions from multiple sources, classifying them using a two-stage ML pipeline (rule-based brand matching + SBERT/SVM relevancy model), and visualizing results with analytics dashboards. Data is stored in Azure Cosmos DB.
 
 ## Data Sources
 
@@ -43,10 +43,12 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
 - In-memory queue with configurable batch size (10) and interval (60 s) for KWatch
 - Content-hash deduplication (KWatch) and URL-hash deduplication (Google Alerts)
 - Multi-process classification worker pool (child processes, not threads, for ONNX compatibility)
-- Paginated REST endpoints for raw and processed data from both sources
+- **In-memory analytics engine** — loads aggregated stats from Cosmos at startup, incrementally updated on each insert, exposes daily counts, sentiment, topic distribution, and classification method split
+- **React + Vite frontend** — SPA dashboard with source/processing toggles, analytics charts (Recharts), filterable feed, topic & date-range filters, all styled with Tailwind CSS
+- Paginated REST endpoints for raw and processed data from both sources with optional date/topic filters
 - Health endpoint exposing queue, worker pool, and scraper metrics
 - Standalone classification API (`POST /api/classify`)
-- Docker-ready with pre-downloaded HuggingFace models baked into the image
+- Docker-ready with pre-downloaded HuggingFace models and pre-built frontend baked into the image
 - Azure App Service deployment support via `web.config` (iisnode)
 
 ## Prerequisites
@@ -57,9 +59,12 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
 
 ## Setup
 
+0. Installing Node & Git, Clone the repo: `git clone <URL>`
+
 1. **Install dependencies:**
    ```bash
    npm install
+   npm run install:frontend
    ```
 
 2. **Configure environment** — create a `.env` file:
@@ -106,7 +111,13 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
    ```
    Entries support subdomain matching (`espn.com` also blocks `www.espn.com`).
 
-5. **Start the server:**
+5. **Build the frontend:**
+   ```bash
+   npm run build:frontend
+   ```
+   This outputs the production React build to `public/`.
+
+6. **Start the server:**
    ```bash
    node server.js        # production
    npm run dev            # development (nodemon)
@@ -114,8 +125,24 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
 
    On startup the server will:
    - Spawn classification workers and load brand queries + SBERT/ONNX models
+   - Load analytics data from Cosmos DB (30-day window)
    - Start the KWatch queue processor (60 s interval)
    - Start the Google Alerts RSS scraper (initial scrape immediately, then every 2 hours)
+   - Serve the React frontend at `http://localhost:3000`
+
+### Development Workflow
+
+For active frontend development, run backend and Vite dev server in parallel:
+
+```bash
+# Terminal 1 — backend on :3000
+npm run dev
+
+# Terminal 2 — Vite HMR on :5173, proxies /api to :3000
+npm run dev:frontend
+```
+
+Open `http://localhost:5173` for hot-reloading frontend development.
 
 ## API Endpoints
 
@@ -136,17 +163,23 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/kwatch?page=1&limit=10` | Paginated raw KWatch data |
-| `GET` | `/api/kwatch/processed?page=1&limit=10` | Paginated classified KWatch data |
+| `GET` | `/api/kwatch/processed?page=1&limit=10` | Paginated classified KWatch data (filters: `startDate`, `endDate`, `topic`, `subTopic`) |
 | `DELETE` | `/api/kwatch/:id?platform=<partition>` | Delete a raw KWatch item |
 
 ### Google Alerts Data
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/google-alerts?page=1&limit=10` | Paginated raw Google Alerts articles |
-| `GET` | `/api/google-alerts/processed?page=1&limit=10` | Paginated classified Google Alerts articles |
+| `GET` | `/api/google-alerts/processed?page=1&limit=10` | Paginated classified Google Alerts articles (filters: `startDate`, `endDate`, `topic`, `subTopic`) |
 | `GET` | `/api/google-alerts/state` | Per-feed scrape state (last hash, timestamp, entry count) |
 | `POST` | `/api/google-alerts/trigger` | Manually trigger a scrape cycle (409 if already running) |
 | `DELETE` | `/api/google-alerts/:id` | Delete a raw Google Alerts item |
+
+### Analytics & Filters
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/analytics?source=all&view=processed&days=7` | Aggregated analytics (daily counts, sentiment, topics, classification method). `source`: `all\|kwatch\|google-alerts`, `view`: `raw\|processed`, `days`: `7\|14\|30` |
+| `GET` | `/api/filters/topics` | Topic-subtopic hierarchy parsed from `BrandQueries.csv` |
 
 ### Classification
 | Method | Path | Description |
@@ -187,14 +220,17 @@ models/
 routes/
   index.js                            # Route aggregator
   webhook.js                          # POST /api/webhook/kwatch
-  kwatch.js                           # GET/DELETE /api/kwatch
-  googleAlerts.js                     # GET/POST/DELETE /api/google-alerts
+  kwatch.js                           # GET/DELETE /api/kwatch (with filter params on processed)
+  googleAlerts.js                     # GET/POST/DELETE /api/google-alerts (with filter params)
+  analytics.js                        # GET /api/analytics — aggregated stats
+  filters.js                          # GET /api/filters/topics — topic hierarchy
   classify.js                         # POST /api/classify, GET /api/classify/status
   health.js                           # GET /api/health
   items.js                            # PoC CRUD for test items
 services/
   kwatchQueue.js                      # In-memory queue, batch processor, dedup logic
   googleAlertsService.js              # RSS scraper, state management, content fetching
+  analyticsService.js                 # In-memory analytics engine (load, track, query)
   classificationService.js            # Orchestrates brand + relevancy classification
   classificationWorkerPool.js         # Child-process pool with round-robin dispatch
   brandClassifier.js                  # CSV → AST parser, boolean query evaluator, lang detection
@@ -207,8 +243,26 @@ scripts/
   download-models.js                  # Pre-download HuggingFace models for Docker
   Migration1/                         # Data migration scripts (fetch → classify → push)
   Migration2/                         # Second migration batch
+frontend/                             # React + Vite SPA
+  src/
+    api/                              # Fetch wrappers (client, analytics, kwatch, googleAlerts)
+    components/
+      analytics/                      # PostsChart, SentimentCard, TopTopicsCard, MethodSplitCard
+      feed/                           # FeedList, FeedCard, KWatchCard, GoogleAlertsCard
+      filters/                        # FilterDrawer, DateRangeFilter, TopicFilter
+      layout/                         # Header, FilterBar
+      ui/                             # Badge, Pagination, Spinner, EmptyState
+    hooks/                            # useAnalytics, useFeed, useTopics
+    store/                            # Zustand filterStore
+    utils/                            # formatters, mergeFeeds
+    App.jsx, main.jsx, index.css
+  index.html                          # HTML shell (Google Fonts, Material Symbols)
+  vite.config.js                      # Builds to ../public/, dev proxy to :3000
+  tailwind.config.js                  # Custom theme (primary color, Inter font)
 public/
-  index.html                          # Minimal frontend
+  index.html                          # Built frontend entry (after npm run build:frontend)
+  assets/                             # Built JS/CSS chunks
+  SRS.html, SDD.html                  # Documentation pages
 test/                                 # Jest tests & integration scripts
 ```
 
@@ -255,14 +309,14 @@ curl -X POST http://localhost:3000/api/google-alerts/trigger
 ## Docker
 
 ```bash
-# Build (pre-downloads HuggingFace models into the image)
+# Build (pre-downloads HuggingFace models and builds frontend into the image)
 docker build --no-cache -t sml-backend:latest .
 
 # Run
 docker run -p 3000:3000 --env-file .env sml-backend:latest
 ```
 
-The Dockerfile uses `node:20-bookworm`, installs native build tools for ONNX, and runs `scripts/download-models.js` at build time so the SBERT model is baked into the image.
+The Dockerfile uses `node:20-bookworm`, installs native build tools for ONNX, runs `scripts/download-models.js` at build time so the SBERT model is baked in, and builds the React frontend to `public/` so the SPA is served directly by Express.
 
 ## Data Migration Scripts
 
