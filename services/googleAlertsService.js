@@ -17,6 +17,7 @@ const {
   googleAlertsStateContainer,
 } = require('../config/database');
 const workerPool = require('./classificationWorkerPool');
+const { computeSentiment } = require('../utils/sentimentAnalyzer');
 
 const RSS_FEEDS = require('../config/alerts_rss_feeds.json');
 const NOT_WEBSITES = require('../config/alerts_not_websites.json');
@@ -249,6 +250,7 @@ async function handleClassificationResult(err, result, item) {
     fullContent: item.fullContent || null,
     contentSource: item.contentSource,
     content: item.content,
+    sentiment: computeSentiment(item.content),
     publishedAt: item.publishedAt,
     scrapedAt: item.scrapedAt,
     topic: cls.topic,

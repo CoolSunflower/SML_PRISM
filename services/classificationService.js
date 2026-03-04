@@ -11,6 +11,8 @@
 const { initializeBrandClassifier, classifyText } = require('./brandClassifier');
 const { initializeRelevancyClassifier, classifyRelevancy, isReady: isRelevancyReady } = require('../utils/relevancyClassifier');
 
+const NOT_WORDS = require('../config/alerts_not_words.json');
+
 /**
  * Initialize all classifiers (brand + relevancy).
  * Must be called once before performClassification().
@@ -54,6 +56,19 @@ function extractSubTopicFromQuery(query) {
     return query.trim();
   }
   return query.substring(0, periodIndex).trim() || 'Unknown';
+}
+
+/**
+ * Check whether any configured NOT word appears in the text (case-insensitive).
+ * Used to filter false-positive RelevancyClassification matches.
+ *
+ * @param {string} text - The combined title + content text
+ * @returns {boolean} true if a NOT word is found and the item should be excluded
+ */
+function hasNotWord(text) {
+  if (!text || NOT_WORDS.length === 0) return false;
+  const lowerText = text.toLowerCase();
+  return NOT_WORDS.some(word => lowerText.includes(word.toLowerCase()));
 }
 
 /**
@@ -108,6 +123,12 @@ async function performClassification(item) {
       const relevancyResult = await classifyRelevancy(textToClassify);
 
       if (relevancyResult.isRelevant) {
+        // FR-CLS-07: NOT words filter — applies only to RelevancyClassification matches
+        if (hasNotWord(textToClassify)) {
+          console.log(`[ClassificationService] Item ${item.id} excluded by NOT words filter`);
+          return { matched: false, method: null, classification: null, relevantByModel: false };
+        }
+
         const subTopic = extractSubTopicFromQuery(item.query);
 
         return {
@@ -134,4 +155,5 @@ module.exports = {
   initializeClassifiers,
   performClassification,
   extractSubTopicFromQuery,
+  hasNotWord,
 };

@@ -33,7 +33,7 @@ This document describes the backend software design of **PRISM (Platform for Rea
 This SDD covers:
 - The architecture of the PRISM backend (Node.js/Express application)
 - Design of all existing modules (ingestion, classification, worker pool, APIs)
-- Design of planned modules (translation, NOT words filter, SharePoint publishing, adverse event notifications)
+- Design of planned modules (translation, SharePoint publishing, adverse event notifications)
 - Azure Cosmos DB schema design for all containers
 - End-to-end data flows with Mermaid diagrams
 - Configuration file formats and environment variable reference
@@ -81,7 +81,8 @@ graph TB
             WP[Worker Pool<br/>N Child Processes]
             BC[Brand Classifier<br/>1300+ AST Rules]
             RC[Relevancy Classifier<br/>SBERT + SVM ONNX]
-            NW[NOT Words Filter<br/>Planned]
+            NW[NOT Words Filter]
+            SA[Sentiment Analyzer<br/>AFINN + natural]
         end
 
         subgraph API Layer
@@ -113,8 +114,10 @@ graph TB
     GQ --> WP
     WP --> BC
     WP --> RC
-    RC -.->|Planned| NW
+    RC --> NW
+    NW -->|GA items| SA
     WP --> DB
+    SA --> DB
     WP -.->|Planned| SP
     WP -.->|Planned| AE
     API --> DB
@@ -142,6 +145,7 @@ graph TB
 | RSS Parsing | rss-parser | 3.13.0 | RSS/Atom feed parsing |
 | Content Extraction | @mozilla/readability + jsdom | 0.6.0 / 28.1.0 | Article text extraction |
 | Language Detection | franc + langdetect | 6.2.0 / 0.2.1 | Language identification |
+| Sentiment Analysis | natural (AFINN) | 8.1.1 | AFINN-165 lexicon-based sentiment scoring for Google Alerts |
 | Hashing | Node.js crypto (MD5) | Built-in | Content and URL deduplication |
 | Testing | Jest + Supertest | 30.2.0 / 7.2.2 | Unit and integration testing |
 | Containerization | Docker | node:20-bookworm | Production deployment |
@@ -171,6 +175,8 @@ flowchart LR
         C1[Brand Classifier<br/>AST Rule Engine]
         C2[Relevancy Classifier<br/>SBERT + SVM]
         C3{Match?}
+        C4[NOT Words Filter<br/>Relevancy path]
+        C5[Sentiment Analyzer<br/>GA items · AFINN]
     end
 
     subgraph Storage
@@ -184,10 +190,14 @@ flowchart LR
     I2 --> I3 --> I5
     I5 --> D1
     D1 --> C1 --> C3
-    C3 -->|Brand Match| D2
+    C3 -->|Brand Match - KWatch| D2
+    C3 -->|Brand Match - GA| C5
     C3 -->|No Match| C2
-    C2 -->|Relevant| D2
+    C2 -->|Relevant| C4
     C2 -->|Not Relevant| X[Discarded]
+    C4 -->|Blocked| X
+    C4 -->|Passes| C5
+    C5 -->|Classified + Sentiment| D2
     I2 --> D3
 ```
 
@@ -261,7 +271,9 @@ The backend is organized into five functional layers, each consisting of one or 
 | **Classification** | Brand Classifier | `services/brandClassifier.js` | CSV parsing, AST compilation, rule-based matching |
 | | Query Parser | `utils/parser.js` | Tokenization, AST parsing, rule evaluation |
 | | Relevancy Classifier | `utils/relevancyClassifier.js` | SBERT embedding, SVM inference |
-| | Classification Service | `services/classificationService.js` | Two-stage orchestration with fallback logic |
+| | Classification Service | `services/classificationService.js` | Two-stage orchestration with fallback logic and NOT words filtering |
+| | NOT Words Filter | `services/classificationService.js` | Post-relevancy exclusion word filtering (config-driven) |
+| | Sentiment Analyzer | `utils/sentimentAnalyzer.js` | AFINN-165 lexicon-based sentiment scoring for Google Alerts items |
 | | Worker Pool | `services/classificationWorkerPool.js` | Child process management, IPC, round-robin |
 | | Worker Process | `workers/classificationWorkerProcess.js` | Classifier initialization and job execution |
 | **API** | Routes | `routes/*.js` | REST endpoint handlers |
@@ -270,6 +282,7 @@ The backend is organized into five functional layers, each consisting of one or 
 | | Brand Queries | `config/BrandQueries.csv` | Rule definitions |
 | | RSS Feeds | `config/alerts_rss_feeds.json` | Feed URL registry |
 | | Blocklist | `config/alerts_not_websites.json` | Domain exclusions |
+| | NOT Words | `config/alerts_not_words.json` | Exclusion words for relevancy false positive filtering |
 | | Model Config | `models/model_config.json` | ML hyperparameters |
 
 ---
@@ -315,6 +328,7 @@ The backend is organized into five functional layers, each consisting of one or 
 - Deduplicate articles by URL hash
 - Insert raw documents and submit classification jobs
 - Handle classification results and insert processed documents
+- Compute sentiment scores for classified GA items using AFINN lexicon
 
 **Key Design Decisions:**
 
@@ -326,6 +340,7 @@ The backend is organized into five functional layers, each consisting of one or 
 | Readability with JSDOM | Accurate content extraction without browser dependency; handles most article layouts |
 | 10s fetch timeout per article | Prevents slow sites from stalling the pipeline |
 | 100-char minimum for full content | Filters out extraction failures that return only navigation text or boilerplate |
+| AFINN lexicon for GA sentiment | KWatch receives pre-labeled sentiment from the webhook; GA has no external source so a lightweight lexicon-based scorer is used |
 
 **URL Extraction Design:**
 Google Alerts RSS entries use redirect URLs of the form:
@@ -335,7 +350,7 @@ https://www.google.com/url?rct=j&sa=t&url=<encoded_actual_url>&ct=ga&...
 The system uses the `URL` constructor to parse the redirect URL and extracts the `url` query parameter, which contains the actual article URL.
 
 **Result Handling:** When the worker pool returns a classification result for a Google Alerts item:
-- If `matched = true`: Build a processed document combining all raw fields with classification fields plus a `classifiedAt` timestamp, and insert into GoogleAlertsProcessedData.
+- If `matched = true`: Build a processed document combining all raw fields with classification fields plus a `classifiedAt` timestamp. Before insertion, compute the item's sentiment using the Sentiment Analyzer (`computeSentiment(item.content)`) and include the `sentiment` field (`Positive`, `Neutral`, or `Negative`) in the document. Insert into GoogleAlertsProcessedData.
 - If `matched = false`: The item remains in raw only.
 
 ---
@@ -442,6 +457,21 @@ The system uses the `URL` constructor to parse the redirect URL and extracts the
 
 The dual-threshold design is driven by the observation that texts mentioning "Stryker" by name often have higher base model scores even when not medically relevant (e.g., sports, entertainment).
 
+#### 3.5.4 NOT Words Filter Module
+
+**Integration Point:** After relevancy classification, before processed document insertion (within `services/classificationService.js`). For full orchestration detail, see section 3.6.
+
+**Implementation:**
+- At startup, a flat JSON array of exclusion words is loaded from `config/alerts_not_words.json`.
+- After the relevancy classifier returns `Relevant`, each word in the array is checked (case-insensitive substring match) against the item's full text.
+- If any exclusion word is found: the classification result is overridden to `matched: false`; the item is not stored in the processed container.
+- The filter does **not** apply to brand-query matches (`method: 'BrandQuery'`).
+
+**Configuration Example:**
+```json
+["football", "nfl", "comics", "comic book"]
+```
+
 ---
 
 ### 3.6 Classification Orchestration Module
@@ -451,6 +481,7 @@ The dual-threshold design is driven by the observation that texts mentioning "St
 **Responsibilities:**
 - Coordinate the two-stage classification pipeline
 - Implement the brand-first, relevancy-fallback logic
+- Apply the NOT words exclusion filter on relevancy-matched items
 - Extract subTopic from query strings for relevancy-only matches
 - Provide a unified classification result structure
 
@@ -460,10 +491,50 @@ The dual-threshold design is driven by the observation that texts mentioning "St
 |-------|-----------|--------|
 | 1 | Text is empty | Return `{ matched: false }` |
 | 2 | Brand rule matches | Run relevancy model for annotation → Return `{ matched: true, method: 'BrandQuery' }` |
-| 3 | No brand match, relevancy says relevant | Extract subTopic from query → Return `{ matched: true, method: 'RelevancyClassification' }` |
+| 3 | No brand match, relevancy says relevant | Apply NOT words filter |
+| 3.1 | NOT word found in item text | Return `{ matched: false }` |
+| 3.2 | NOT words clear | Extract subTopic from query → Return `{ matched: true, method: 'RelevancyClassification' }` |
 | 4 | No brand match, relevancy says not relevant | Return `{ matched: false }` |
 
+**NOT Words Filter:** Loaded at startup from `config/alerts_not_words.json`. Applied only to items reaching the `RelevancyClassification` path (stage 3). Case-insensitive substring match against the full item text. If any exclusion word is found, the result is overridden to `{ matched: false }` and the item is not stored in the processed container.
+
 **SubTopic Extraction:** For relevancy-only matches, the subTopic is derived from the item's `query` field by taking all characters before the first period (`.`). For example, `"Gamma3.Medical"` → `"Gamma3"`. If no period exists, the entire query is used.
+
+#### 3.6.1 Sentiment Analyzer Module: Used for Google Alerts sentiment
+
+**File:** `utils/sentimentAnalyzer.js`
+
+**Integration Point:** After classification, when building the processed document for Google Alerts items (inside `services/googleAlertsService.js` result handler). KWatch items receive their sentiment directly from the webhook payload (provided by the KWatch service); server-side sentiment computation is not applied to them.
+
+**Responsibilities:**
+- Compute a sentiment label (`Positive`, `Neutral`, `Negative`) for a given text string using the AFINN lexicon
+- Provide a single reusable export (`computeSentiment`) consumed by the Google Alerts result handler
+
+**Implementation Details:**
+
+| Component | Detail |
+|-----------|--------|
+| Library | `natural` (npm) |
+| Lexicon | AFINN-165 (word-level integer scores in the range −5 to +5) |
+| Stemmer | Porter Stemmer (English) |
+| Scoring | `SentimentAnalyzer.getSentiment(tokens)` — returns the average AFINN score across all scored tokens |
+
+**Scoring → Label Mapping:**
+
+| Computed Score | Label |
+|---------------|-------|
+| `score > 0` | `Positive` |
+| `score = 0` | `Neutral` |
+| `score < 0` | `Negative` |
+
+**Edge Case Handling:**
+- Empty string, `null`, non-string, or zero-token input → returns `Neutral` directly without running the analyzer.
+
+**Tokenization:** The input text is whitespace-split and empty tokens are filtered before passing to the analyzer. No additional normalization (lowercasing, punctuation removal) is performed at this stage; the `natural` library handles token matching internally.
+
+**Key Design Decision:** A lexicon-based approach was chosen over a transformer-based sentiment model to avoid additional inference overhead at classification time. The AFINN lexicon is lightweight, synchronous, and sufficient for a high-level positive / neutral / negative signal across article-length English text.
+
+**Backfill Migration:** A one-time script (`scripts/AddSentiment/add-sentiment-to-google-alerts-processed.js`) is provided to populate the `sentiment` field on existing processed documents that predate this feature.
 
 ---
 
@@ -560,7 +631,7 @@ Workers that exit with code 0 (graceful) during shutdown are not restarted.
 
 ### 3.10 Remaining Planned Modules
 
-#### 3.10.1 Translation Service Integration
+#### 3.10.1 Translation Service Integration (Status: Planned)
 
 **Integration Point:** Between ingestion and classification.
 
@@ -581,17 +652,7 @@ Workers that exit with code 0 (graceful) during shutdown are not restarted.
 | Health-check gating | Caller waits for model readiness with timeout | Block-and-wait, simpler logic |
 | Lazy init with fallback | Load on demand; timeout to untranslated text | Graceful degradation, some items miss translation |
 
-#### 3.10.2 NOT Words Filter Module
-
-**Integration Point:** After relevancy classification, before processed document insertion.
-
-**Design Concept:**
-- Load a config file (JSON) at startup that maps keyword/feed names to arrays of exclusion words.
-- After the classification service returns `method: 'RelevancyClassification'`, look up the item's `query`/`feedName` in the config.
-- Perform case-insensitive substring search for each NOT word in the item's text.
-- If any NOT word is found: override the classification result to `matched: false` (item not stored in processed container).
-
-#### 3.10.3 SharePoint Publisher Module
+#### 3.10.3 SharePoint Publisher Module (Status: Planned)
 
 **Integration Point:** After processed document insertion.
 
@@ -619,7 +680,7 @@ Content-Type: application/json
 }
 ```
 
-#### 3.10.4 Adverse Event Notifier Module
+#### 3.10.4 Adverse Event Notifier Module (Status: Planned)
 
 **Integration Point:** After classification, when topic matches death-related criteria.
 
@@ -631,7 +692,7 @@ Content-Type: application/json
 
 ---
 
-#### 3.10.5 Operational Alert Email System
+#### 3.10.5 Operational Alert Email System (Status: Planned)
 
 **Integration Point:** Monitoring hooks distributed across `services/kwatchQueue.js`, `services/googleAlertsService.js`, `services/classificationWorkerPool.js`, and `config/database.js`.
 
@@ -806,6 +867,7 @@ This container stores only articles that were successfully classified. Articles 
 | `fullContent` | String / null | No | Copied from raw | Full extracted article text |
 | `contentSource` | String | Yes | Copied from raw | Content source indicator (`"full"` or `"snippet"`) |
 | `content` | String | Yes | Copied from raw | Text used for classification |
+| `sentiment` | String | Yes | Sentiment Analyzer | Sentiment label computed by the AFINN lexicon scorer. One of `Positive`, `Neutral`, or `Negative` |
 | `publishedAt` | String (ISO 8601) | Yes | Copied from raw | Article publication date |
 | `scrapedAt` | String (ISO 8601) | Yes | Copied from raw | Scraping timestamp |
 | `topic` | String | Yes | Classification | Primary classification category from brand rules or `"General-RelevancyClassification"` |
@@ -851,7 +913,7 @@ This is not a Cosmos DB container but rather the schema of the list items publis
 | author | String | `item.author` | `"N/A"` | Post author |
 | title | String | `item.title` | `item.title` | Content title |
 | content | String | `item.content` | `item.content` | Text body |
-| sentiment | String | `item.sentiment` | `"neutral"` | Sentiment value |
+| sentiment | String | `item.sentiment` | `item.sentiment` | Sentiment value (`Positive`, `Neutral`, `Negative`). KWatch: from webhook payload. GA: AFINN-computed |
 | topic | String | `item.topic` | `item.topic` | Classification topic |
 | subtopic | String | `item.subTopic` | `item.subTopic` | Classification subtopic |
 | relevantByModel | Boolean | `item.relevantByModel` | `item.relevantByModel` | ML relevancy flag |
@@ -976,7 +1038,7 @@ flowchart TD
     AE -->|Yes| AF[Skip duplicate]
     AE -->|No| AG[Submit to Worker Pool]
     AG --> AH{Classification result?}
-    AH -->|matched = true| AI[Build processed document<br/>+ classifiedAt timestamp]
+    AH -->|matched = true| AI[Build processed document<br/>+ classifiedAt timestamp<br/>+ sentiment via AFINN]
     AH -->|matched = false| AJ[Not stored in processed]
     AI --> AK[Insert into GoogleAlertsProcessedData]
     AK --> CYCLE_END_CHK{End of cycle:<br/>failedFeedCount ≥ 10% of total feeds?}
@@ -1023,7 +1085,9 @@ flowchart TD
     V --> X{P_Mention >= threshold?}
     W --> X
     X -->|No| Y[Return matched=false]
-    X -->|Yes| Z[Extract subTopic from query<br/>text before first period]
+    X -->|Yes| NW[Apply NOT words filter<br/>case-insensitive substr match<br/>against config/alerts_not_words.json]
+    NW -->|Word found| NW_FAIL[Return matched=false]
+    NW -->|Clear| Z[Extract subTopic from query<br/>text before first period]
     Z --> AA[Return matched=true<br/>method=RelevancyClassification<br/>topic=General-RelevancyClassification]
 ```
 
@@ -1312,7 +1376,23 @@ Do NOT block calling pipeline]
 
 ---
 
-### 6.4 Model Configuration
+### 6.4 NOT Words Exclusion List
+
+**File:** `config/alerts_not_words.json`
+**Format:** JSON array of exclusion word/phrase strings.
+
+```json
+["football", "nfl", "comics", "comic book"]
+```
+
+**Matching Logic:**
+- Each item in the array is checked against the full item text as a case-insensitive substring match.
+- The filter applies only to items classified via `RelevancyClassification` (not `BrandQuery` matches).
+- New exclusion words can be added to the array without code changes; the file is loaded at server startup.
+
+---
+
+### 6.5 Model Configuration
 
 **File:** `models/model_config.json`
 
@@ -1346,7 +1426,7 @@ Do NOT block calling pipeline]
 
 ---
 
-### 6.5 Environment Variables Reference
+### 6.6 Environment Variables Reference
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|

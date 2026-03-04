@@ -69,6 +69,13 @@ jest.mock('../config/alerts_rss_feeds.json', () => ({
 // NOT websites config mock
 jest.mock('../config/alerts_not_websites.json', () => ['blocked.com', 'spam.org']);
 
+// Sentiment analyzer mock — avoids loading natural's ESM dependency (afinn-165)
+// in the Jest CommonJS test environment.
+const mockComputeSentiment = jest.fn().mockReturnValue('Positive');
+jest.mock('../utils/sentimentAnalyzer', () => ({
+  computeSentiment: (...args) => mockComputeSentiment(...args),
+}));
+
 // JSDOM mock
 const mockJSDOMInstance = { window: { document: {} } };
 jest.mock('jsdom', () => ({
@@ -678,6 +685,42 @@ describe('scrapeAllFeeds - classification handler', () => {
     expect(processed.relevantByModel).toBe(true);
     expect(processed.platform).toBe('google-alerts');
     expect(processed.classifiedAt).toBeDefined();
+    // Sentiment must be present and one of the three valid labels
+    expect(['Positive', 'Negative', 'Neutral']).toContain(processed.sentiment);
+  });
+
+  test('processed document sentiment reflects content tone', async () => {
+    // Use content with clearly positive words so the sentiment is deterministic
+    const realUrl = 'https://example.com/positive-article';
+    const gLink = googleLink(realUrl);
+    mockParseURL
+      .mockResolvedValueOnce({ items: [makeEntry(gLink, 'Good News', 'great excellent wonderful')] })
+      .mockResolvedValueOnce({ items: [] });
+
+    // Return positive words as full content so computeSentiment receives them
+    mockReadabilityParse.mockReturnValue({ textContent: 'great excellent wonderful love success' });
+
+    let capturedCallback;
+    mockSubmitJob.mockImplementation((data, callback) => {
+      capturedCallback = { data, callback };
+      return 'mock-job-id';
+    });
+
+    await scrapeAllFeeds();
+
+    await capturedCallback.callback(
+      null,
+      {
+        matched: true,
+        method: 'BrandQuery',
+        classification: { topic: 'T', subTopic: 'S', queryName: 'Q', internalId: 'I' },
+        relevantByModel: true,
+      },
+      capturedCallback.data
+    );
+
+    const processed = mockProcessedCreate.mock.calls[0][0];
+    expect(processed.sentiment).toBe('Positive');
   });
 
   test('does NOT write to processed container when classification does not match', async () => {

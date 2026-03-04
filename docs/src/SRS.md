@@ -583,34 +583,62 @@ At a high level, PRISM provides the following capabilities:
 
 ---
 
-### 4.7 FR-CLS-07: Relevancy NOT Words Filter (Status: Planned)
+### 4.7 FR-CLS-07: Relevancy NOT Words Filter (Status: Implemented)
 
-**Description:** For items that are classified as relevant by the relevancy ML model (i.e., items that went through the relevancy fallback path), the system shall apply an additional filtering step using a configurable list of exclusion words. If any exclusion word for the corresponding keyword/feed is found in the item's text, the item shall be excluded from processed output.
+**Description:** For items that are classified as relevant by the relevancy ML model (i.e., items that went through the relevancy fallback path), the system shall apply an additional filtering step using a configurable list of exclusion words. If any exclusion word is found in the item's text, the item shall be excluded from processed output.
 
 **Purpose:** The relevancy ML model may produce false positives for certain keywords. For example, if the original keyword is "Stryker," the model might flag content about "Stryker" football players or the comic book character. NOT words like "football," "comics," etc., filter out these false positives.
 
 **Configuration:**
-- A JSON or CSV configuration file mapping each keyword/feed name to a set of exclusion words.
+- A JSON array of exclusion words loaded at startup from `config/alerts_not_words.json`.
 - Example:
   ```json
-  {
-    "Stryker": ["football", "comics", "marvel", "movie", "nfl"],
-    "Gamma3": ["radiation", "gamma ray", "hulk"]
-  }
+  ["football", "nfl", "comics", "comic book"]
   ```
 
 **Filter Logic:**
 1. After the relevancy model classifies an item as relevant (method = `RelevancyClassification`):
-2. Look up the item's `query` or `feedName` in the NOT words configuration.
-3. If any configured NOT word is found in the item's text (case-insensitive match):
-   - Mark the item as not relevant.
-   - Do not store it in the processed container.
-4. If no NOT word matches, proceed normally.
+2. If any configured NOT word is found in the item's text (case-insensitive substring match):
+   - Return `matched: false`.
+   - Do not store the item in the processed container.
+3. If no NOT word matches, proceed normally.
 
 **Acceptance Criteria:**
 - The filter shall only apply to items classified via the `RelevancyClassification` method, not to `BrandQuery` matches.
-- The NOT words configuration shall be loadable at startup from a config file without code changes.
+- The NOT words configuration shall be loadable at startup from `config/alerts_not_words.json` without code changes.
 - Matching shall be case-insensitive.
+
+---
+
+### 4.8 FR-CLS-08: Google Alerts Sentiment Classification (Status: Implemented)
+
+**Description:** For each Google Alerts article that is successfully classified and stored in the processed container, the system shall compute a sentiment label using the AFINN lexicon via the `natural` library. The computed sentiment shall be stored as a field in the processed document.
+
+**Contrast with KWatch:** KWatch items receive their sentiment from the webhook payload (provided by the KWatch service). Google Alerts items have no external sentiment source, so it is computed server-side.
+
+**Implementation:**
+
+| Component | Detail |
+|-----------|--------|
+| Library | `natural` (npm) |
+| Lexicon | AFINN-165 (word-level sentiment scores) |
+| Stemmer | Porter Stemmer (English) |
+| Scoring Method | Average AFINN score across all tokens |
+
+**Sentiment Labels:**
+
+| Score | Label |
+|-------|-------|
+| Score > 0 | `Positive` |
+| Score = 0 | `Neutral` |
+| Score < 0 | `Negative` |
+
+**Acceptance Criteria:**
+- The `sentiment` field shall be one of `Positive`, `Neutral`, or `Negative`.
+- Sentiment shall be computed from the `content` field of the article (full extracted text if available, otherwise RSS snippet).
+- Empty, null, or non-string content shall default to `Neutral`.
+- The `sentiment` field shall be present on every document written to `GoogleAlertsProcessedData`.
+- A one-time migration script (`scripts/AddSentiment/add-sentiment-to-google-alerts-processed.js`) shall be available to backfill the `sentiment` field on existing processed documents that predate this requirement.
 
 ---
 
