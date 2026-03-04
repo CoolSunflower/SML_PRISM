@@ -5,14 +5,13 @@ import { TopTopicsCard } from './TopTopicsCard';
 import { MethodSplitCard } from './MethodSplitCard';
 
 export function AnalyticsSection({ data, loading }) {
-  const { processing, source } = useFilterStore();
+  const { processing } = useFilterStore();
   const isProcessed = processing === 'processed';
 
   if (loading || !data) return null;
 
-  // Sentiment only for KWatch processed or "all" processed (GA has no sentiment)
-  // update: GA now has sentiment
-  const showSentiment = isProcessed && source !== 'google-alerts' && data.sentiment;
+  // All processed views show the same 4-box layout
+  const showSentiment = isProcessed && data.sentiment;
   const showTopTopics = isProcessed && data.topTopics?.length > 0;
   const showMethodSplit = isProcessed && data.classificationMethod;
 

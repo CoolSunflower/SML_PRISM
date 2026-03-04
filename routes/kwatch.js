@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { kwatchContainer, kwatchProcessedContainer } = require('../config/database');
 const { getQueueStatus } = require('../services/kwatchQueue');
+const analyticsService = require('../services/analyticsService');
 
 // GET /api/kwatch - KWatch Raw Data Retrieval Endpoint
 router.get('/', async (req, res) => {
@@ -19,11 +20,10 @@ router.get('/', async (req, res) => {
     };
 
     const { resources: items } = await kwatchContainer.items.query(querySpec).fetchAll();
-    
-    // Get total count
-    const countQuery = { query: 'SELECT VALUE COUNT(1) FROM c' };
-    const { resources: countResult } = await kwatchContainer.items.query(countQuery).fetchAll();
-    const totalItems = countResult[0] || 0;
+
+    // Use cached analytics count instead of expensive COUNT query
+    const cached = analyticsService.getAnalytics('kwatch', 'raw', 30);
+    const totalItems = cached?.totalAllTime ?? 0;
 
     res.json({
       items,
@@ -57,14 +57,14 @@ router.get('/processed', async (req, res) => {
     ];
 
     if (req.query.startDate) {
-      conditions.push('c.classifiedAt >= @startDate');
+      conditions.push('c.receivedAt >= @startDate');
       parameters.push({ name: '@startDate', value: req.query.startDate });
     }
     if (req.query.endDate) {
       // Add 1 day so the end date is inclusive
       const end = new Date(req.query.endDate);
       end.setDate(end.getDate() + 1);
-      conditions.push('c.classifiedAt < @endDate');
+      conditions.push('c.receivedAt < @endDate');
       parameters.push({ name: '@endDate', value: end.toISOString() });
     }
     if (req.query.topic) {
@@ -76,23 +76,31 @@ router.get('/processed', async (req, res) => {
       parameters.push({ name: '@subTopic', value: req.query.subTopic });
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')} ` : '';
+    const hasFilters = conditions.length > 0;
+    const whereClause = hasFilters ? `WHERE ${conditions.join(' AND ')} ` : '';
 
     const querySpec = {
-      query: `SELECT * FROM c ${whereClause}ORDER BY c.classifiedAt DESC OFFSET @offset LIMIT @limit`,
+      query: `SELECT * FROM c ${whereClause}ORDER BY c.receivedAt DESC OFFSET @offset LIMIT @limit`,
       parameters,
     };
 
     const { resources: items } = await kwatchProcessedContainer.items.query(querySpec).fetchAll();
 
-    // Count query with same filters
-    const countParams = parameters.filter(p => p.name !== '@offset' && p.name !== '@limit');
-    const countQuery = {
-      query: `SELECT VALUE COUNT(1) FROM c ${whereClause}`,
-      parameters: countParams,
-    };
-    const { resources: countResult } = await kwatchProcessedContainer.items.query(countQuery).fetchAll();
-    const totalItems = countResult[0] || 0;
+    let totalItems;
+    if (hasFilters) {
+      // Only run COUNT query when filters are active (unavoidable)
+      const countParams = parameters.filter(p => p.name !== '@offset' && p.name !== '@limit');
+      const countQuery = {
+        query: `SELECT VALUE COUNT(1) FROM c ${whereClause}`,
+        parameters: countParams,
+      };
+      const { resources: countResult } = await kwatchProcessedContainer.items.query(countQuery).fetchAll();
+      totalItems = countResult[0] || 0;
+    } else {
+      // Use cached analytics count for unfiltered queries
+      const cached = analyticsService.getAnalytics('kwatch', 'processed', 30);
+      totalItems = cached?.totalAllTime ?? 0;
+    }
 
     res.json({
       items,
@@ -115,7 +123,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { platform } = req.query; // Need partition key for deletion
-    
+
     if (!platform) {
       return res.status(400).json({ error: 'Platform (partition key) is required' });
     }

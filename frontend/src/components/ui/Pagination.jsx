@@ -18,14 +18,14 @@ export function Pagination({ page, totalPages, totalItems, limit, onPageChange }
 
   return (
     <div className="mt-8 flex items-center justify-between">
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-slate-500 dark:text-slate-400">
         Showing {start}–{end} of {totalItems.toLocaleString()} results
       </p>
       <div className="flex gap-1.5">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-9 h-9 flex items-center justify-center border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined text-lg">chevron_left</span>
         </button>
@@ -37,7 +37,7 @@ export function Pagination({ page, totalPages, totalItems, limit, onPageChange }
               'px-3 h-9 flex items-center justify-center rounded-lg text-sm font-medium',
               p === page
                 ? 'bg-primary text-white'
-                : 'border border-slate-200 hover:bg-slate-50',
+                : 'border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-300',
             )}
           >
             {p}
@@ -46,7 +46,7 @@ export function Pagination({ page, totalPages, totalItems, limit, onPageChange }
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
-          className="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-9 h-9 flex items-center justify-center border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined text-lg">chevron_right</span>
         </button>

@@ -4,12 +4,14 @@ const express = require('express');
 const router = express.Router();
 const analyticsService = require('../services/analyticsService');
 
-// GET /api/analytics?source=all|kwatch|google-alerts&view=raw|processed&days=7|14|30
+// GET /api/analytics?source=all|kwatch|google-alerts&view=raw|processed&days=7|14|30&startDate=&endDate=
 router.get('/', (req, res) => {
   try {
     const source = req.query.source || 'all';
     const view = req.query.view || 'raw';
     const days = parseInt(req.query.days) || 7;
+    const startDate = req.query.startDate || '';
+    const endDate = req.query.endDate || '';
 
     // Validate params
     if (!['all', 'kwatch', 'google-alerts'].includes(source)) {
@@ -22,7 +24,7 @@ router.get('/', (req, res) => {
       return res.status(400).json({ error: 'Invalid days. Use: 7, 14, 30' });
     }
 
-    const data = analyticsService.getAnalytics(source, view, days);
+    const data = analyticsService.getAnalytics(source, view, days, startDate, endDate);
 
     if (!data) {
       return res.status(500).json({ error: 'Analytics data not available' });

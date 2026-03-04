@@ -5,7 +5,7 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 
-// ─── Parse BrandQueries.csv at module load ──────────────────────────────────
+//  Parse BrandQueries.csv at module load 
 
 let topicsHierarchy = [];
 let totalQueries = 0;

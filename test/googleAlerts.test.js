@@ -89,7 +89,7 @@ jest.mock('@mozilla/readability', () => ({
   Readability: jest.fn(() => ({ parse: mockReadabilityParse })),
 }));
 
-// ─── Require module under test ───────────────────────────────────────────────
+//  Require module under test 
 
 const {
   extractUrlFromGoogleLink,
@@ -102,7 +102,7 @@ const {
 
 const crypto = require('crypto');
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers 
 
 /** Build a Google Alerts redirect URL wrapping a real destination */
 function googleLink(realUrl) {
@@ -134,7 +134,7 @@ function docIdFromUrl(url) {
   return crypto.createHash('md5').update(url).digest('hex');
 }
 
-// ─── Reset mocks before each test ────────────────────────────────────────────
+//  Reset mocks before each test 
 
 beforeEach(() => {
   jest.clearAllMocks();

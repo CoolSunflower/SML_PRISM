@@ -7,7 +7,7 @@ const {
   googleAlertsProcessedContainer,
 } = require('../config/database');
 
-// ─── In-memory analytics state ───────────────────────────────────────────────
+//  In-memory analytics state 
 
 const WINDOW_DAYS = 30;
 
@@ -37,7 +37,7 @@ const state = {
   },
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers 
 
 function toDateKey(isoString) {
   if (!isoString) return null;
@@ -58,7 +58,7 @@ function inferMethod(topic) {
     : 'brandQuery';
 }
 
-// ─── Startup load ────────────────────────────────────────────────────────────
+//  Startup load 
 
 async function fetchAllItems(container, querySpec) {
   const { resources } = await container.items.query(querySpec).fetchAll();
@@ -113,7 +113,7 @@ async function initialize() {
   try {
     await Promise.all([
       loadContainerAnalytics(kwatchContainer, 'receivedAt', state.kwatch.raw, false),
-      loadContainerAnalytics(kwatchProcessedContainer, 'classifiedAt', state.kwatch.processed, true),
+      loadContainerAnalytics(kwatchProcessedContainer, 'receivedAt', state.kwatch.processed, true),
       loadContainerAnalytics(googleAlertsRawContainer, 'scrapedAt', state.googleAlerts.raw, false),
       loadContainerAnalytics(googleAlertsProcessedContainer, 'classifiedAt', state.googleAlerts.processed, true),
     ]);
@@ -130,7 +130,7 @@ async function initialize() {
   setInterval(pruneOldData, 24 * 60 * 60 * 1000);
 }
 
-// ─── Incremental updates ────────────────────────────────────────────────────
+//  Incremental updates 
 
 function recordRawItem(source, item) {
   const target = state[source]?.raw;
@@ -151,7 +151,7 @@ function recordProcessedItem(source, item) {
 
   target.totalCount++;
 
-  const dateKey = toDateKey(item.classifiedAt);
+  const dateKey = toDateKey(item.classifiedAt || item.receivedAt);
   if (dateKey) {
     target.dailyCounts.set(dateKey, (target.dailyCounts.get(dateKey) || 0) + 1);
   }
@@ -169,7 +169,7 @@ function recordProcessedItem(source, item) {
   }
 }
 
-// ─── Pruning ─────────────────────────────────────────────────────────────────
+//  Pruning 
 
 function pruneOldData() {
   const cutoffKey = cutoffISO(WINDOW_DAYS).substring(0, 10);
@@ -186,21 +186,37 @@ function pruneOldData() {
   }
 }
 
-// ─── Getters ─────────────────────────────────────────────────────────────────
+//  Getters 
 
-function getAnalyticsForSource(source, view, days) {
+function getAnalyticsForSource(source, view, days, startDate, endDate) {
   const target = state[source]?.[view];
   if (!target) return null;
 
+  // Determine date range for filtering dailyCounts
+  const hasDateFilter = startDate || endDate;
+  const startKey = startDate ? startDate.substring(0, 10) : null;
+  // endDate is inclusive - add 1 day for comparison
+  let endKey = null;
+  if (endDate) {
+    const end = new Date(endDate);
+    end.setDate(end.getDate() + 1);
+    endKey = end.toISOString().substring(0, 10);
+  }
   const cutoffKey = cutoffISO(days).substring(0, 10);
+
   const dailyCounts = {};
   let periodTotal = 0;
 
   for (const [dateKey, count] of target.dailyCounts) {
-    if (dateKey >= cutoffKey) {
-      dailyCounts[dateKey] = count;
-      periodTotal += count;
+    // Apply date range filter if present, otherwise use days cutoff
+    if (hasDateFilter) {
+      if (startKey && dateKey < startKey) continue;
+      if (endKey && dateKey >= endKey) continue;
+    } else {
+      if (dateKey < cutoffKey) continue;
     }
+    dailyCounts[dateKey] = count;
+    periodTotal += count;
   }
 
   const result = {
@@ -209,7 +225,7 @@ function getAnalyticsForSource(source, view, days) {
     dailyCounts,
   };
 
-  // Processed-only fields
+  // Processed-only fields (aggregated over full 30-day window)
   if (view === 'processed') {
     result.sentiment = { ...target.sentiment };
 
@@ -243,10 +259,10 @@ function mergeTopTopics(a, b) {
     .slice(0, 10);
 }
 
-function getAnalytics(source, view, days) {
+function getAnalytics(source, view, days, startDate, endDate) {
   if (source === 'all') {
-    const kw = getAnalyticsForSource('kwatch', view, days);
-    const ga = getAnalyticsForSource('googleAlerts', view, days);
+    const kw = getAnalyticsForSource('kwatch', view, days, startDate, endDate);
+    const ga = getAnalyticsForSource('googleAlerts', view, days, startDate, endDate);
     if (!kw || !ga) return null;
 
     const result = {
@@ -272,7 +288,7 @@ function getAnalytics(source, view, days) {
   }
 
   const sourceKey = source === 'google-alerts' ? 'googleAlerts' : source;
-  return getAnalyticsForSource(sourceKey, view, days);
+  return getAnalyticsForSource(sourceKey, view, days, startDate, endDate);
 }
 
 function getLastRefreshAt() {

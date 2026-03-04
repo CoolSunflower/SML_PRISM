@@ -9,6 +9,7 @@ const {
   googleAlertsStateContainer,
 } = require('../config/database');
 const { scrapeAllFeeds, getScraperStatus } = require('../services/googleAlertsService');
+const analyticsService = require('../services/analyticsService');
 
 // GET /api/google-alerts - Paginated raw data
 router.get('/', async (req, res) => {
@@ -27,10 +28,9 @@ router.get('/', async (req, res) => {
 
     const { resources: items } = await googleAlertsRawContainer.items.query(querySpec).fetchAll();
 
-    const { resources: countResult } = await googleAlertsRawContainer.items
-      .query('SELECT VALUE COUNT(1) FROM c')
-      .fetchAll();
-    const totalItems = countResult[0] || 0;
+    // Use cached analytics count instead of expensive COUNT query
+    const cached = analyticsService.getAnalytics('google-alerts', 'raw', 30);
+    const totalItems = cached?.totalAllTime ?? 0;
 
     res.json({
       items,
@@ -81,7 +81,8 @@ router.get('/processed', async (req, res) => {
       parameters.push({ name: '@subTopic', value: req.query.subTopic });
     }
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')} ` : '';
+    const hasFilters = conditions.length > 0;
+    const whereClause = hasFilters ? `WHERE ${conditions.join(' AND ')} ` : '';
 
     const querySpec = {
       query: `SELECT * FROM c ${whereClause}ORDER BY c.classifiedAt DESC OFFSET @offset LIMIT @limit`,
@@ -90,15 +91,23 @@ router.get('/processed', async (req, res) => {
 
     const { resources: items } = await googleAlertsProcessedContainer.items.query(querySpec).fetchAll();
 
-    const countParams = parameters.filter(p => p.name !== '@offset' && p.name !== '@limit');
-    const countQuery = {
-      query: `SELECT VALUE COUNT(1) FROM c ${whereClause}`,
-      parameters: countParams,
-    };
-    const { resources: countResult } = await googleAlertsProcessedContainer.items
-      .query(countQuery)
-      .fetchAll();
-    const totalItems = countResult[0] || 0;
+    let totalItems;
+    if (hasFilters) {
+      // Only run COUNT query when filters are active (unavoidable)
+      const countParams = parameters.filter(p => p.name !== '@offset' && p.name !== '@limit');
+      const countQuery = {
+        query: `SELECT VALUE COUNT(1) FROM c ${whereClause}`,
+        parameters: countParams,
+      };
+      const { resources: countResult } = await googleAlertsProcessedContainer.items
+        .query(countQuery)
+        .fetchAll();
+      totalItems = countResult[0] || 0;
+    } else {
+      // Use cached analytics count for unfiltered queries
+      const cached = analyticsService.getAnalytics('google-alerts', 'processed', 30);
+      totalItems = cached?.totalAllTime ?? 0;
+    }
 
     res.json({
       items,

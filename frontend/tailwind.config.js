@@ -6,11 +6,13 @@ export default {
     './index.html',
     './src/**/*.{js,jsx}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         primary: '#1717cf',
         'background-light': '#f6f6f8',
+        'background-dark': '#0f172a',
       },
       fontFamily: {
         display: ['Inter', 'system-ui', 'sans-serif'],

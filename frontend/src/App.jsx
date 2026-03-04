@@ -14,7 +14,7 @@ export default function App() {
   const isProcessed = processing === 'processed';
 
   return (
-    <div className="min-h-screen bg-background-light">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors">
       <Header />
       <main className="max-w-7xl mx-auto px-6 py-6">
         <FilterBar />
