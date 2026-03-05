@@ -1,0 +1,9 @@
+services:
+  sml-backend:
+    image: adarshtesting1/sml-backend:latest
+    container_name: sml-backend
+    ports:
+      - "${PORT:-4000}:${PORT:-4000}"
+    env_file:
+      - .env
+    restart: unless-stopped

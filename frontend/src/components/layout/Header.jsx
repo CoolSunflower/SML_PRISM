@@ -1,6 +1,7 @@
 import { useFilterStore } from '../../store/filterStore';
 import { Toggle } from './FilterBar';
 import { SettingsMenu } from './SettingsMenu';
+import prismLogo from '../../../assets/image.png';
 
 export function Header() {
   const { processing, setProcessing } = useFilterStore();
@@ -10,7 +11,7 @@ export function Header() {
       <div className='flex justify-between'>
         <div className="flex items-center gap-4">
           <div className="w-50 h-10 rounded-xl bg-primary flex items-center justify-center">
-            <img src="../../../assets/image.png" className="w-full h-full object-cover" alt="PRISM Logo" />
+            <img src={prismLogo} className="w-full h-full object-cover" alt="PRISM Logo" />
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">PRISM</h1>
