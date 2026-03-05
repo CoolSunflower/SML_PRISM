@@ -4,14 +4,13 @@ const express = require('express');
 const router = express.Router();
 const analyticsService = require('../services/analyticsService');
 
-// GET /api/analytics?source=all|kwatch|google-alerts&view=raw|processed&days=7|14|30&startDate=&endDate=
+// GET /api/analytics?source=all|kwatch|google-alerts&view=raw|processed&days=7|14|30
+//   Optional filters: startDate, endDate, topic, subTopic, platform (csv), sentiment (csv)
 router.get('/', (req, res) => {
   try {
     const source = req.query.source || 'all';
     const view = req.query.view || 'raw';
     const days = parseInt(req.query.days) || 7;
-    const startDate = req.query.startDate || '';
-    const endDate = req.query.endDate || '';
 
     // Validate params
     if (!['all', 'kwatch', 'google-alerts'].includes(source)) {
@@ -24,7 +23,17 @@ router.get('/', (req, res) => {
       return res.status(400).json({ error: 'Invalid days. Use: 7, 14, 30' });
     }
 
-    const data = analyticsService.getAnalytics(source, view, days, startDate, endDate);
+    // Build filters object
+    const filters = {
+      startDate: req.query.startDate || '',
+      endDate: req.query.endDate || '',
+      topic: req.query.topic || '',
+      subTopic: req.query.subTopic || '',
+      platform: req.query.platform ? req.query.platform.split(',') : [],
+      sentiment: req.query.sentiment ? req.query.sentiment.split(',') : [],
+    };
+
+    const data = analyticsService.getAnalytics(source, view, days, filters);
 
     if (!data) {
       return res.status(500).json({ error: 'Analytics data not available' });

@@ -80,6 +80,20 @@ router.get('/processed', async (req, res) => {
       conditions.push('c.subTopic = @subTopic');
       parameters.push({ name: '@subTopic', value: req.query.subTopic });
     }
+    if (req.query.platform) {
+      const platforms = req.query.platform.split(',');
+      const placeholders = platforms.map((_, i) => `@plat${i}`).join(', ');
+      conditions.push(`c.platform IN (${placeholders})`);
+      platforms.forEach((p, i) => parameters.push({ name: `@plat${i}`, value: p }));
+    }
+    if (req.query.sentiment) {
+      const sentiments = req.query.sentiment.split(',');
+      const placeholders = sentiments.map((_, i) => `@sent${i}`).join(', ');
+      conditions.push(`c.sentiment IN (${placeholders})`);
+      sentiments.forEach((s, i) => {
+        parameters.push({ name: `@sent${i}`, value: s.charAt(0).toUpperCase() + s.slice(1) });
+      });
+    }
 
     const hasFilters = conditions.length > 0;
     const whereClause = hasFilters ? `WHERE ${conditions.join(' AND ')} ` : '';

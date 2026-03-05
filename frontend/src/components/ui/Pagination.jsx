@@ -19,7 +19,7 @@ export function Pagination({ page, totalPages, totalItems, limit, onPageChange }
   return (
     <div className="mt-8 flex items-center justify-between">
       <p className="text-sm text-slate-500 dark:text-slate-400">
-        Showing {start}–{end} of {totalItems.toLocaleString()} results
+        Showing {start}-{end} of {totalItems.toLocaleString()} results
       </p>
       <div className="flex gap-1.5">
         <button

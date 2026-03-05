@@ -26,7 +26,14 @@ export function Toggle({ label, options, value, onChange }) {
 }
 
 export function FilterBar() {
-  const { source, setSource, processing, setProcessing, filtersOpen, toggleFilters } = useFilterStore();
+  const { source, setSource, processing, setProcessing, filtersOpen, toggleFilters, applied } = useFilterStore();
+
+  // Count active applied filters
+  let badgeCount = 0;
+  if (applied.startDate || applied.endDate) badgeCount++;
+  if (applied.topic) badgeCount++;
+  if (applied.platform.length > 0) badgeCount++;
+  if (applied.sentiment.length > 0) badgeCount++;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl mb-6 shadow-sm">
@@ -47,14 +54,19 @@ export function FilterBar() {
             <button
               onClick={toggleFilters}
               className={clsx(
-                'flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-all',
+                'relative flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-all',
                 filtersOpen
-                  ? 'border-primary bg-primary/5 text-primary'
+                  ? 'border-primary bg-primary/5 text-primary dark:bg-primary/10'
                   : 'border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300',
               )}
             >
               <span className="material-symbols-outlined text-lg">filter_list</span>
               Filters
+              {badgeCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold px-1">
+                  {badgeCount}
+                </span>
+              )}
             </button>
           </>
         )}

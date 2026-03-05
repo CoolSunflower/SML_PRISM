@@ -19,7 +19,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-6 py-6">
         <FilterBar />
         {isProcessed && <FilterDrawer />}
-        <AnalyticsSection data={analyticsData} loading={analyticsLoading} />
+        <AnalyticsSection data={analyticsData} loading={analyticsLoading} pagination={pagination} />
         <FeedList items={items} pagination={pagination} loading={feedLoading} />
       </main>
     </div>

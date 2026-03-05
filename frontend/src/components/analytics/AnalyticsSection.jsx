@@ -4,7 +4,7 @@ import { SentimentCard } from './SentimentCard';
 import { TopTopicsCard } from './TopTopicsCard';
 import { MethodSplitCard } from './MethodSplitCard';
 
-export function AnalyticsSection({ data, loading }) {
+export function AnalyticsSection({ data, loading, pagination }) {
   const { processing } = useFilterStore();
   const isProcessed = processing === 'processed';
 
@@ -29,7 +29,7 @@ export function AnalyticsSection({ data, loading }) {
     <div className="space-y-4 mb-6">
       <div className={`grid gap-4 ${showSentiment ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
         <div className={showSentiment ? 'lg:col-span-2' : ''}>
-          <PostsChart data={data} />
+          <PostsChart data={data} pagination={pagination} />
         </div>
         {showSentiment && <SentimentCard data={data} />}
       </div>

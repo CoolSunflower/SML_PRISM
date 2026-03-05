@@ -3,7 +3,7 @@
  */
 export function mergeFeeds(kwatchRes, gaRes, processing) {
   const getDate = (item, src) => {
-    if (processing === 'processed') return item.classifiedAt;
+    if (processing === 'processed') return item.classifiedAt || item.receivedAt;
     return src === 'kwatch' ? item.receivedAt : item.scrapedAt;
   };
 

@@ -33,7 +33,8 @@ function FeedHeader({ pagination, startDate, endDate }) {
 }
 
 export function FeedList({ items, pagination, loading }) {
-  const { processing, page, limit, startDate, endDate, setPage } = useFilterStore();
+  const { processing, page, limit, applied, setPage } = useFilterStore();
+  const { startDate, endDate } = applied;
   const isProcessed = processing === 'processed';
 
   if (loading) return <Spinner />;

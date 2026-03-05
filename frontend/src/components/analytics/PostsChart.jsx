@@ -93,9 +93,10 @@ function ChartContent({ chartType, chartData }) {
   );
 }
 
-export function PostsChart({ data }) {
-  const { chartDays, setChartDays, startDate, endDate } = useFilterStore();
+export function PostsChart({ data, pagination }) {
+  const { chartDays, setChartDays, applied } = useFilterStore();
   const { chartType } = useSettingsStore();
+  const { startDate, endDate } = applied;
   const hasDateFilter = startDate || endDate;
 
   const chartData = useMemo(() => {
@@ -124,6 +125,7 @@ export function PostsChart({ data }) {
 
   const totalInPeriod = data?.totalInPeriod ?? 0;
   const totalAllTime = data?.totalAllTime ?? 0;
+  const totalItemsInRange = hasDateFilter ? totalInPeriod : pagination?.totalItems ?? totalAllTime;
 
   const periodLabel = hasDateFilter ? 'Filtered' : `${chartDays}d`;
 
@@ -133,9 +135,12 @@ export function PostsChart({ data }) {
         <div>
           <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Mentions ({periodLabel})</p>
           <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{formatNumber(totalInPeriod)}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-            {formatNumber(totalAllTime)} all time
-          </p>
+          {!hasDateFilter && (
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+              {formatNumber(totalItemsInRange)} all time
+            </p>
+          )
+          }
         </div>
         {!hasDateFilter && (
           <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">

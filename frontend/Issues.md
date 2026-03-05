@@ -10,3 +10,6 @@
 - Maybe change the to spline based curve, lets add a basic settings option menu in header on top left with light-dark selector and graph view selector
 - I have shifted the logic a bit to show the View selector in the header
 - Go through the codebase once again and ensure we are not doing anything sub-optimal, especially since the database is large, let us try to ensure we are not making big unnecessary queries.
+
+
+- Time of post is not visible in Social media items, it is visible in Google Alerts items

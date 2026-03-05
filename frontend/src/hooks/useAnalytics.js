@@ -3,7 +3,7 @@ import { useFilterStore } from '../store/filterStore';
 import * as analyticsApi from '../api/analytics';
 
 export function useAnalytics() {
-  const { source, processing, chartDays, startDate, endDate } = useFilterStore();
+  const { source, processing, chartDays, applied, fetchTrigger } = useFilterStore();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,14 +12,15 @@ export function useAnalytics() {
     setLoading(true);
     setError(null);
     try {
-      const res = await analyticsApi.getAnalytics(source, processing, chartDays, startDate, endDate);
+      const res = await analyticsApi.getAnalytics(source, processing, chartDays, applied);
       setData(res.data);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [source, processing, chartDays, startDate, endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, processing, chartDays, fetchTrigger]);
 
   useEffect(() => { fetch(); }, [fetch]);
 

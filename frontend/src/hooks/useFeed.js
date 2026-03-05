@@ -5,7 +5,7 @@ import * as gaApi from '../api/googleAlerts';
 import { mergeFeeds } from '../utils/mergeFeeds';
 
 export function useFeed() {
-  const { source, processing, page, limit, startDate, endDate, topic, subTopic } = useFilterStore();
+  const { source, processing, page, limit, applied, fetchTrigger } = useFilterStore();
   const [items, setItems] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ export function useFeed() {
     setLoading(true);
     setError(null);
     try {
-      const filters = { page, limit, startDate, endDate, topic, subTopic };
+      const filters = { page, limit, ...applied };
 
       if (source === 'all') {
         const [kw, ga] = await Promise.all([
@@ -47,7 +47,8 @@ export function useFeed() {
     } finally {
       setLoading(false);
     }
-  }, [source, processing, page, limit, startDate, endDate, topic, subTopic]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, processing, page, limit, fetchTrigger]);
 
   useEffect(() => { fetchFeed(); }, [fetchFeed]);
 

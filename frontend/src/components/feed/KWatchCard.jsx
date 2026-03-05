@@ -6,9 +6,7 @@ const platformLabels = {
   twitter: 'Twitter/X',
   reddit: 'Reddit',
   facebook: 'Facebook',
-  instagram: 'Instagram',
   youtube: 'YouTube',
-  tiktok: 'TikTok',
 };
 
 const sentimentVariant = {
@@ -20,7 +18,7 @@ const sentimentVariant = {
 export function KWatchCard({ item, isProcessed }) {
   const platform = (item.platform || '').toLowerCase();
   const label = platformLabels[platform] || 'Web';
-  const dateField = isProcessed ? item.classifiedAt : item.receivedAt;
+  const dateField = isProcessed ? item.datetime : item.receivedAt;
   const content = item.content || item.text || '';
   const truncated = content.length > 500 ? content.slice(0, 500) + '...' : content;
 
