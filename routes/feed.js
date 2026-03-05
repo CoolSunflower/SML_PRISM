@@ -117,8 +117,7 @@ async function handleProcessed(req, res, page, limit, fetchLimit) {
   if (req.query.platform) {
     const platforms = req.query.platform.split(',');
     const placeholders = platforms.map((_, i) => `@kwPlat${i}`).join(', ');
-    // KWatch uses NOT IN (exclusion list) — matches routes/kwatch.js line 81
-    kwConditions.push(`c.platform NOT IN (${placeholders})`);
+    kwConditions.push(`c.platform IN (${placeholders})`);
     platforms.forEach((p, i) => kwParams.push({ name: `@kwPlat${i}`, value: p }));
   }
   if (req.query.sentiment) {

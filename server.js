@@ -81,9 +81,9 @@ async function startServer() {
   startQueueProcessor();
   console.log('[Server] KWatch queue processor started');
 
-  // // Start Google Alerts RSS scraper (runs every 2 hours, initial scrape on startup)
-  // startGoogleAlertsScraper();
-  // console.log('[Server] Google Alerts scraper started');
+  // Start Google Alerts RSS scraper (runs every 2 hours, initial scrape on startup)
+  startGoogleAlertsScraper();
+  console.log('[Server] Google Alerts scraper started');
 
   app.listen(PORT, () => {
     const poolMetrics = workerPool.getMetrics();

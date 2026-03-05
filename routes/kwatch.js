@@ -78,7 +78,7 @@ router.get('/processed', async (req, res) => {
     if (req.query.platform) {
       const platforms = req.query.platform.split(',');
       const placeholders = platforms.map((_, i) => `@plat${i}`).join(', ');
-      conditions.push(`c.platform NOT IN (${placeholders})`);
+      conditions.push(`c.platform IN (${placeholders})`);
       platforms.forEach((p, i) => parameters.push({ name: `@plat${i}`, value: p }));
     }
     if (req.query.sentiment) {

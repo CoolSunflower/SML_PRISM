@@ -306,12 +306,7 @@ async function getFilteredAnalyticsFromDB(sourceKey, view, filters) {
     }
     if (platform && platform.length > 0) {
       const placeholders = platform.map((_, i) => `@plat${i}`).join(', ');
-      // KWatch uses NOT IN (exclusion), Google Alerts uses IN (inclusion)
-      conditions.push(
-        sourceKey === 'kwatch'
-          ? `c.platform NOT IN (${placeholders})`
-          : `c.platform IN (${placeholders})`
-      );
+      conditions.push(`c.platform IN (${placeholders})`);
       platform.forEach((p, i) => params.push({ name: `@plat${i}`, value: p }));
     }
     if (sentiment && sentiment.length > 0) {

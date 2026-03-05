@@ -129,9 +129,16 @@ export function PostsChart({ data, pagination }) {
     });
   }, [data, chartDays, startDate, endDate, hasDateFilter]);
 
-  const totalInPeriod = data?.totalInPeriod ?? 0;
+  // Derive the headline count from the visible chart data so it stays
+  // consistent with the rendered bars/lines regardless of which backend
+  // path produced the analytics (fast in-memory vs filtered DB query).
+  const periodCount = useMemo(
+    () => chartData.reduce((sum, d) => sum + d.count, 0),
+    [chartData],
+  );
+
   const totalAllTime = data?.totalAllTime ?? 0;
-  const totalItemsInRange = hasDateFilter ? totalInPeriod : pagination?.totalItems ?? totalAllTime;
+  const totalItemsInRange = hasDateFilter ? periodCount : pagination?.totalItems ?? totalAllTime;
 
   const periodLabel = hasDateFilter ? 'Filtered' : `${chartDays}d`;
 
@@ -140,7 +147,7 @@ export function PostsChart({ data, pagination }) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Mentions ({periodLabel})</p>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{formatNumber(totalInPeriod)}</p>
+          <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{formatNumber(periodCount)}</p>
           {!hasDateFilter && (
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
               {formatNumber(totalItemsInRange)} all time
