@@ -37,12 +37,12 @@ const icons = {
 };
 
 const platformColors = {
-  twitter: 'bg-slate-900 text-white',
+  twitter: 'bg-slate-900 text-white dark:bg-slate-700',
   reddit: 'bg-orange-500 text-white',
   facebook: 'bg-blue-600 text-white',
   youtube: 'bg-red-600 text-white',
-  'google-alerts': 'bg-white text-blue-500 border border-slate-200',
-  default: 'bg-slate-100 text-slate-500',
+  'google-alerts': 'bg-white text-blue-500 border border-slate-200 dark:bg-slate-700 dark:text-blue-400 dark:border-slate-600',
+  default: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400',
 };
 
 export function PlatformIcon({ platform }) {

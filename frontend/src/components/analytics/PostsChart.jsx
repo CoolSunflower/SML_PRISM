@@ -24,8 +24,14 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 function ChartContent({ chartType, chartData }) {
+  const { theme } = useSettingsStore();
+  const isDark = theme === 'dark';
+  const gridStroke = isDark ? '#334155' : '#e2e8f0';
+  const tickFill = isDark ? '#94a3b8' : '#94a3b8';
+  const graphStroke = isDark ? '#60a5fa' : '#1717cf';
+
   const axisProps = {
-    tick: { fontSize: 11, fill: '#94a3b8' },
+    tick: { fontSize: 11, fill: tickFill },
     axisLine: false,
     tickLine: false,
   };
@@ -34,17 +40,17 @@ function ChartContent({ chartType, chartData }) {
     return (
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
           <XAxis dataKey="date" {...axisProps} />
           <YAxis {...axisProps} allowDecimals={false} />
           <Tooltip content={<CustomTooltip />} />
           <Line
             type="monotone"
             dataKey="count"
-            stroke="#1717cf"
+            stroke={graphStroke}
             strokeWidth={2.5}
-            dot={{ r: 3, fill: '#1717cf' }}
-            activeDot={{ r: 5, fill: '#1717cf' }}
+            dot={{ r: 3, fill: graphStroke }}
+            activeDot={{ r: 5, fill: graphStroke }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -57,22 +63,22 @@ function ChartContent({ chartType, chartData }) {
         <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
           <defs>
             <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#1717cf" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#1717cf" stopOpacity={0} />
+              <stop offset="5%" stopColor={graphStroke} stopOpacity={0.3} />
+              <stop offset="95%" stopColor={graphStroke} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
           <XAxis dataKey="date" {...axisProps} />
           <YAxis {...axisProps} allowDecimals={false} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
             dataKey="count"
-            stroke="#1717cf"
+            stroke={graphStroke}
             strokeWidth={2.5}
             fill="url(#colorCount)"
-            dot={{ r: 3, fill: '#1717cf' }}
-            activeDot={{ r: 5, fill: '#1717cf' }}
+            dot={{ r: 3, fill: graphStroke }}
+            activeDot={{ r: 5, fill: graphStroke }}
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -83,11 +89,11 @@ function ChartContent({ chartType, chartData }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
         <XAxis dataKey="date" {...axisProps} />
         <YAxis {...axisProps} allowDecimals={false} />
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(23, 23, 207, 0.05)' }} />
-        <Bar dataKey="count" fill="#1717cf" radius={[4, 4, 0, 0]} maxBarSize={40} />
+        <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? 'rgba(23, 23, 207, 0.1)' : 'rgba(23, 23, 207, 0.05)' }} />
+        <Bar dataKey="count" fill={graphStroke} radius={[4, 4, 0, 0]} maxBarSize={40} />
       </BarChart>
     </ResponsiveContainer>
   );

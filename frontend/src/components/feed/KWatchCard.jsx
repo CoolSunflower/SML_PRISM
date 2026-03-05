@@ -46,8 +46,8 @@ export function KWatchCard({ item, isProcessed }) {
           {/* Classification box (processed only) */}
           {isProcessed && item.topic && (
             <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-lg">
-              <span className="material-symbols-outlined text-emerald-600 text-sm">sell</span>
-              <span className="text-xs font-semibold text-emerald-700">
+              <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-sm">sell</span>
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                 {item.topic}
                 {item.subTopic && ` / ${item.subTopic}`}
               </span>
@@ -66,7 +66,7 @@ export function KWatchCard({ item, isProcessed }) {
               href={item.link || item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+              className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary/80 transition-colors"
             >
               <span className="material-symbols-outlined text-sm">open_in_new</span>
               View Source

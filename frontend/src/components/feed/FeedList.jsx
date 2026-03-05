@@ -25,7 +25,7 @@ function FeedHeader({ pagination, startDate, endDate }) {
         <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Feed</h2>
         <span className="text-xs text-slate-400 dark:text-slate-500">({totalItems.toLocaleString()} results)</span>
       </div>
-      <span className="text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-full">
+      <span className="text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700 px-3 py-1 rounded-full">
         {rangeLabel}
       </span>
     </div>

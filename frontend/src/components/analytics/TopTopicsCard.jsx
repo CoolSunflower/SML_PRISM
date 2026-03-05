@@ -1,4 +1,5 @@
 import { formatNumber } from '../../utils/formatters';
+import { useSettingsStore } from '../../store/settingsStore';
 
 export function TopTopicsCard({ data }) {
   const topics = data?.topTopics;
@@ -20,7 +21,7 @@ export function TopTopicsCard({ data }) {
               </div>
               <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-primary/70 transition-all duration-500"
+                  className="h-full rounded-full bg-blue-500 transition-all duration-500"
                   style={{ width: `${(t.count / maxCount) * 100}%` }}
                 />
               </div>
