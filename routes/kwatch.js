@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
     const { resources: items } = await kwatchContainer.items.query(querySpec).fetchAll();
 
     // Use cached analytics count instead of expensive COUNT query
-    const cached = analyticsService.getAnalytics('kwatch', 'raw', 30);
+    const cached = await analyticsService.getAnalytics('kwatch', 'raw', 30);
     const totalItems = cached?.totalAllTime ?? 0;
 
     res.json({
@@ -112,7 +112,7 @@ router.get('/processed', async (req, res) => {
       totalItems = countResult[0] || 0;
     } else {
       // Use cached analytics count for unfiltered queries
-      const cached = analyticsService.getAnalytics('kwatch', 'processed', 30);
+      const cached = await analyticsService.getAnalytics('kwatch', 'processed', 30);
       totalItems = cached?.totalAllTime ?? 0;
     }
 

@@ -72,8 +72,8 @@ async function handleRaw(req, res, page, limit, fetchLimit) {
   const startIdx = (page - 1) * limit;
   const pageItems = merged.slice(startIdx, startIdx + limit);
 
-  const kwCached = analyticsService.getAnalytics('kwatch', 'raw', 30);
-  const gaCached = analyticsService.getAnalytics('google-alerts', 'raw', 30);
+  const kwCached = await analyticsService.getAnalytics('kwatch', 'raw', 30);
+  const gaCached = await analyticsService.getAnalytics('google-alerts', 'raw', 30);
   const totalItems = (kwCached?.totalAllTime ?? 0) + (gaCached?.totalAllTime ?? 0);
 
   res.json({
@@ -220,8 +220,8 @@ async function handleProcessed(req, res, page, limit, fetchLimit) {
 
     totalItems = (kwCount.resources[0] || 0) + (gaCount.resources[0] || 0);
   } else {
-    const kwCached = analyticsService.getAnalytics('kwatch', 'processed', 30);
-    const gaCached = analyticsService.getAnalytics('google-alerts', 'processed', 30);
+    const kwCached = await analyticsService.getAnalytics('kwatch', 'processed', 30);
+    const gaCached = await analyticsService.getAnalytics('google-alerts', 'processed', 30);
     totalItems = (kwCached?.totalAllTime ?? 0) + (gaCached?.totalAllTime ?? 0);
   }
 

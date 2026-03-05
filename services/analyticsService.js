@@ -21,7 +21,6 @@ function createEmptyProcessedState() {
     sentiment: { positive: 0, neutral: 0, negative: 0 },
     topicCounts: new Map(),
     classificationMethod: { brandQuery: 0, relevancyClassification: 0 },
-    items: [], // Per-item detail for filtered re-aggregation
   };
 }
 
@@ -36,6 +35,13 @@ const state = {
     processed: createEmptyProcessedState(),
   },
 };
+
+//  Memoization cache for filtered DB queries
+const filterCache = new Map();
+
+function invalidateFilterCache() {
+  filterCache.clear();
+}
 
 //  Helpers
 function toDateKey(isoString) {
@@ -57,22 +63,6 @@ function inferMethod(topic) {
     : 'brandQuery';
 }
 
-/**
- * Normalize platform strings to canonical form for consistent filtering.
- */
-function normalizePlatform(platform) {
-  const lower = (platform || '').toLowerCase();
-  const map = {
-    Twitter: 'Twitter',
-    reddit: 'Reddit',
-    facebook: 'Facebook',
-    youtube: 'YouTube',
-    googlealerts: 'google-alerts',
-    'google-alerts': 'google-alerts',
-  };
-  return map[lower] || platform;
-}
-
 //  Startup load
 async function fetchAllItems(container, querySpec) {
   const { resources } = await container.items.query(querySpec).fetchAll();
@@ -88,9 +78,9 @@ async function loadContainerAnalytics(container, dateField, target, isProcessed)
   });
   target.totalCount = countResult || 0;
 
-  // 2) Per-item fields for last 30 days
+  // 2) Per-item fields for last 30 days (aggregates only, no per-item storage)
   const fields = isProcessed
-    ? `c.${dateField}, c.topic, c.subTopic, c.sentiment, c.platform`
+    ? `c.${dateField}, c.topic, c.sentiment`
     : `c.${dateField}`;
 
   const items = await fetchAllItems(container, {
@@ -105,27 +95,15 @@ async function loadContainerAnalytics(container, dateField, target, isProcessed)
     }
 
     if (isProcessed) {
-      // Sentiment
       const sent = (item.sentiment || '').toLowerCase();
       if (sent in target.sentiment) {
         target.sentiment[sent]++;
       }
 
-      // Topic
       if (item.topic) {
         target.topicCounts.set(item.topic, (target.topicCounts.get(item.topic) || 0) + 1);
         target.classificationMethod[inferMethod(item.topic)]++;
       }
-
-      // Store lightweight record for filtered re-aggregation
-      target.items.push({
-        dateKey,
-        topic: item.topic || '',
-        subTopic: item.subTopic || '',
-        sentiment: sent,
-        platform: normalizePlatform(item.platform || ''),
-        method: inferMethod(item.topic),
-      });
     }
   }
 }
@@ -166,6 +144,8 @@ function recordRawItem(source, item) {
   if (dateKey) {
     target.dailyCounts.set(dateKey, (target.dailyCounts.get(dateKey) || 0) + 1);
   }
+
+  invalidateFilterCache();
 }
 
 function recordProcessedItem(source, item) {
@@ -191,15 +171,7 @@ function recordProcessedItem(source, item) {
     target.classificationMethod[inferMethod(item.topic)]++;
   }
 
-  // Store lightweight record for filtered re-aggregation
-  target.items.push({
-    dateKey,
-    topic: item.topic || '',
-    subTopic: item.subTopic || '',
-    sentiment: sent,
-    platform: normalizePlatform(item.platform || ''),
-    method: inferMethod(item.topic),
-  });
+  invalidateFilterCache();
 }
 
 //  Pruning
@@ -215,13 +187,11 @@ function pruneOldData() {
         }
       }
     }
-    // Prune per-item detail arrays for processed views
-    const proc = state[source].processed;
-    proc.items = proc.items.filter((item) => item.dateKey >= cutoffKey);
   }
 }
 
 //  Getters
+
 /**
  * Fast path: aggregate-only analytics using pre-computed Maps.
  * Used when no granular filters (platform, sentiment, topic, date) are active.
@@ -279,97 +249,140 @@ function getAnalyticsForSource(source, view, days, startDate, endDate) {
   return result;
 }
 
+//  Filtered analytics via Cosmos DB
+
 /**
- * Filtered analytics: iterate per-item records and re-aggregate.
- * Falls back to fast path when no granular filters are active.
+ * Resolve the correct container and date field for a source+view combination.
  */
-function getFilteredAnalyticsForSource(source, view, days, filters) {
+function resolveContainer(sourceKey, view) {
+  if (sourceKey === 'kwatch') {
+    return {
+      container: view === 'processed' ? kwatchProcessedContainer : kwatchContainer,
+      dateField: 'receivedAt',
+    };
+  }
+  return {
+    container: view === 'processed' ? googleAlertsProcessedContainer : googleAlertsRawContainer,
+    dateField: view === 'processed' ? 'classifiedAt' : 'scrapedAt',
+  };
+}
+
+/**
+ * Query Cosmos DB with the given filters, fetch lightweight records,
+ * and aggregate in Node.js. Results are memoized until new data arrives.
+ */
+async function getFilteredAnalyticsFromDB(sourceKey, view, filters) {
+  const cacheKey = JSON.stringify({ sourceKey, view, ...filters });
+  if (filterCache.has(cacheKey)) {
+    return filterCache.get(cacheKey);
+  }
+
   const { startDate, endDate, topic, subTopic, platform, sentiment } = filters;
+  const { container, dateField } = resolveContainer(sourceKey, view);
 
-  // Raw view does not support granular filters
-  if (view !== 'processed') {
-    return getAnalyticsForSource(source, view, days, startDate, endDate);
+  // ---- Build WHERE clause ----
+  const conditions = [];
+  const params = [];
+
+  if (startDate) {
+    conditions.push(`c.${dateField} >= @startDate`);
+    params.push({ name: '@startDate', value: startDate });
   }
-
-  const hasGranularFilters =
-    startDate || endDate ||
-    topic || subTopic ||
-    (platform && platform.length > 0) ||
-    (sentiment && sentiment.length > 0);
-
-  // Fast path: no filters at all - use pre-aggregated Maps (unfiltered 30-day window)
-  if (!hasGranularFilters) {
-    return getAnalyticsForSource(source, view, days, startDate, endDate);
-  }
-
-  const target = state[source]?.processed;
-  if (!target) return null;
-
-  // Date bounds
-  const hasDateFilter = startDate || endDate;
-  const startKey = startDate ? startDate.substring(0, 10) : null;
-  let endKey = null;
   if (endDate) {
     const end = new Date(endDate);
     end.setDate(end.getDate() + 1);
-    endKey = end.toISOString().substring(0, 10);
+    conditions.push(`c.${dateField} < @endDate`);
+    params.push({ name: '@endDate', value: end.toISOString() });
   }
-  const cutoffKey = cutoffISO(days).substring(0, 10);
 
-  // Build Sets for O(1) lookup on array filters
-  const platformSet = platform && platform.length > 0
-    ? new Set(platform.map(normalizePlatform))
-    : null;
-  const sentimentSet = sentiment && sentiment.length > 0
-    ? new Set(sentiment.map((s) => s.toLowerCase()))
-    : null;
+  if (view === 'processed') {
+    if (topic) {
+      conditions.push('c.topic = @topic');
+      params.push({ name: '@topic', value: topic });
+    }
+    if (subTopic) {
+      conditions.push('c.subTopic = @subTopic');
+      params.push({ name: '@subTopic', value: subTopic });
+    }
+    if (platform && platform.length > 0) {
+      const placeholders = platform.map((_, i) => `@plat${i}`).join(', ');
+      // KWatch uses NOT IN (exclusion), Google Alerts uses IN (inclusion)
+      conditions.push(
+        sourceKey === 'kwatch'
+          ? `c.platform NOT IN (${placeholders})`
+          : `c.platform IN (${placeholders})`
+      );
+      platform.forEach((p, i) => params.push({ name: `@plat${i}`, value: p }));
+    }
+    if (sentiment && sentiment.length > 0) {
+      const placeholders = sentiment.map((_, i) => `@sent${i}`).join(', ');
+      conditions.push(`c.sentiment IN (${placeholders})`);
+      sentiment.forEach((s, i) => {
+        // Google Alerts capitalizes sentiment values
+        const val = sourceKey === 'kwatch' ? s : s.charAt(0).toUpperCase() + s.slice(1);
+        params.push({ name: `@sent${i}`, value: val });
+      });
+    }
+  }
 
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')} ` : '';
+
+  // ---- Fetch lightweight records ----
+  const selectFields = view === 'processed'
+    ? `c.${dateField} as dateVal, c.topic, c.sentiment`
+    : `c.${dateField} as dateVal`;
+
+  const { resources } = await container.items
+    .query({ query: `SELECT ${selectFields} FROM c ${where}`, parameters: params })
+    .fetchAll();
+
+  // ---- Aggregate in Node.js ----
   const dailyCounts = {};
-  let periodTotal = 0;
+  let totalInPeriod = 0;
   const sentimentAgg = { positive: 0, neutral: 0, negative: 0 };
   const topicCounts = new Map();
   const methodAgg = { brandQuery: 0, relevancyClassification: 0 };
 
-  for (const item of target.items) {
-    // Date filter
-    if (hasDateFilter) {
-      if (startKey && item.dateKey < startKey) continue;
-      if (endKey && item.dateKey >= endKey) continue;
-    } else {
-      if (item.dateKey < cutoffKey) continue;
+  for (const item of resources) {
+    const dateKey = toDateKey(item.dateVal);
+    if (dateKey) {
+      dailyCounts[dateKey] = (dailyCounts[dateKey] || 0) + 1;
     }
+    totalInPeriod++;
 
-    // Granular filters
-    if (topic && item.topic !== topic) continue;
-    if (subTopic && item.subTopic !== subTopic) continue;
-    if (platformSet && !platformSet.has(item.platform)) continue;
-    if (sentimentSet && !sentimentSet.has(item.sentiment)) continue;
+    if (view === 'processed') {
+      const sent = (item.sentiment || '').toLowerCase();
+      if (sent in sentimentAgg) sentimentAgg[sent]++;
 
-    // Aggregate
-    dailyCounts[item.dateKey] = (dailyCounts[item.dateKey] || 0) + 1;
-    periodTotal++;
-
-    if (item.sentiment in sentimentAgg) {
-      sentimentAgg[item.sentiment]++;
-    }
-    if (item.topic) {
-      topicCounts.set(item.topic, (topicCounts.get(item.topic) || 0) + 1);
-      methodAgg[item.method]++;
+      if (item.topic) {
+        topicCounts.set(item.topic, (topicCounts.get(item.topic) || 0) + 1);
+        methodAgg[inferMethod(item.topic)]++;
+      }
     }
   }
 
-  return {
-    totalInPeriod: periodTotal,
-    totalAllTime: target.totalCount, // all-time remains unfiltered
+  const target = state[sourceKey]?.[view];
+
+  const result = {
+    totalInPeriod,
+    totalAllTime: target?.totalCount ?? 0,
     dailyCounts,
-    sentiment: sentimentAgg,
-    topTopics: [...topicCounts.entries()]
+  };
+
+  if (view === 'processed') {
+    result.sentiment = sentimentAgg;
+    result.topTopics = [...topicCounts.entries()]
       .map(([t, count]) => ({ topic: t, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 10),
-    classificationMethod: methodAgg,
-  };
+      .slice(0, 10);
+    result.classificationMethod = methodAgg;
+  }
+
+  filterCache.set(cacheKey, result);
+  return result;
 }
+
+//  Merge helpers
 
 function mergeDailyCounts(a, b) {
   const merged = { ...a };
@@ -390,21 +403,33 @@ function mergeTopTopics(a, b) {
 }
 
 /**
- * Public analytics getter. Accepts a filters object:
- *   { startDate, endDate, topic, subTopic, platform: string[], sentiment: string[] }
+ * Public analytics getter (async).
  *
- * Backward-compatible: callers from kwatch/googleAlerts routes pass (source, view, 30)
- * for totalAllTime without a filters object — defaults to empty filters.
+ * - No filters → fast path using in-memory pre-aggregated Maps (instant)
+ * - With filters → queries Cosmos DB, aggregates, memoizes
  */
-function getAnalytics(source, view, days, filters = {}) {
-  // Normalize: old callers may pass positional (source, view, days) with no filters
-  const f = typeof filters === 'object' && !Array.isArray(filters)
-    ? filters
-    : {};
+async function getAnalytics(source, view, days, filters = {}) {
+  const f = typeof filters === 'object' && !Array.isArray(filters) ? filters : {};
+
+  const hasGranularFilters =
+    f.startDate || f.endDate ||
+    f.topic || f.subTopic ||
+    (f.platform && f.platform.length > 0) ||
+    (f.sentiment && f.sentiment.length > 0);
 
   if (source === 'all') {
-    const kw = getFilteredAnalyticsForSource('kwatch', view, days, f);
-    const ga = getFilteredAnalyticsForSource('googleAlerts', view, days, f);
+    let kw, ga;
+
+    if (hasGranularFilters) {
+      [kw, ga] = await Promise.all([
+        getFilteredAnalyticsFromDB('kwatch', view, f),
+        getFilteredAnalyticsFromDB('googleAlerts', view, f),
+      ]);
+    } else {
+      kw = getAnalyticsForSource('kwatch', view, days, f.startDate, f.endDate);
+      ga = getAnalyticsForSource('googleAlerts', view, days, f.startDate, f.endDate);
+    }
+
     if (!kw || !ga) return null;
 
     const result = {
@@ -430,7 +455,12 @@ function getAnalytics(source, view, days, filters = {}) {
   }
 
   const sourceKey = source === 'google-alerts' ? 'googleAlerts' : source;
-  return getFilteredAnalyticsForSource(sourceKey, view, days, f);
+
+  if (hasGranularFilters) {
+    return getFilteredAnalyticsFromDB(sourceKey, view, f);
+  }
+
+  return getAnalyticsForSource(sourceKey, view, days, f.startDate, f.endDate);
 }
 
 function getLastRefreshAt() {

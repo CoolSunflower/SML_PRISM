@@ -6,7 +6,7 @@ const analyticsService = require('../services/analyticsService');
 
 // GET /api/analytics?source=all|kwatch|google-alerts&view=raw|processed&days=7|14|30
 //   Optional filters: startDate, endDate, topic, subTopic, platform (csv), sentiment (csv)
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const source = req.query.source || 'all';
     const view = req.query.view || 'raw';
@@ -33,7 +33,7 @@ router.get('/', (req, res) => {
       sentiment: req.query.sentiment ? req.query.sentiment.split(',') : [],
     };
 
-    const data = analyticsService.getAnalytics(source, view, days, filters);
+    const data = await analyticsService.getAnalytics(source, view, days, filters);
 
     if (!data) {
       return res.status(500).json({ error: 'Analytics data not available' });
