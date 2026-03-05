@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useFilterStore } from '../store/filterStore';
 import * as kwatchApi from '../api/kwatch';
 import * as gaApi from '../api/googleAlerts';
-import { mergeFeeds } from '../utils/mergeFeeds';
+import * as feedApi from '../api/feed';
 
 export function useFeed() {
   const { source, processing, page, limit, applied, fetchTrigger } = useFilterStore();
@@ -18,17 +18,9 @@ export function useFeed() {
       const filters = { page, limit, ...applied };
 
       if (source === 'all') {
-        const [kw, ga] = await Promise.all([
-          processing === 'raw'
-            ? kwatchApi.getKWatchRaw(page, limit)
-            : kwatchApi.getKWatchProcessed(filters),
-          processing === 'raw'
-            ? gaApi.getGoogleAlertsRaw(page, limit)
-            : gaApi.getGoogleAlertsProcessed(filters),
-        ]);
-        const merged = mergeFeeds(kw, ga, processing);
-        setItems(merged.items);
-        setPagination(merged.pagination);
+        const res = await feedApi.getCombinedFeed({ page, limit, processing, ...applied });
+        setItems(res.items);
+        setPagination(res.pagination);
       } else if (source === 'kwatch') {
         const res = processing === 'raw'
           ? await kwatchApi.getKWatchRaw(page, limit)

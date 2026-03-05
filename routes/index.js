@@ -9,6 +9,7 @@ const classifyRoutes = require('./classify');
 const googleAlertsRoutes = require('./googleAlerts');
 const analyticsRoutes = require('./analytics');
 const filtersRoutes = require('./filters');
+const feedRoutes = require('./feed');
 
 // Mount routes
 router.use('/webhook', webhookRoutes);
@@ -19,5 +20,6 @@ router.use('/classify', classifyRoutes);
 router.use('/google-alerts', googleAlertsRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/filters', filtersRoutes);
+router.use('/feed', feedRoutes);
 
 module.exports = router;

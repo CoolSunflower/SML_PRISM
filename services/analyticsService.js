@@ -8,7 +8,6 @@ const {
 } = require('../config/database');
 
 //  In-memory analytics state
-
 const WINDOW_DAYS = 30;
 
 function createEmptyRawState() {
@@ -39,7 +38,6 @@ const state = {
 };
 
 //  Helpers
-
 function toDateKey(isoString) {
   if (!isoString) return null;
   return isoString.substring(0, 10); // YYYY-MM-DD
@@ -76,7 +74,6 @@ function normalizePlatform(platform) {
 }
 
 //  Startup load
-
 async function fetchAllItems(container, querySpec) {
   const { resources } = await container.items.query(querySpec).fetchAll();
   return resources;
@@ -147,7 +144,7 @@ async function initialize() {
 
     state.lastRefreshAt = new Date().toISOString();
     const elapsed = Date.now() - start;
-    console.log(`[Analytics] Loaded in ${elapsed}ms — KWatch raw: ${state.kwatch.raw.totalCount}, processed: ${state.kwatch.processed.totalCount} | GA raw: ${state.googleAlerts.raw.totalCount}, processed: ${state.googleAlerts.processed.totalCount}`);
+    console.log(`[Analytics] Loaded in ${elapsed}ms - KWatch raw: ${state.kwatch.raw.totalCount}, processed: ${state.kwatch.processed.totalCount} | GA raw: ${state.googleAlerts.raw.totalCount}, processed: ${state.googleAlerts.processed.totalCount}`);
   } catch (err) {
     console.error('[Analytics] Initialization error:', err.message);
     throw err;
@@ -158,7 +155,6 @@ async function initialize() {
 }
 
 //  Incremental updates
-
 function recordRawItem(source, item) {
   const target = state[source]?.raw;
   if (!target) return;
@@ -207,7 +203,6 @@ function recordProcessedItem(source, item) {
 }
 
 //  Pruning
-
 function pruneOldData() {
   const cutoffKey = cutoffISO(WINDOW_DAYS).substring(0, 10);
 
@@ -227,10 +222,9 @@ function pruneOldData() {
 }
 
 //  Getters
-
 /**
  * Fast path: aggregate-only analytics using pre-computed Maps.
- * Used when no granular filters (platform, sentiment, topic) are active.
+ * Used when no granular filters (platform, sentiment, topic, date) are active.
  */
 function getAnalyticsForSource(source, view, days, startDate, endDate) {
   const target = state[source]?.[view];
@@ -298,11 +292,12 @@ function getFilteredAnalyticsForSource(source, view, days, filters) {
   }
 
   const hasGranularFilters =
+    startDate || endDate ||
     topic || subTopic ||
     (platform && platform.length > 0) ||
     (sentiment && sentiment.length > 0);
 
-  // Fast path: no granular filters, just date range on pre-aggregated Maps
+  // Fast path: no filters at all - use pre-aggregated Maps (unfiltered 30-day window)
   if (!hasGranularFilters) {
     return getAnalyticsForSource(source, view, days, startDate, endDate);
   }
