@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Badge } from '../ui/Badge';
 import { PlatformIcon } from '../ui/PlatformIcon';
 import { timeAgo } from '../../utils/formatters';
@@ -15,12 +16,29 @@ const sentimentVariant = {
   negative: 'negative',
 };
 
-export function KWatchCard({ item, isProcessed }) {
+export function KWatchCard({ item, isProcessed, onRemediate }) {
+  const [remediating, setRemediating] = useState(false);
+  const [remediateError, setRemediateError] = useState(null);
+
   const platform = (item.platform || '').toLowerCase();
   const label = platformLabels[platform] || 'Web';
   const dateField = isProcessed ? item.datetime : item.receivedAt;
   const content = item.content || item.text || '';
   const truncated = content.length > 500 ? content.slice(0, 500) + '...' : content;
+
+  const isDoneRemediation = item.doneRemediation === true;
+
+  async function handleRemediate(action) {
+    setRemediating(true);
+    setRemediateError(null);
+    try {
+      await onRemediate(item.id, action, item.platform);
+    } catch (err) {
+      setRemediateError(err.message || 'Failed to remediate');
+    } finally {
+      setRemediating(false);
+    }
+  }
 
   return (
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
@@ -60,18 +78,60 @@ export function KWatchCard({ item, isProcessed }) {
           {/* Content */}
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{truncated}</p>
 
-          {/* Footer - View Source */}
-          {(item.link || item.url) && (
-            <a
-              href={item.link || item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary/80 transition-colors"
-            >
-              <span className="material-symbols-outlined text-sm">open_in_new</span>
-              View Source
-            </a>
-          )}
+          {/* Footer row */}
+          <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
+            {(item.link || item.url) && (
+              <a
+                href={item.link || item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary/80 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">open_in_new</span>
+                View Source
+              </a>
+            )}
+
+            {/* Remediation controls (processed mode only) */}
+            {isProcessed && (
+              <div className="flex items-center gap-2 ml-auto">
+                {isDoneRemediation ? (
+                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                    item.remediationAction === 'accepted'
+                      ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    <span className="material-symbols-outlined text-sm">
+                      {item.remediationAction === 'accepted' ? 'check_circle' : 'cancel'}
+                    </span>
+                    {item.remediationAction === 'accepted' ? 'Accepted' : 'Rejected'}
+                  </span>
+                ) : (
+                  <>
+                    {remediateError && (
+                      <span className="text-xs text-red-500 dark:text-red-400">{remediateError}</span>
+                    )}
+                    <button
+                      onClick={() => handleRemediate('rejected')}
+                      disabled={remediating}
+                      className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:hover:border-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="material-symbols-outlined text-sm">cancel</span>
+                      Reject
+                    </button>
+                    <button
+                      onClick={() => handleRemediate('accepted')}
+                      disabled={remediating}
+                      className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="material-symbols-outlined text-sm">check_circle</span>
+                      Accept
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

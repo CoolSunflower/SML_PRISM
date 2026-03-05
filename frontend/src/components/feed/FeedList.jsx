@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useFilterStore } from '../../store/filterStore';
 import { FeedCard } from './FeedCard';
 import { Pagination } from '../ui/Pagination';
 import { Spinner } from '../ui/Spinner';
 import { EmptyState } from '../ui/EmptyState';
 import { format } from 'date-fns';
+import { remediateItem } from '../../api/remediation';
 
 function FeedHeader({ pagination, startDate, endDate }) {
   const totalItems = pagination?.totalItems ?? 0;
@@ -37,15 +39,44 @@ export function FeedList({ items, pagination, loading }) {
   const { startDate, endDate } = applied;
   const isProcessed = processing === 'processed';
 
+  // Local overrides applied optimistically after remediation: avoids full refetch
+  const [overrides, setOverrides] = useState({});
+
+  async function handleRemediate(id, action, platform) {
+    const item = items.find(i => i.id === id);
+    const source = item?._source === 'google-alerts' ? 'google-alerts' : 'kwatch';
+    const response = await remediateItem(source, id, action, platform);
+    // TODO: show toast notification on success/failure of api call & update item view (i.e. overrides) based on response instead of assuming success
+    if(response.success) {
+      console.log('Remediation successful:', response.item);
+    } else {
+      console.error('Remediation failed:', response);
+    }
+
+    setOverrides(prev => ({
+      ...prev,
+      [id]: { doneRemediation: true, remediationAction: action },
+    }));
+  }
+
   if (loading) return <Spinner />;
   if (!items || items.length === 0) return <EmptyState />;
+
+  const displayItems = Object.keys(overrides).length > 0
+    ? items.map(item => overrides[item.id] ? { ...item, ...overrides[item.id] } : item)
+    : items;
 
   return (
     <div>
       <FeedHeader pagination={pagination} startDate={startDate} endDate={endDate} />
       <div className="space-y-3">
-        {items.map((item, idx) => (
-          <FeedCard key={item.id || idx} item={item} isProcessed={isProcessed} />
+        {displayItems.map((item, idx) => (
+          <FeedCard
+            key={item.id || idx}
+            item={item}
+            isProcessed={isProcessed}
+            onRemediate={isProcessed ? handleRemediate : undefined}
+          />
         ))}
       </div>
       {pagination && pagination.totalPages > 1 && (

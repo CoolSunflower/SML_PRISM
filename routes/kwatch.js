@@ -132,6 +132,42 @@ router.get('/processed', async (req, res) => {
   }
 });
 
+// PATCH /api/kwatch/processed/:id/remediate - Accept or reject a processed KWatch item
+router.patch('/processed/:id/remediate', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, platform } = req.body;
+
+    if (!action || !['accepted', 'rejected'].includes(action)) {
+      return res.status(400).json({ error: 'action must be "accepted" or "rejected"' });
+    }
+    if (!platform) {
+      return res.status(400).json({ error: 'platform (partition key) is required' });
+    }
+
+    const { resource: existing } = await kwatchProcessedContainer.item(id, [platform, id]).read();
+    if (!existing) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    const updated = { ...existing, doneRemediation: true, remediationAction: action };
+
+    if (action === 'accepted') {
+      // TODO: send to SharePoint list for downstream reporting & update Cosmos item
+      console.log(`[Remediation] KWatch item ${id} accepted: SharePoint send pending implementation`);
+      // const { resource: replaced } = await kwatchProcessedContainer.item(id, [platform, id]).replace(updated);
+    }
+
+    res.json({ success: true, item: updated });
+  } catch (error) {
+    if (error.code === 404) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+    console.error('[Remediation] Error remediating KWatch processed item:', error);
+    res.status(500).json({ error: 'Failed to remediate item' });
+  }
+});
+
 // DELETE /api/kwatch/:id - Delete a KWatch item
 router.delete('/:id', async (req, res) => {
   try {

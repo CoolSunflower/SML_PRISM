@@ -138,6 +138,39 @@ router.get('/processed', async (req, res) => {
   }
 });
 
+// PATCH /api/google-alerts/processed/:id/remediate - Accept or reject a processed Google Alerts item
+router.patch('/processed/:id/remediate', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action } = req.body;
+
+    if (!action || !['accepted', 'rejected'].includes(action)) {
+      return res.status(400).json({ error: 'action must be "accepted" or "rejected"' });
+    }
+
+    const { resource: existing } = await googleAlertsProcessedContainer.item(id, id).read();
+    if (!existing) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    const updated = { ...existing, doneRemediation: true, remediationAction: action };
+
+    if (action === 'accepted') {
+      // TODO: send to SharePoint list for downstream reporting & update Cosmos item
+      console.log(`[Remediation] Google Alerts item ${id} accepted: SharePoint send pending implementation`);
+      // const { resource: replaced } = await googleAlertsProcessedContainer.item(id, id).replace(updated);
+    }
+
+    res.json({ success: true, item: updated });
+  } catch (err) {
+    if (err.code === 404) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+    console.error('[Remediation] Error remediating Google Alerts processed item:', err);
+    res.status(500).json({ error: 'Failed to remediate item' });
+  }
+});
+
 // GET /api/google-alerts/state - All feed states (last scraped times, hashes, entry counts)
 router.get('/state', async (req, res) => {
   try {
