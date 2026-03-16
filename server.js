@@ -72,7 +72,7 @@ async function startServer() {
   // Initialize Analytics (load from Cosmos DB — runs once at startup)
   console.log('[Server] Loading analytics data...');
   try {
-    // await analyticsService.initialize();
+    await analyticsService.initialize();
     console.log('[Server] Analytics data loaded');
   } catch (err) {
     console.error('[Server] Analytics initialization failed:', err.message);
@@ -98,9 +98,9 @@ async function startServer() {
   startQueueProcessor();
   console.log('[Server] KWatch queue processor started');
 
-  // // Start Google Alerts RSS scraper (runs every 2 hours, initial scrape on startup)
-  // startGoogleAlertsScraper();
-  // console.log('[Server] Google Alerts scraper started');
+  // Start Google Alerts RSS scraper (runs every 2 hours, initial scrape on startup)
+  startGoogleAlertsScraper();
+  console.log('[Server] Google Alerts scraper started');
 
   app.listen(PORT, () => {
     const poolMetrics = workerPool.getMetrics();
