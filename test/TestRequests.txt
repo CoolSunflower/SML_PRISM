@@ -29,3 +29,42 @@ Invoke-WebRequest `
     "content": "Stryker nail implant",
     "sentiment": "positive"
   }'
+
+// Should detect German (supported Tier 1), route through translation pool,
+// then classify the translated English text via Relevancy model.
+// No Stryker/Mako brand keywords -> brand matcher skips -> SBERT/SVM picks up
+// on orthopedic implant recall context -> RelevancyClassification
+Invoke-WebRequest `
+  -Uri "https://social-media-listening-ahawbrhza5ewc4au.eastus-01.azurewebsites.net/api/webhook/kwatch" `
+  -Method POST `
+  -Headers @{ "Content-Type" = "application/json" } `
+  -Body '{
+    "platform": "twitter",
+    "query": "Knieprothese Test. Integration",
+    "datetime": "2026-01-21T10:55:24.397Z",
+    "link": "https://test.com/3",
+    "author": "test_user_de",
+    "title": "Hüftgelenk-Implantat Rückruf",
+    "content": "Orthopädische Implantate für Hüft- und Kniegelenk wurden von Behörden wegen erhöhter Ausfallraten zurückgerufen. Betroffene Patienten sollten ihren Arzt konsultieren.",
+    "sentiment": "negative"
+  }'
+
+// Should detect Russian (unsupported - not in the 23 supported languages),
+// skip translation entirely, and classify directly on the raw text.
+// Brand names "Stryker" and "Mako" appear in Latin script inside the Cyrillic text
+// (standard practice on Russian social media) -> brand AST matcher finds them ->
+// BrandQuery classification. relevantByModel is also computed as an annotation.
+Invoke-WebRequest `
+  -Uri "https://social-media-listening-ahawbrhza5ewc4au.eastus-01.azurewebsites.net/api/webhook/kwatch" `
+  -Method POST `
+  -Headers @{ "Content-Type" = "application/json" } `
+  -Body '{
+    "platform": "twitter",
+    "query": "Stryker Mako Test. Integration",
+    "datetime": "2026-01-21T10:55:24.397Z",
+    "link": "https://test.com/4",
+    "author": "test_user_ru",
+    "title": "Stryker Mako отзыв",
+    "content": "Компания Stryker отзывает роботизированную систему Nailing для хирургии коленного сустава. Производитель рекомендует прекратить использование до устранения дефекта.",
+    "sentiment": "negative"
+  }'
