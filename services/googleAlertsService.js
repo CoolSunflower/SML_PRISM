@@ -17,6 +17,8 @@ const {
   googleAlertsStateContainer,
 } = require('../config/database');
 const workerPool = require('./classificationWorkerPool');
+const translationPool = require('./translationWorkerPool');
+const { detectLanguage } = require('./languageDetection');
 const { computeSentiment } = require('../utils/sentimentAnalyzer');
 const analyticsService = require('./analyticsService');
 
@@ -260,6 +262,8 @@ async function handleClassificationResult(err, result, item) {
     internalId: cls.internalId,
     relevantByModel: result.relevantByModel,
     classifiedAt: new Date().toISOString(),
+    detectedLanguage: item.detectedLanguage || null,
+    translatedContent: item.translatedContent || null,
   };
 
   try {
@@ -275,6 +279,22 @@ async function handleClassificationResult(err, result, item) {
   }
 }
 
+/**
+ * Callback invoked when translation completes (or fails with graceful degradation).
+ * Submits the item to the classification worker pool.
+ */
+function handleTranslationResult(err, translatedItem, originalItem) {
+  if (err) {
+    console.error(`[GoogleAlerts] Translation error for ${originalItem.id}:`, err.message);
+    translatedItem = originalItem;
+  }
+
+  const jobId = workerPool.submitJob(translatedItem, handleClassificationResult);
+  if (!jobId) {
+    console.warn(`[GoogleAlerts] Worker pool full, classification skipped for ${translatedItem.id}`);
+  }
+}
+
 // Queue processing
 async function processQueue(queue) {
   console.log(`[GoogleAlerts] Processing ${queue.length} queued items...`);
@@ -283,6 +303,7 @@ async function processQueue(queue) {
   let skippedDuplicate = 0;
   let rawInserted = 0;
   let classificationSubmitted = 0;
+  let translationSubmitted = 0;
   let contentFetchSuccess = 0;
 
   for (const queueItem of queue) {
@@ -357,17 +378,34 @@ async function processQueue(queue) {
       continue;
     }
 
-    // 6. Submit to shared classification worker pool
-    const jobId = workerPool.submitJob(rawDoc, handleClassificationResult);
-    if (jobId) {
-      classificationSubmitted++;
+    // 6. Detect language, translate if needed, then classify
+    const textForDetection = `${rawDoc.title || ''} ${rawDoc.content || ''}`.trim();
+    const lang = detectLanguage(textForDetection);
+
+    if (lang.isEnglish || !lang.isSupported) {
+      // English or unsupported language -> classify directly
+      rawDoc.detectedLanguage = lang.iso1 || (lang.isEnglish ? 'en' : null);
+      const jobId = workerPool.submitJob(rawDoc, handleClassificationResult);
+      if (jobId) {
+        classificationSubmitted++;
+      } else {
+        console.warn(`[GoogleAlerts] Worker pool full, classification skipped for ${docId}`);
+      }
     } else {
-      console.warn(`[GoogleAlerts] Worker pool full, classification skipped for ${docId}`);
+      // Non-English supported language -> translate first, then classify
+      rawDoc._detectedLangISO1 = lang.iso1;
+      rawDoc._detectedLangISO3 = lang.iso3;
+      const jobId = translationPool.submitJob(rawDoc, handleTranslationResult);
+      if (jobId) {
+        translationSubmitted++;
+      } else {
+        console.warn(`[GoogleAlerts] Translation pool full, skipping translation for ${docId}`);
+      }
     }
   }
 
-  const stats = { rawInserted, skippedDuplicate, skippedNotWebsite, contentFetchSuccess, classificationSubmitted };
-  console.log(`[GoogleAlerts] Queue done: ${rawInserted} inserted, ${skippedDuplicate} duplicates, ${skippedNotWebsite} blocked, ${contentFetchSuccess} full-content fetches, ${classificationSubmitted} classified`);
+  const stats = { rawInserted, skippedDuplicate, skippedNotWebsite, contentFetchSuccess, classificationSubmitted, translationSubmitted };
+  console.log(`[GoogleAlerts] Queue done: ${rawInserted} inserted, ${skippedDuplicate} duplicates, ${skippedNotWebsite} blocked, ${contentFetchSuccess} full-content fetches, ${classificationSubmitted} classified, ${translationSubmitted} sent for translation`);
   return stats;
 }
 
@@ -420,7 +458,7 @@ async function scrapeAllFeeds() {
     console.log(`[GoogleAlerts] Scrape phase: ${feedsScraped} feeds, ${feedsWithNew} with new items, ${queue.length} total items, ${feedsFailed} failed, ${feedsUnchanged} unchanged/empty`);
 
     // Phase 2: Process the collected queue
-    let processStats = { rawInserted: 0, skippedDuplicate: 0, skippedNotWebsite: 0, contentFetchSuccess: 0, classificationSubmitted: 0 };
+    let processStats = { rawInserted: 0, skippedDuplicate: 0, skippedNotWebsite: 0, contentFetchSuccess: 0, classificationSubmitted: 0, translationSubmitted: 0 };
     if (queue.length > 0) {
       processStats = await processQueue(queue);
     }

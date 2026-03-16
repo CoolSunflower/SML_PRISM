@@ -2,12 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { getQueueStatus } = require('../services/kwatchQueue');
 const workerPool = require('../services/classificationWorkerPool');
+const translationPool = require('../services/translationWorkerPool');
 const { getScraperStatus } = require('../services/googleAlertsService');
 
 // GET /api/health - Health check
 router.get('/', (req, res) => {
   const queueStatus = getQueueStatus();
   const workerMetrics = workerPool.getMetrics();
+  const translationMetrics = translationPool.getMetrics();
   const googleAlertsStatus = getScraperStatus();
 
   res.json({
@@ -16,6 +18,7 @@ router.get('/', (req, res) => {
     services: {
       kwatchQueue: queueStatus,
       workerPool: workerMetrics,
+      translationPool: translationMetrics,
       googleAlerts: googleAlertsStatus,
     },
   });

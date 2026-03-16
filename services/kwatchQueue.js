@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const { kwatchContainer, kwatchProcessedContainer } = require('../config/database');
 const workerPool = require('./classificationWorkerPool');
+const translationPool = require('./translationWorkerPool');
+const { detectLanguage } = require('./languageDetection');
 const analyticsService = require('./analyticsService');
 
 // In-memory queue for handling webhook notifications
@@ -52,6 +54,8 @@ async function handleClassificationResult(err, result, item) {
     internalId: classification.internalId,
     relevantByModel: result.relevantByModel,
     isDuplicate: item.isDuplicate || false,
+    detectedLanguage: item.detectedLanguage || null,
+    translatedContent: item.translatedContent || null,
   };
 
   try {
@@ -64,6 +68,22 @@ async function handleClassificationResult(err, result, item) {
     } else {
       console.error(`[KWatchQueue] Failed to write processed item ${item.id}:`, dbErr.message);
     }
+  }
+}
+
+/**
+ * Callback invoked when translation completes (or fails with graceful degradation).
+ * Submits the item to the classification worker pool.
+ */
+function handleTranslationResult(err, translatedItem, originalItem) {
+  if (err) {
+    console.error(`[KWatchQueue] Translation error for item ${originalItem.id}:`, err.message);
+    translatedItem = originalItem;
+  }
+
+  const jobId = workerPool.submitJob(translatedItem, handleClassificationResult);
+  if (!jobId) {
+    console.warn(`[KWatchQueue] Worker pool full, classification skipped for ${translatedItem.id}`);
   }
 }
 
@@ -122,16 +142,27 @@ async function processKWatchQueue() {
       }
     }
 
-    // Step 2: Submit classification jobs to worker pool
-    let jobsSubmitted = 0;
+    // Step 2: Detect language, translate if needed, then classify
+    let jobsSubmitted = 0; let translationSubmitted = 0;
     for (const item of batch) {
-      const jobId = workerPool.submitJob(item, handleClassificationResult);
-      if (jobId) {
-        jobsSubmitted++;
+      const textForDetection = `${item.title || ''} ${item.content || ''}`.trim();
+      const lang = detectLanguage(textForDetection);
+
+      if (lang.isEnglish || !lang.isSupported) {
+        // English or unsupported language -> classify directly
+        item.detectedLanguage = lang.iso1 || (lang.isEnglish ? 'en' : null);
+        const jobId = workerPool.submitJob(item, handleClassificationResult);
+        if (jobId) jobsSubmitted++;
+      } else {
+        // Non-English supported language -> translate first, then classify
+        item._detectedLangISO1 = lang.iso1;
+        item._detectedLangISO3 = lang.iso3;
+        const jobId = translationPool.submitJob(item, handleTranslationResult);
+        if (jobId) translationSubmitted++;
       }
     }
 
-    console.log(`Batch complete: ${successful} raw inserted, ${failed} failed, ${duplicateInsertedCount} duplicates | ${jobsSubmitted} classification jobs submitted to workers`);
+    console.log(`Batch complete: ${successful} raw inserted, ${failed} failed, ${duplicateInsertedCount} duplicates | ${jobsSubmitted} classification jobs submitted to workers, ${translationSubmitted} translation jobs submitted to workers`);
 
     // Log any insert failures
     results.forEach((result, idx) => {

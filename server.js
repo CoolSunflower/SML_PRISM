@@ -12,6 +12,8 @@ const { startQueueProcessor } = require('./services/kwatchQueue');
 const workerPool = require('./services/classificationWorkerPool');
 const { startGoogleAlertsScraper, stopGoogleAlertsScraper } = require('./services/googleAlertsService');
 const analyticsService = require('./services/analyticsService');
+const translationPool = require('./services/translationWorkerPool');
+const languageDetection = require('./services/languageDetection');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -70,25 +72,42 @@ async function startServer() {
   // Initialize Analytics (load from Cosmos DB — runs once at startup)
   console.log('[Server] Loading analytics data...');
   try {
-    await analyticsService.initialize();
+    // await analyticsService.initialize();
     console.log('[Server] Analytics data loaded');
   } catch (err) {
     console.error('[Server] Analytics initialization failed:', err.message);
     console.log('[Server] Continuing without cached analytics');
   }
 
+  // Initialize Language Detection (loads franc ESM module)
+  console.log('[Server] Initializing language detection...');
+  await languageDetection.initialize();
+
+  // Initialize Translation Worker Pool (health-checks Flask translator)
+  console.log('[Server] Initializing Translation Worker Pool...');
+  try {
+    await translationPool.initialize();
+    const translationMetrics = translationPool.getMetrics();
+    console.log(`[Server] Translation Pool ready (concurrency: ${translationMetrics.concurrencyLimit}, translator: ${translationMetrics.translatorUrl})`);
+  } catch (err) {
+    console.error('[Server] Translation Pool initialization failed:', err.message);
+    console.log('[Server] Continuing without translation (items will be classified with original text)');
+  }
+
   // Start queue processor for KWatch
   startQueueProcessor();
   console.log('[Server] KWatch queue processor started');
 
-  // Start Google Alerts RSS scraper (runs every 2 hours, initial scrape on startup)
-  startGoogleAlertsScraper();
-  console.log('[Server] Google Alerts scraper started');
+  // // Start Google Alerts RSS scraper (runs every 2 hours, initial scrape on startup)
+  // startGoogleAlertsScraper();
+  // console.log('[Server] Google Alerts scraper started');
 
   app.listen(PORT, () => {
     const poolMetrics = workerPool.getMetrics();
+    const translationMetrics = translationPool.getMetrics();
     console.log(`Server running on port ${PORT}`);
     console.log(`Classification Workers: ${poolMetrics.initialized ? 'Ready' : 'Not Ready'} (${poolMetrics.workerCount} workers)`);
+    console.log(`Translation Pool: ${translationMetrics.initialized ? 'Ready' : 'Not Ready'} (concurrency: ${translationMetrics.concurrencyLimit})`);
   });
 }
 
@@ -96,6 +115,7 @@ async function startServer() {
 process.on('SIGTERM', async () => {
   console.log('[Server] SIGTERM received, shutting down...');
   stopGoogleAlertsScraper();
+  await translationPool.shutdown();
   await workerPool.shutdown();
   process.exit(0);
 });
@@ -103,6 +123,7 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   console.log('[Server] SIGINT received, shutting down...');
   stopGoogleAlertsScraper();
+  await translationPool.shutdown();
   await workerPool.shutdown();
   process.exit(0);
 });

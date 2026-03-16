@@ -83,7 +83,14 @@ function hasNotWord(text) {
  * @returns {Promise<{matched: boolean, method: string|null, classification: object|null, relevantByModel: boolean}>}
  */
 async function performClassification(item) {
-  const textToClassify = `${item.title || ''} ${item.content || ''}`.trim();
+  // Use original content + translated content for classification
+  // Both are included so brand keywords in the original language AND
+  // English keywords in the translation are matched
+  const originalText = `${item.title || ''} ${item.content || ''}`.trim();
+  const translatedText = item.translatedContent || '';
+  const textToClassify = translatedText
+    ? `${originalText} ${translatedText}`.trim()
+    : originalText;
 
   if (!textToClassify) {
     return { matched: false, method: null, classification: null, relevantByModel: false };
