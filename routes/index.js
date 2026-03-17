@@ -10,6 +10,7 @@ const googleAlertsRoutes = require('./googleAlerts');
 const analyticsRoutes = require('./analytics');
 const filtersRoutes = require('./filters');
 const feedRoutes = require('./feed');
+const exportRoutes = require('./export');
 
 // Mount routes
 router.use('/webhook', webhookRoutes);
@@ -21,5 +22,6 @@ router.use('/google-alerts', googleAlertsRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/filters', filtersRoutes);
 router.use('/feed', feedRoutes);
+router.use('/export', exportRoutes);
 
 module.exports = router;
