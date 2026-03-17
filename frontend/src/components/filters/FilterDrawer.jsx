@@ -20,8 +20,6 @@ export function FilterDrawer() {
     draft.startDate || draft.endDate || draft.topic || draft.subTopic ||
     draft.platform.length > 0 || draft.sentiment.length > 0;
 
-  console.log(source);
-
   return (
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 mb-6 shadow-sm animate-in slide-in-from-top-2">
       <div className="flex items-center justify-between mb-4">
