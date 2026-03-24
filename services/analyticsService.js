@@ -243,6 +243,8 @@ function getAnalyticsForSource(source, view, days, startDate, endDate) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
+    result.deathRelatedEvents = target.topicCounts.get('Competitors death related events') || 0;
+
     result.classificationMethod = { ...target.classificationMethod };
   }
 
@@ -379,6 +381,7 @@ async function getFilteredAnalyticsFromDB(sourceKey, view, filters) {
       .map(([t, count]) => ({ topic: t, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
+    result.deathRelatedEvents = topicCounts.get('Competitors death related events') || 0;
     result.classificationMethod = methodAgg;
   }
 
@@ -450,6 +453,7 @@ async function getAnalytics(source, view, days, filters = {}) {
         negative: kw.sentiment.negative + ga.sentiment.negative,
       };
       result.topTopics = mergeTopTopics(kw.topTopics, ga.topTopics);
+      result.deathRelatedEvents = (kw.deathRelatedEvents || 0) + (ga.deathRelatedEvents || 0);
       result.classificationMethod = {
         brandQuery: kw.classificationMethod.brandQuery + ga.classificationMethod.brandQuery,
         relevancyClassification: kw.classificationMethod.relevancyClassification + ga.classificationMethod.relevancyClassification,

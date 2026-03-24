@@ -50,9 +50,11 @@ export function SentimentCard({ data }) {
           bgColor="bg-rose-500"
         />
       </div>
-      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 text-center">
+      <div className="mt-4 mb-4 pt-3 border-t border-slate-100 dark:border-slate-700 text-center">
         <span className="text-xs text-slate-400 dark:text-slate-500">{formatNumber(total)} total analyzed</span>
       </div>
+
+      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4">Death Related Event Count (all time): {formatNumber(data?.deathRelatedEvents || 0)}</p>
     </div>
   );
 }
