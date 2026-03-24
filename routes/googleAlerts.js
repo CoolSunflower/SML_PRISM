@@ -94,6 +94,15 @@ router.get('/processed', async (req, res) => {
         parameters.push({ name: `@sent${i}`, value: s.charAt(0).toUpperCase() + s.slice(1) });
       });
     }
+    // Remediation status filter: 'accepted', 'rejected', or 'pending' (null/undefined)
+    if (req.query.remediationStatus) {
+      if (req.query.remediationStatus === 'pending') {
+        conditions.push('(NOT IS_DEFINED(c.remediationStatus) OR c.remediationStatus = null)');
+      } else {
+        conditions.push('c.remediationStatus = @remediationStatus');
+        parameters.push({ name: '@remediationStatus', value: req.query.remediationStatus });
+      }
+    }
 
     const hasFilters = conditions.length > 0;
     const whereClause = hasFilters ? `WHERE ${conditions.join(' AND ')} ` : '';
@@ -138,14 +147,14 @@ router.get('/processed', async (req, res) => {
   }
 });
 
-// PATCH /api/google-alerts/processed/:id/remediate - Accept or reject a processed Google Alerts item
+// PATCH /api/google-alerts/processed/:id/remediate - Accept, reject, or undo remediation for a processed Google Alerts item
 router.patch('/processed/:id/remediate', async (req, res) => {
   try {
     const { id } = req.params;
-    const { action } = req.body;
+    const { action, sentiment, topic, subTopic } = req.body;
 
-    if (!action || !['accepted', 'rejected'].includes(action)) {
-      return res.status(400).json({ error: 'action must be "accepted" or "rejected"' });
+    if (!action || !['accepted', 'rejected', 'undo'].includes(action)) {
+      return res.status(400).json({ error: 'action must be "accepted", "rejected", or "undo"' });
     }
 
     const { resource: existing } = await googleAlertsProcessedContainer.item(id, id).read();
@@ -153,15 +162,35 @@ router.patch('/processed/:id/remediate', async (req, res) => {
       return res.status(404).json({ error: 'Item not found' });
     }
 
-    const updated = { ...existing, doneRemediation: true, remediationAction: action };
+    // Build the updated document
+    const updated = { ...existing };
 
-    if (action === 'accepted') {
-      // TODO: send to SharePoint list for downstream reporting & update Cosmos item
-      console.log(`[Remediation] Google Alerts item ${id} accepted: SharePoint send pending implementation`);
-      // const { resource: replaced } = await googleAlertsProcessedContainer.item(id, id).replace(updated);
+    if (action === 'undo') {
+      // Remove remediation status
+      delete updated.remediationStatus;
+      delete updated.remediatedAt;
+    } else {
+      updated.remediationStatus = action;
+      updated.remediatedAt = new Date().toISOString();
+
+      // For accepted items, optionally update classification fields
+      if (action === 'accepted') {
+        // Google Alerts uses capitalized sentiment
+        if (sentiment) updated.sentiment = sentiment.charAt(0).toUpperCase() + sentiment.slice(1);
+        if (topic) updated.topic = topic;
+        if (subTopic) updated.subTopic = subTopic;
+      }
     }
 
-    res.json({ success: true, item: updated });
+    // Persist to database
+    const { resource: replaced } = await googleAlertsProcessedContainer.item(id, id).replace(updated);
+    console.log(`[Remediation] Google Alerts item ${id} ${action}`);
+
+    // Invalidate analytics cache since remediation status changed
+    const analyticsService = require('../services/analyticsService');
+    analyticsService.invalidateFilterCache();
+
+    res.json({ success: true, item: replaced });
   } catch (err) {
     if (err.code === 404) {
       return res.status(404).json({ error: 'Item not found' });

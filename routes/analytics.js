@@ -31,6 +31,7 @@ router.get('/', async (req, res) => {
       subTopic: req.query.subTopic || '',
       platform: req.query.platform ? req.query.platform.split(',') : [],
       sentiment: req.query.sentiment ? req.query.sentiment.split(',') : [],
+      remediationStatus: req.query.remediationStatus || '',
     };
 
     const data = await analyticsService.getAnalytics(source, view, days, filters);

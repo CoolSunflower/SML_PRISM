@@ -11,6 +11,7 @@ import { fetchJSON } from './client';
  * @param {string} [params.subTopic]
  * @param {string[]} [params.platform]
  * @param {string[]} [params.sentiment]
+ * @param {string} [params.remediationStatus]  'accepted' | 'rejected' | 'pending' | ''
  * @param {number} [params.offset]        row offset for pagination (default 0)
  * @param {number} [params.limit]         batch size (default 100)
  * @returns {Promise<{ items: object[], hasMore: boolean, totalCount?: number }>}
@@ -23,6 +24,7 @@ export function getExportBatch({
   subTopic,
   platform,
   sentiment,
+  remediationStatus,
   offset = 0,
   limit = 100,
 } = {}) {
@@ -31,5 +33,6 @@ export function getExportBatch({
   if (subTopic) params.append('subTopic', subTopic);
   if (platform?.length > 0) params.append('platform', platform.join(','));
   if (sentiment?.length > 0) params.append('sentiment', sentiment.join(','));
+  if (remediationStatus) params.append('remediationStatus', remediationStatus);
   return fetchJSON(`/export/processed?${params}`);
 }

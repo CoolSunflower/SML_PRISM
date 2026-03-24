@@ -10,6 +10,7 @@ export function getCombinedFeed({
   subTopic,
   platform,
   sentiment,
+  remediationStatus,
 } = {}) {
   const params = new URLSearchParams({ page, limit, processing });
   if (startDate) params.append('startDate', startDate);
@@ -18,5 +19,6 @@ export function getCombinedFeed({
   if (subTopic) params.append('subTopic', subTopic);
   if (platform?.length > 0) params.append('platform', platform.join(','));
   if (sentiment?.length > 0) params.append('sentiment', sentiment.join(','));
+  if (remediationStatus) params.append('remediationStatus', remediationStatus);
   return fetchJSON(`/feed/combined?${params}`);
 }

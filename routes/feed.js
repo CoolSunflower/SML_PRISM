@@ -126,6 +126,15 @@ async function handleProcessed(req, res, page, limit, fetchLimit) {
     kwConditions.push(`c.sentiment IN (${placeholders})`);
     sentiments.forEach((s, i) => kwParams.push({ name: `@kwSent${i}`, value: s }));
   }
+  // Remediation status filter
+  if (req.query.remediationStatus) {
+    if (req.query.remediationStatus === 'pending') {
+      kwConditions.push('(NOT IS_DEFINED(c.remediationStatus) OR c.remediationStatus = null)');
+    } else {
+      kwConditions.push('c.remediationStatus = @kwRemStatus');
+      kwParams.push({ name: '@kwRemStatus', value: req.query.remediationStatus });
+    }
+  }
 
   const kwWhere = kwConditions.length > 0 ? `WHERE ${kwConditions.join(' AND ')} ` : '';
 
@@ -171,6 +180,15 @@ async function handleProcessed(req, res, page, limit, fetchLimit) {
     sentiments.forEach((s, i) => {
       gaParams.push({ name: `@gaSent${i}`, value: s.charAt(0).toUpperCase() + s.slice(1) });
     });
+  }
+  // Remediation status filter
+  if (req.query.remediationStatus) {
+    if (req.query.remediationStatus === 'pending') {
+      gaConditions.push('(NOT IS_DEFINED(c.remediationStatus) OR c.remediationStatus = null)');
+    } else {
+      gaConditions.push('c.remediationStatus = @gaRemStatus');
+      gaParams.push({ name: '@gaRemStatus', value: req.query.remediationStatus });
+    }
   }
 
   const gaWhere = gaConditions.length > 0 ? `WHERE ${gaConditions.join(' AND ')} ` : '';

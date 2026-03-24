@@ -66,6 +66,16 @@ function createWorkerEntry(index) {
       return;
     }
 
+    if (msg.type === 'reloadComplete') {
+      entry.ready = true;
+      if (msg.success) {
+        console.log(`[WorkerPool] Worker ${index} reloaded successfully (${msg.queryCount} queries)`);
+      } else {
+        console.error(`[WorkerPool] Worker ${index} reload failed: ${msg.error}`);
+      }
+      return;
+    }
+
     if (msg.type === 'result') {
       entry.busy = false;
       const pending = pendingJobs.get(msg.jobId);
@@ -222,6 +232,45 @@ function getMetrics() {
 }
 
 /**
+ * Reload brand queries in all workers.
+ * Sends a reload message to each worker, which will reinitialize the brand classifier.
+ * @returns {Promise<void>}
+ */
+async function reloadWorkers() {
+  if (!isInitialized) {
+    console.warn('[WorkerPool] Not initialized, cannot reload');
+    return;
+  }
+
+  console.log(`[WorkerPool] Reloading brand queries in ${workerCount} workers...`);
+
+  // Send reload message to all workers
+  const reloadPromises = workers.map((entry, idx) => {
+    return new Promise((resolve) => {
+      entry.ready = false; // Mark as not ready during reload
+
+      const timeout = setTimeout(() => {
+        console.warn(`[WorkerPool] Worker ${idx} reload timeout`);
+        resolve(false);
+      }, 30000); // 30 second timeout
+
+      const checkReady = setInterval(() => {
+        if (entry.ready) {
+          clearInterval(checkReady);
+          clearTimeout(timeout);
+          resolve(true);
+        }
+      }, 100);
+
+      entry.worker.send({ type: 'reload' });
+    });
+  });
+
+  await Promise.all(reloadPromises);
+  console.log('[WorkerPool] All workers reloaded');
+}
+
+/**
  * Gracefully shut down all workers.
  * @returns {Promise<void>}
  */
@@ -244,5 +293,6 @@ module.exports = {
   initialize,
   submitJob,
   getMetrics,
+  reloadWorkers,
   shutdown,
 };

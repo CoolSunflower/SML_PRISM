@@ -3,11 +3,13 @@ import { useFilterStore } from '../../store/filterStore';
 import { Toggle } from './FilterBar';
 import { SettingsMenu } from './SettingsMenu';
 import { ExportModal } from '../export/ExportModal';
+import { ConfigPage } from '../config/ConfigPage';
 import prismLogo from '../../../assets/image.png';
 
 export function Header() {
   const { processing, setProcessing } = useFilterStore();
   const [exportOpen, setExportOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
 
   return (
     <>
@@ -29,6 +31,7 @@ export function Header() {
               onChange={setProcessing}
               options={[
                 { value: 'processed', label: 'Processed' },
+                // { value: 'relevant', label: 'Relevant' },
                 { value: 'raw', label: 'Raw' },
               ]}
             />
@@ -40,12 +43,21 @@ export function Header() {
             >
               <span className="material-symbols-outlined text-lg">download</span>
             </button>
+            <button
+              onClick={() => setConfigOpen(true)}
+              className="w-30 h-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all p-4"
+              title="Configuration"
+            >
+              Config
+              {/* <span className="material-symbols-outlined text-lg">settings</span> */}
+            </button>
             <SettingsMenu />
           </div>
         </div>
       </header>
 
       {exportOpen && <ExportModal onClose={() => setExportOpen(false)} />}
+      {configOpen && <ConfigPage onClose={() => setConfigOpen(false)} />}
     </>
   );
 }

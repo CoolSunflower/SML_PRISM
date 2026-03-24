@@ -3,6 +3,7 @@ import { DateRangeFilter } from './DateRangeFilter';
 import { TopicFilter } from './TopicFilter';
 import { PlatformFilter } from './PlatformFilter';
 import { SentimentFilter } from './SentimentFilter';
+import { RemediationStatusFilter } from './RemediationStatusFilter';
 
 export function FilterDrawer() {
   const filtersOpen = useFilterStore((s) => s.filtersOpen);
@@ -12,13 +13,18 @@ export function FilterDrawer() {
   const draft = useFilterStore((s) => s.draft);
   const applied = useFilterStore((s) => s.applied);
   const source = useFilterStore((s) => s.source);
+  const processing = useFilterStore((s) => s.processing);
 
   if (!filtersOpen) return null;
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(applied);
   const hasAnyDraft =
     draft.startDate || draft.endDate || draft.topic || draft.subTopic ||
-    draft.platform.length > 0 || draft.sentiment.length > 0;
+    draft.platform.length > 0 || draft.sentiment.length > 0 ||
+    (processing !== 'relevant' && draft.remediationStatus);
+
+  // Hide remediation status filter in 'relevant' view (it's always 'accepted')
+  const showRemediationFilter = processing === 'processed';
 
   return (
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 mb-6 shadow-sm animate-in slide-in-from-top-2">
@@ -37,6 +43,7 @@ export function FilterDrawer() {
         <TopicFilter />
         {source !== 'google-alerts' && <PlatformFilter />}
         <SentimentFilter />
+        {showRemediationFilter && <RemediationStatusFilter />}
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">

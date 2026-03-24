@@ -7,13 +7,14 @@ const DEFAULT_FILTERS = {
   topic: '',
   subTopic: '',
   platform: [],   // string[] of selected platform values
-  sentiment: [],   // string[] e.g. ['positive','negative']
+  sentiment: [],  // string[] e.g. ['positive','negative']
+  remediationStatus: '', // '' (all) | 'accepted' | 'rejected' | 'pending'
 };
 
 export const useFilterStore = create((set, get) => ({
   // ---- Core toggles (take effect immediately) ----
   source: 'all',           // 'all' | 'kwatch' | 'google-alerts'
-  processing: 'processed', // 'raw' | 'processed'
+  processing: 'processed', // 'raw' | 'processed' | 'relevant'
   chartDays: 7,
 
   // ---- Draft state (UI selections, NOT yet sent to APIs) ----
@@ -39,14 +40,21 @@ export const useFilterStore = create((set, get) => ({
     fetchTrigger: get().fetchTrigger + 1,
   }),
 
-  setProcessing: (processing) => set({
-    processing,
-    page: 1,
-    draft: { ...DEFAULT_FILTERS },
-    applied: { ...DEFAULT_FILTERS },
-    filtersOpen: false,
-    fetchTrigger: get().fetchTrigger + 1,
-  }),
+  setProcessing: (processing) => {
+    // For 'relevant' view, auto-set remediationStatus to 'accepted'
+    const newFilters = processing === 'relevant'
+      ? { ...DEFAULT_FILTERS, remediationStatus: 'accepted' }
+      : { ...DEFAULT_FILTERS };
+
+    set({
+      processing,
+      page: 1,
+      draft: newFilters,
+      applied: newFilters,
+      filtersOpen: false,
+      fetchTrigger: get().fetchTrigger + 1,
+    });
+  },
 
   setChartDays: (chartDays) => set({ chartDays }),
 
@@ -61,6 +69,8 @@ export const useFilterStore = create((set, get) => ({
     set((s) => ({ draft: { ...s.draft, platform } })),
   setDraftSentiment: (sentiment) =>
     set((s) => ({ draft: { ...s.draft, sentiment } })),
+  setDraftRemediationStatus: (remediationStatus) =>
+    set((s) => ({ draft: { ...s.draft, remediationStatus } })),
 
   // ---- Apply action: copy draft -> applied, bump trigger, reset page ----
   applyFilters: () => set((s) => ({
@@ -70,12 +80,20 @@ export const useFilterStore = create((set, get) => ({
   })),
 
   // ---- Clear action: reset both draft & applied to defaults ----
-  clearFilters: () => set((s) => ({
-    draft: { ...DEFAULT_FILTERS },
-    applied: { ...DEFAULT_FILTERS },
-    fetchTrigger: s.fetchTrigger + 1,
-    page: 1,
-  })),
+  clearFilters: () => {
+    const { processing } = get();
+    // Preserve remediationStatus for 'relevant' view
+    const newFilters = processing === 'relevant'
+      ? { ...DEFAULT_FILTERS, remediationStatus: 'accepted' }
+      : { ...DEFAULT_FILTERS };
+
+    set((s) => ({
+      draft: newFilters,
+      applied: newFilters,
+      fetchTrigger: s.fetchTrigger + 1,
+      page: 1,
+    }));
+  },
 
   // ---- Pagination (triggers fetch immediately via page dependency in hook) ----
   setPage: (page) => set({ page }),

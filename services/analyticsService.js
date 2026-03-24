@@ -277,7 +277,7 @@ async function getFilteredAnalyticsFromDB(sourceKey, view, filters) {
     return filterCache.get(cacheKey);
   }
 
-  const { startDate, endDate, topic, subTopic, platform, sentiment } = filters;
+  const { startDate, endDate, topic, subTopic, platform, sentiment, remediationStatus } = filters;
   const { container, dateField } = resolveContainer(sourceKey, view);
 
   // ---- Build WHERE clause ----
@@ -317,6 +317,15 @@ async function getFilteredAnalyticsFromDB(sourceKey, view, filters) {
         const val = sourceKey === 'kwatch' ? s : s.charAt(0).toUpperCase() + s.slice(1);
         params.push({ name: `@sent${i}`, value: val });
       });
+    }
+    // Remediation status filter: 'accepted', 'rejected', or 'pending' (null/undefined)
+    if (remediationStatus) {
+      if (remediationStatus === 'pending') {
+        conditions.push('(NOT IS_DEFINED(c.remediationStatus) OR c.remediationStatus = null)');
+      } else {
+        conditions.push('c.remediationStatus = @remediationStatus');
+        params.push({ name: '@remediationStatus', value: remediationStatus });
+      }
     }
   }
 
@@ -410,7 +419,8 @@ async function getAnalytics(source, view, days, filters = {}) {
     f.startDate || f.endDate ||
     f.topic || f.subTopic ||
     (f.platform && f.platform.length > 0) ||
-    (f.sentiment && f.sentiment.length > 0);
+    (f.sentiment && f.sentiment.length > 0) ||
+    f.remediationStatus;
 
   if (source === 'all') {
     let kw, ga;
@@ -468,4 +478,5 @@ module.exports = {
   recordProcessedItem,
   getAnalytics,
   getLastRefreshAt,
+  invalidateFilterCache,
 };

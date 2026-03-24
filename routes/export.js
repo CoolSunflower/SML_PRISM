@@ -10,7 +10,7 @@ const {
 // GET /api/export/processed
 // Returns a batch of processed data using SQL OFFSET/LIMIT pagination.
 // Required: dataType (kwatch | google-alerts), startDate, endDate
-// Optional: topic, subTopic, platform (csv), sentiment (csv), offset (default 0), limit (default 100)
+// Optional: topic, subTopic, platform (csv), sentiment (csv), remediationStatus, offset (default 0), limit (default 100)
 router.get('/processed', async (req, res) => {
   try {
     const {
@@ -21,6 +21,7 @@ router.get('/processed', async (req, res) => {
       subTopic,
       platform,
       sentiment,
+      remediationStatus,
     } = req.query;
     const offset = Math.max(parseInt(req.query.offset) || 0, 0);
     const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
@@ -82,13 +83,22 @@ router.get('/processed', async (req, res) => {
         parameters.push({ name: `@sent${i}`, value: val });
       });
     }
+    // Remediation status filter: 'accepted', 'rejected', or 'pending' (null/undefined)
+    if (remediationStatus) {
+      if (remediationStatus === 'pending') {
+        conditions.push('(NOT IS_DEFINED(c.remediationStatus) OR c.remediationStatus = null)');
+      } else {
+        conditions.push('c.remediationStatus = @remediationStatus');
+        parameters.push({ name: '@remediationStatus', value: remediationStatus });
+      }
+    }
 
     const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
     // SELECT specific columns only (avoid SELECT * for export performance)
     const selectClause = isKWatch
-      ? 'SELECT c.receivedAt, c.platform, c.author, c.title, c.content, c.sentiment, c.topic, c.subTopic, c.link, c.relevantByModel, c.isDuplicate'
-      : 'SELECT c.classifiedAt, c.platform, c.title, c.content, c.sentiment, c.topic, c.subTopic, c.extractedUrl, c.relevantByModel';
+      ? 'SELECT c.receivedAt, c.platform, c.author, c.title, c.content, c.sentiment, c.topic, c.subTopic, c.link, c.relevantByModel, c.isDuplicate, c.remediationStatus'
+      : 'SELECT c.classifiedAt, c.platform, c.title, c.content, c.sentiment, c.topic, c.subTopic, c.extractedUrl, c.relevantByModel, c.remediationStatus';
 
     // Use SQL OFFSET/LIMIT for stateless batch pagination
     const querySpec = {

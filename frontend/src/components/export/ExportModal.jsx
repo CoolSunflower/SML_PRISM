@@ -5,7 +5,7 @@ import { getExportBatch } from '../../api/export';
 import { buildCSV, downloadCSV } from '../../utils/csv';
 import { ExportProgress } from './ExportProgress';
 
-const MAX_RANGE_DAYS = 30;
+const MAX_RANGE_DAYS = 100;
 
 function addDays(dateStr, days) {
   const d = new Date(dateStr + 'T00:00:00');
@@ -38,12 +38,20 @@ const SENTIMENTS = [
   },
 ];
 
+const REMEDIATION_STATUSES = [
+  { value: '', label: 'All' },
+  { value: 'accepted', label: 'Accepted' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'pending', label: 'Pending' },
+];
+
 /**
  * ExportModal - full-screen overlay that lets users configure and trigger a CSV export.
  * @param {{ onClose: () => void }} props
  */
 export function ExportModal({ onClose }) {
   // Filter state
+  const [exportPage, setExportPage] = useState('processed'); // 'processed' | 'relevant'
   const [dataType, setDataType] = useState('kwatch');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -51,6 +59,7 @@ export function ExportModal({ onClose }) {
   const [subTopic, setSubTopic] = useState('');
   const [platform, setPlatform] = useState([]);
   const [sentiment, setSentiment] = useState([]);
+  const [remediationStatus, setRemediationStatus] = useState('');
 
   // Export progress state
   const [exporting, setExporting] = useState(false);
@@ -86,6 +95,12 @@ export function ExportModal({ onClose }) {
     setPlatform([]);
     setSubTopic('');
     setTopic('');
+  }
+
+  // Reset remediationStatus when switching pages
+  function handleExportPageChange(page) {
+    setExportPage(page);
+    setRemediationStatus(page === 'relevant' ? 'accepted' : '');
   }
 
   // Toggle helpers
@@ -143,6 +158,7 @@ export function ExportModal({ onClose }) {
           subTopic: subTopic || undefined,
           platform: platform.length > 0 ? platform : undefined,
           sentiment: sentiment.length > 0 ? sentiment : undefined,
+          remediationStatus: exportPage === 'relevant' ? 'accepted' : (remediationStatus || undefined),
           offset,
           limit: BATCH_SIZE,
         });
@@ -211,29 +227,38 @@ export function ExportModal({ onClose }) {
               />
             ) : (
               <div className="space-y-5">
-                {/* Page selection (Processed only) */}
-                <div>
+                {/* Page selection (Processed / Relevant) */}
+                {/* <div>
                   <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                    Page
+                    Data View
                   </p>
                   <div className="flex gap-2">
                     <button
-                      disabled
-                      className="px-4 py-1.5 text-sm font-semibold rounded-lg border border-primary bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300 cursor-not-allowed opacity-80"
+                      onClick={() => handleExportPageChange('processed')}
+                      className={clsx(
+                        'px-4 py-1.5 text-sm font-semibold rounded-lg border transition-all',
+                        exportPage === 'processed'
+                          ? 'border-primary bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300'
+                          : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700',
+                      )}
                     >
                       Processed
                     </button>
                     <button
-                      disabled
-                      className="px-4 py-1.5 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-                      title="Raw data export is not supported due to volume"
+                      onClick={() => handleExportPageChange('relevant')}
+                      className={clsx(
+                        'px-4 py-1.5 text-sm font-semibold rounded-lg border transition-all',
+                        exportPage === 'relevant'
+                          ? 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-600'
+                          : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700',
+                      )}
                     >
-                      Raw (not supported)
+                      Relevant Only
                     </button>
                   </div>
-                </div>
+                </div> */}
 
-                <div className="h-px bg-slate-100 dark:bg-slate-700" />
+                {/* <div className="h-px bg-slate-100 dark:bg-slate-700" /> */}
 
                 {/* Data type, required */}
                 <div>
@@ -268,7 +293,7 @@ export function ExportModal({ onClose }) {
                 <div>
                   <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                     Date Range <span className="text-red-400">*</span>{' '}
-                    <span className="font-normal normal-case">(max 30 days)</span>
+                    <span className="font-normal normal-case">(max 100 days)</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -382,6 +407,34 @@ export function ExportModal({ onClose }) {
                                 )}
                               >
                                 {p.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Remediation Status (Processed page only) */}
+                    {exportPage === 'processed' && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                          Remediation Status
+                        </label>
+                        <div className="flex gap-2">
+                          {REMEDIATION_STATUSES.map((s) => {
+                            const isSelected = remediationStatus === s.value;
+                            return (
+                              <button
+                                key={s.value}
+                                onClick={() => setRemediationStatus(s.value)}
+                                className={clsx(
+                                  'flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all',
+                                  isSelected
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700',
+                                )}
+                              >
+                                {s.label}
                               </button>
                             );
                           })}

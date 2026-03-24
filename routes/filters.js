@@ -93,3 +93,4 @@ router.get('/topics', (req, res) => {
 });
 
 module.exports = router;
+module.exports.reloadTopics = loadTopics;

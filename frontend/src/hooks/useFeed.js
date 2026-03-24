@@ -16,19 +16,22 @@ export function useFeed() {
     setError(null);
     try {
       const filters = { page, limit, ...applied };
+      // Treat 'relevant' as processed view (remediationStatus already set to 'accepted' by store)
+      const isRaw = processing === 'raw';
+      const effectiveProcessing = isRaw ? 'raw' : 'processed';
 
       if (source === 'all') {
-        const res = await feedApi.getCombinedFeed({ page, limit, processing, ...applied });
+        const res = await feedApi.getCombinedFeed({ page, limit, processing: effectiveProcessing, ...applied });
         setItems(res.items);
         setPagination(res.pagination);
       } else if (source === 'kwatch') {
-        const res = processing === 'raw'
+        const res = isRaw
           ? await kwatchApi.getKWatchRaw(page, limit)
           : await kwatchApi.getKWatchProcessed(filters);
         setItems(res.items.map((i) => ({ ...i, _source: 'kwatch' })));
         setPagination(res.pagination);
       } else {
-        const res = processing === 'raw'
+        const res = isRaw
           ? await gaApi.getGoogleAlertsRaw(page, limit)
           : await gaApi.getGoogleAlertsProcessed(filters);
         setItems(res.items.map((i) => ({ ...i, _source: 'google-alerts' })));

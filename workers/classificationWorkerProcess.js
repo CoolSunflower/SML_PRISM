@@ -43,6 +43,23 @@ async function init() {
  * Handle incoming messages from the parent process.
  */
 process.on('message', async (msg) => {
+  // Handle reload request
+  if (msg.type === 'reload') {
+    console.log('[Worker] Received reload request, reinitializing classifiers...');
+    try {
+      ready = false;
+      const status = await initializeClassifiers();
+      console.log(`[Worker] Reloaded - Brand: ${status.brandReady ? 'Ready' : 'Failed'} (${status.brandQueryCount} queries), Relevancy: ${status.relevancyReady ? 'Ready' : 'Failed'}`);
+      ready = true;
+      process.send({ type: 'reloadComplete', success: true, queryCount: status.brandQueryCount });
+    } catch (err) {
+      console.error('[Worker] Reload failed:', err.message);
+      process.send({ type: 'reloadComplete', success: false, error: err.message });
+    }
+    return;
+  }
+
+  // Handle classification request
   if (msg.type !== 'classify') return;
 
   const { jobId, data } = msg;

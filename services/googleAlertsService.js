@@ -22,8 +22,8 @@ const { detectLanguage } = require('./languageDetection');
 const { computeSentiment } = require('../utils/sentimentAnalyzer');
 const analyticsService = require('./analyticsService');
 
-const RSS_FEEDS = require('../config/alerts_rss_feeds.json');
-const NOT_WEBSITES = require('../config/alerts_not_websites.json');
+let RSS_FEEDS = require('../config/alerts_rss_feeds.json');
+let NOT_WEBSITES = require('../config/alerts_not_websites.json');
 
 const SCRAPE_INTERVAL = parseInt(process.env.GOOGLE_ALERTS_SCRAPE_INTERVAL) || 7200000; // 2 hours
 const FEED_FETCH_CONCURRENCY = 10; // Number of feeds fetched in parallel per batch
@@ -518,11 +518,35 @@ function getScraperStatus() {
   };
 }
 
+/**
+ * Hot-reload config files (RSS feeds, blocked websites, blocked words)
+ * Clears require.cache and re-requires the JSON files
+ */
+function reloadConfig() {
+  const path = require('path');
+  const rssPath = path.resolve(__dirname, '../config/alerts_rss_feeds.json');
+  const websitesPath = path.resolve(__dirname, '../config/alerts_not_websites.json');
+
+  // Clear require.cache
+  delete require.cache[rssPath];
+  delete require.cache[websitesPath];
+
+  // Re-require
+  RSS_FEEDS = require('../config/alerts_rss_feeds.json');
+  NOT_WEBSITES = require('../config/alerts_not_websites.json');
+
+  console.log('[GoogleAlerts] Config reloaded:', {
+    totalFeeds: Object.keys(RSS_FEEDS).length,
+    blockedWebsites: NOT_WEBSITES.length,
+  });
+}
+
 module.exports = {
   startGoogleAlertsScraper,
   stopGoogleAlertsScraper,
   scrapeAllFeeds,
   getScraperStatus,
+  reloadConfig,
   // Exported for unit testing
   extractUrlFromGoogleLink,
   isNotWebsite,

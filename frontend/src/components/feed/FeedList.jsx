@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useFilterStore } from '../../store/filterStore';
 import { FeedCard } from './FeedCard';
 import { Pagination } from '../ui/Pagination';
 import { Spinner } from '../ui/Spinner';
 import { EmptyState } from '../ui/EmptyState';
+import { Toast } from '../ui/Toast';
 import { format } from 'date-fns';
 import { remediateItem } from '../../api/remediation';
 
@@ -37,26 +38,44 @@ function FeedHeader({ pagination, startDate, endDate }) {
 export function FeedList({ items, pagination, loading }) {
   const { processing, page, limit, applied, setPage } = useFilterStore();
   const { startDate, endDate } = applied;
-  const isProcessed = processing === 'processed';
+  const isProcessed = processing === 'processed' || processing === 'relevant';
 
-  // Local overrides applied optimistically after remediation: avoids full refetch
+  // Local overrides applied optimistically after remediation
   const [overrides, setOverrides] = useState({});
 
-  async function handleRemediate(id, action, platform) {
+  // Toast notification state
+  const [toast, setToast] = useState(null);
+
+  const showToast = useCallback(({ message, type = 'info' }) => {
+    setToast({ id: Date.now(), message, type });
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast(null);
+  }, []);
+
+  async function handleRemediate(id, action, platform, editedFields = {}) {
     const item = items.find(i => i.id === id);
     const source = item?._source === 'google-alerts' ? 'google-alerts' : 'kwatch';
-    const response = await remediateItem(source, id, action, platform);
-    // TODO: show toast notification on success/failure of api call & update item view (i.e. overrides) based on response instead of assuming success
-    if(response.success) {
-      console.log('Remediation successful:', response.item);
-    } else {
-      console.error('Remediation failed:', response);
+
+    const response = await remediateItem(source, id, action, platform, editedFields);
+
+    if (response.success && response.item) {
+      // Update local state with the response from server
+      setOverrides(prev => ({
+        ...prev,
+        [id]: {
+          remediationStatus: response.item.remediationStatus,
+          remediatedAt: response.item.remediatedAt,
+          // Also update any edited classification fields
+          ...(editedFields.sentiment && { sentiment: response.item.sentiment }),
+          ...(editedFields.topic && { topic: response.item.topic }),
+          ...(editedFields.subTopic && { subTopic: response.item.subTopic }),
+        },
+      }));
     }
 
-    setOverrides(prev => ({
-      ...prev,
-      [id]: { doneRemediation: true, remediationAction: action },
-    }));
+    return response;
   }
 
   if (loading) return <Spinner />;
@@ -76,6 +95,7 @@ export function FeedList({ items, pagination, loading }) {
             item={item}
             isProcessed={isProcessed}
             onRemediate={isProcessed ? handleRemediate : undefined}
+            onShowToast={showToast}
           />
         ))}
       </div>
@@ -89,6 +109,15 @@ export function FeedList({ items, pagination, loading }) {
             onPageChange={setPage}
           />
         </div>
+      )}
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
       )}
     </div>
   );

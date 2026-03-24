@@ -34,6 +34,7 @@ const KWATCH_COLUMNS = [
   { header: 'Sentiment', key: 'sentiment' },
   { header: 'Topic', key: 'topic' },
   { header: 'Brand', key: 'subTopic' },
+  { header: 'Remediation Status', key: 'remediationStatus' },
   { header: 'Link', key: 'link' },
   { header: 'Relevant by Model', key: 'relevantByModel' },
   { header: 'Is Duplicate', key: 'isDuplicate' },
@@ -48,6 +49,7 @@ const GOOGLE_ALERTS_COLUMNS = [
   { header: 'Sentiment', key: 'sentiment' },
   { header: 'Topic', key: 'topic' },
   { header: 'Brand', key: 'subTopic' },
+  { header: 'Remediation Status', key: 'remediationStatus' },
   { header: 'Link', key: 'extractedUrl' },
   { header: 'Relevant by Model', key: 'relevantByModel' },
   { header: 'Is Duplicate', key: 'isDuplicate' }, // We need to set this to false for Google alerts dont have duplicates
