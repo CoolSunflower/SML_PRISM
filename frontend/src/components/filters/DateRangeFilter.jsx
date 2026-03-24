@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useFilterStore } from '../../store/filterStore';
 
-const MAX_RANGE_DAYS = 30;
+const MAX_RANGE_DAYS = 100;
 
 function addDays(dateStr, days) {
   const d = new Date(dateStr + 'T00:00:00');
@@ -26,7 +26,7 @@ export function DateRangeFilter() {
   return (
     <div>
       <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-        Date Range <span className="font-normal normal-case">(max 30 days)</span>
+        Date Range <span className="font-normal normal-case">(max 100 days)</span>
       </label>
       <div className="flex items-center gap-2">
         <input
