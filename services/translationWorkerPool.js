@@ -85,9 +85,9 @@ async function initialize() {
     await new Promise(r => setTimeout(r, 2000));
   }
 
-  // Translator not reachable -- still mark initialized for graceful degradation
-  console.warn(`[TranslationPool] Translator not reachable at ${translatorUrl}, will retry per-request`);
-  isInitialized = true;
+  // Translator not reachable
+  console.warn(`[TranslationPool] Translator not reachable at ${translatorUrl}`);
+  // isInitialized = true;
 }
 
 /**

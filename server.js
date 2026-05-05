@@ -22,8 +22,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from frontend build
+app.use(express.static(path.join(__dirname, 'frontend/dist')));
 
 // API Routes
 app.use('/api', routes);
@@ -48,9 +48,9 @@ app.get('/sdd', (req, res) => {
 
 // SPA catch-all: serve index.html for all non-API, non-static routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'), (err) => {
+  res.sendFile(path.join(__dirname, 'frontend/dist/index.html'), (err) => {
     if (err) {
-      res.status(500).send('Frontend not found. Run "npm run build:frontend" to build the UI.');
+      res.status(500).send('Frontend not found. Run "cd frontend && npm run build" to build the UI.');
     }
   });
 });

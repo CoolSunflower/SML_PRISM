@@ -4,3 +4,4 @@ frontend/node_modules/
 .DS_Store
 plans/
 public/assets/
+public/
