@@ -11,27 +11,30 @@ Express.js backend + React frontend for monitoring social media mentions from mu
 
 ## Architecture Overview
 
-```
+```text
 KWatch Webhook ──▶ In-Memory Queue ──▶ Batch Processor ──▶ Cosmos DB (KWatch Raw)
-                                                        └──▶ Worker Pool
-                                                                │
-Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ Cosmos DB (Alerts Raw)
-(203 RSS feeds)   (every 2 hrs)                             └──▶ Worker Pool
-                                                                │
-                                                    ┌───────────┘
-                                                    ▼
-                                              Brand Classifier (rule-based AST)
-                                              Relevancy Classifier (SBERT + SVM ONNX)
-                                                    │
-                                                    ├──▶ Cosmos DB (KWatch Processed)
-                                                    └──▶ Cosmos DB (Alerts Processed)
+                                                        └──▶ Language Detection ──▶ [Translation Service (Flask)]
+                                                                    │                           │
+                                                                    ▼                           ▼
+Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ Cosmos DB (Alerts Raw)       Worker Pool
+(203 RSS feeds)   (every 2 hrs)                             └──▶ Language Detection             │
+                                                                                                ▼
+                                                                                   Brand Classifier (rule-based AST)
+                                                                                   Relevancy Classifier (SBERT/SVM)
+                                                                                                │
+                                                              ┌─────────────────────────────────┴─────────────────────────────────┐
+                                                              ▼                                                                   ▼
+                                                Cosmos DB (Processed Data)                                           Teams Webhook Alert
+                                                (Analytics Engine Updated)                                     (If "Competitors Death Related Events")
 ```
 
-### Classification Pipeline
+### Processing & Classification Pipeline
 
-1. **Brand Classifier** — parses boolean query rules from `config/BrandQueries.csv` into ASTs at startup. Supports `AND`, `OR`, `NOT`, `NEAR/n`, quoted phrases, and language filtering (Portuguese via `franc`). If a rule matches, the item is tagged with its topic, sub-topic, and internal ID.
-2. **Relevancy Classifier** — uses `Xenova/all-MiniLM-L6-v2` SBERT embeddings (384-dim) fed into an SVM RBF kernel exported as ONNX (`models/svm_classifier.onnx`). Acts as a fallback when no brand rule matches, and also annotates brand-matched items with a `relevantByModel` flag.
-3. **Worker Pool** — spawns configurable child processes (default 2) that each load both classifiers. Jobs are distributed round-robin with automatic crash recovery and backpressure handling (max queue size 1000). Shared across all data sources.
+1. **Language Detection & Translation Worker Pool** — uses `franc` to detect the item's language. Supported non-English text is dispatched to an external Python Flask translator service via a dedicated HTTP worker pool (with limits, backoff, and graceful degrade on timeout). Translated items then proceed to classification.
+2. **Brand Classifier** — parses boolean query rules from `config/BrandQueries.csv` into ASTs at startup. Supports `AND`, `OR`, `NOT`, `NEAR/n`, and quoted phrases. If a rule matches, the item is tagged with its topic, sub-topic, and internal ID.
+3. **Relevancy Classifier** — uses `Xenova/all-MiniLM-L6-v2` SBERT embeddings (384-dim) fed into an SVM RBF kernel exported as ONNX (`models/svm_classifier.onnx`). Acts as a fallback when no brand rule matches, and also annotates brand-matched items with a `relevantByModel` flag.
+4. **Classification Worker Pool** — spawns configurable child processes (default 2) that each load both classifiers. Jobs are distributed round-robin with automatic crash recovery and backpressure handling (max queue size 1000). Shared across all data sources.
+5. **Teams Alerts Integration** — seamlessly pushes a notification to Microsoft Teams via an adaptive card webhook when a post is classified under critical topics like *"Competitors Death Related Events"*.
 
 ## Features
 
@@ -40,14 +43,17 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
 - Full article content extraction via `@mozilla/readability` (Firefox Reader View) with snippet fallback
 - Per-feed state tracking so only new RSS entries are processed each cycle
 - Domain blocklist (`config/alerts_not_websites.json`) with subdomain-aware filtering
+- **Language Detection & Translation Strategy** with fallback capability.
 - In-memory queue with configurable batch size (10) and interval (60 s) for KWatch
 - Content-hash deduplication (KWatch) and URL-hash deduplication (Google Alerts)
 - Multi-process classification worker pool (child processes, not threads, for ONNX compatibility)
+- **Teams Alert Integration** automatically escalates high-risk matched events (e.g. mentions of complications or death).
 - **In-memory analytics engine** — loads aggregated stats from Cosmos at startup, incrementally updated on each insert, exposes daily counts, sentiment, topic distribution, and classification method split
 - **React + Vite frontend** — SPA dashboard with source/processing toggles, analytics charts (Recharts), filterable feed, topic & date-range filters, all styled with Tailwind CSS
 - Paginated REST endpoints for raw and processed data from both sources with optional date/topic filters
-- Health endpoint exposing queue, worker pool, and scraper metrics
+- Health endpoint exposing queue, worker pool, translation, and scraper metrics
 - Standalone classification API (`POST /api/classify`)
+- Hosted endpoints for Software Requirements Specification (SRS) and Software Design Document (SDD) documentation
 - Docker-ready with pre-downloaded HuggingFace models and pre-built frontend baked into the image
 - Azure App Service deployment support via `web.config` (iisnode)
 
@@ -55,7 +61,9 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
 
 - **Node.js** ≥ 18
 - **Azure Cosmos DB** account with the containers listed below
+- (Optional) **Python Flask Translator Service** running independently in a seperate service
 - (Optional) **Docker** for containerised deployment
+- (Optional) **Microsoft Teams Incoming Webhook** for automated alerts
 
 ## Setup
 
@@ -87,6 +95,11 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
 
    # Server
    PORT=3000
+
+   # External Services & Integrations
+   TRANSLATOR_URL=http://localhost:8000
+   TEAMS_WEBHOOK_URL=https://<tenant>.webhook.office.com/webhookb2/...
+   TRANSLATION_CONCURRENCY=5           # limit parallel requests to translator
 
    # Workers (optional)
    CLASSIFICATION_WORKERS=2            # number of child processes
@@ -149,7 +162,13 @@ Open `http://localhost:5173` for hot-reloading frontend development.
 ### Health & Status
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/health` | Health check with queue, worker pool, and scraper metrics |
+| `GET` | `/api/health` | Health check with queue, worker pool, translation, and scraper metrics |
+
+### Documentation
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/srs` | Serves Software Requirements Specification (`SRS.html`) |
+| `GET` | `/sdd` | Serves Software Design Document (`SDD.html`) |
 
 ### KWatch Webhook
 | Method | Path | Description |
@@ -233,6 +252,9 @@ services/
   analyticsService.js                 # In-memory analytics engine (load, track, query)
   classificationService.js            # Orchestrates brand + relevancy classification
   classificationWorkerPool.js         # Child-process pool with round-robin dispatch
+  translationWorkerPool.js            # HTTP pool managing requests towards Flask Translator
+  languageDetection.js                # ES module wrapper testing item language with franc
+  teamsService.js                     # Triggers Microsoft Teams alerts for key events
   brandClassifier.js                  # CSV → AST parser, boolean query evaluator, lang detection
 utils/
   parser.js                           # Tokenizer & AST engine (AND/OR/NOT/NEAR)
@@ -282,6 +304,11 @@ Tests for `googleAlertsService` fully mock all I/O (Cosmos DB, RSS parser, `fetc
 - Classification result handling
 - Concurrent scrape guard (overlap prevention)
 - All API routes
+
+Other significant test suites include:
+- `languageDetection.test.js`: Verifies `franc` integration and ISO language mappings.
+- `translationIntegration.test.js` & `translationStress.test.js`: Evaluate translation backend with varied loads and timeouts.
+- `kwatchTranslationFlow.test.js`: Ensures KWatch items properly trigger conditional translation before classification.
 
 ### Manual Webhook Test
 
