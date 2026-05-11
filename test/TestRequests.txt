@@ -68,3 +68,19 @@ Invoke-WebRequest `
     "content": "Компания Stryker отзывает роботизированную систему Nailing для хирургии коленного сустава. Производитель рекомендует прекратить использование до устранения дефекта.",
     "sentiment": "negative"
   }'
+
+
+Invoke-WebRequest `
+  -Uri "http://localhost:4000/api/webhook/kwatch" `
+  -Method POST `
+  -Headers @{ "Content-Type" = "application/json" } `
+  -Body '{
+    "platform": "twitter",
+    "query": "Stryker",
+    "datetime": "2026-01-21T10:55:24.397Z",
+    "link": "https://test.com/competitor-death-alert",
+    "author": "medical_news_daily",
+    "title": "Testing Please Ignore",
+    "content": "A patient reportedly died following severe complications after a Stryker implant surgery.",
+    "sentiment": "negative"
+  }'

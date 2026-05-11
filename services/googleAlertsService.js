@@ -22,6 +22,8 @@ const { detectLanguage } = require('./languageDetection');
 const { computeSentiment } = require('../utils/sentimentAnalyzer');
 const analyticsService = require('./analyticsService');
 
+const { sendTeamsAlert } = require('./teamsService');
+
 let RSS_FEEDS = require('../config/alerts_rss_feeds.json');
 let NOT_WEBSITES = require('../config/alerts_not_websites.json');
 
@@ -276,6 +278,16 @@ async function handleClassificationResult(err, result, item) {
     } else {
       console.error(`[GoogleAlerts] Failed to write processed item ${item.id}:`, dbErr.message);
     }
+  }
+
+  if (
+    cls.topic &&
+    cls.topic.toLowerCase() === 'competitors death related events'
+  ) {
+    sendTeamsAlert(item, cls)
+      .catch(err => {
+        console.error('[GoogleAlerts] Failed to send Teams alert:', err.message);
+      });
   }
 }
 

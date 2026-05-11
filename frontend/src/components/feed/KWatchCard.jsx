@@ -101,6 +101,12 @@ export function KWatchCard({ item, isProcessed, onRemediate, onShowToast }) {
 
             {/* Content */}
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{truncated}</p>
+            {/* Translated Content if present */}
+            {item.translatedContent && item.translatedContent !== content && (
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line mt-2 italic">
+                <b>Translation:</b> {item.translatedContent}
+              </p>
+            )}
 
             {/* Footer row */}
             <div className="flex items-center justify-between mt-2 flex-wrap gap-2">

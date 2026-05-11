@@ -4,6 +4,7 @@ const workerPool = require('./classificationWorkerPool');
 const translationPool = require('./translationWorkerPool');
 const { detectLanguage } = require('./languageDetection');
 const analyticsService = require('./analyticsService');
+const { sendTeamsAlert } = require('./teamsService');
 
 // In-memory queue for handling webhook notifications
 const kwatchQueue = [];
@@ -68,6 +69,16 @@ async function handleClassificationResult(err, result, item) {
     } else {
       console.error(`[KWatchQueue] Failed to write processed item ${item.id}:`, dbErr.message);
     }
+  }
+
+  if (
+    classification.topic &&
+    classification.topic.toLowerCase() === 'competitors death related events'
+  ) {
+    sendTeamsAlert(item, classification)
+      .catch(err => {
+        console.error('[KWatchQueue] Failed to send Teams alert:', err.message);
+      });
   }
 }
 
