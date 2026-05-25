@@ -15,3 +15,9 @@ export function getGoogleAlertsProcessed({ page = 1, limit = 25, startDate, endD
   if (remediationStatus) params.append('remediationStatus', remediationStatus);
   return fetchJSON(`/google-alerts/processed?${params}`);
 }
+
+export function deleteGoogleAlertsItem(id) {
+  return fetchJSON(`/google-alerts/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+}

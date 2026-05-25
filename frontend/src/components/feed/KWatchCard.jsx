@@ -17,7 +17,7 @@ const sentimentVariant = {
   negative: 'negative',
 };
 
-export function KWatchCard({ item, isProcessed, onRemediate, onShowToast }) {
+export function KWatchCard({ item, isProcessed, onRemediate, onDelete, onShowToast }) {
   const [showModal, setShowModal] = useState(false);
   const [remediating, setRemediating] = useState(false);
 
@@ -110,17 +110,29 @@ export function KWatchCard({ item, isProcessed, onRemediate, onShowToast }) {
 
             {/* Footer row */}
             <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
-              {(item.link || item.url) && (
-                <a
-                  href={item.link || item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary/80 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-sm">open_in_new</span>
-                  View Source
-                </a>
-              )}
+              <div className="flex items-center gap-3">
+                {(item.link || item.url) && (
+                  <a
+                    href={item.link || item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary/80 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">open_in_new</span>
+                    View Source
+                  </a>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={() => onDelete(item.id, 'kwatch', platform)}
+                    className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+                    title="Delete Post"
+                  >
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                    Delete
+                  </button>
+                )}
+              </div>
 
               {/* Remediation controls (processed mode only) */}
               {isProcessed && (

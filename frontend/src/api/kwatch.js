@@ -15,3 +15,9 @@ export function getKWatchProcessed({ page = 1, limit = 25, startDate, endDate, t
   if (remediationStatus) params.append('remediationStatus', remediationStatus);
   return fetchJSON(`/kwatch/processed?${params}`);
 }
+
+export function deleteKWatchItem(id, platform) {
+  return fetchJSON(`/kwatch/${encodeURIComponent(id)}?platform=${encodeURIComponent(platform)}`, {
+    method: 'DELETE',
+  });
+}

@@ -230,17 +230,33 @@ router.post('/trigger', (req, res) => {
   res.json({ message: 'Scrape cycle triggered', status: getScraperStatus() });
 });
 
-// DELETE /api/google-alerts/:id - Delete a raw item by id
+// DELETE /api/google-alerts/:id - Delete item by id from both raw and processed containers
 // Partition key for GoogleAlertsRawData is /id, so pass id as both item id and partition key
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await googleAlertsRawContainer.item(id, id).delete();
+    let deletedAny = false;
+
+    try {
+      await googleAlertsRawContainer.item(id, id).delete();
+      deletedAny = true;
+    } catch (err) {
+      if (err.code !== 404) throw err;
+    }
+
+    try {
+      await googleAlertsProcessedContainer.item(id, id).delete();
+      deletedAny = true;
+    } catch (err) {
+      if (err.code !== 404) throw err;
+    }
+
+    if (!deletedAny) {
+      return res.status(404).json({ error: 'Item not found in either container', id });
+    }
+
     res.json({ message: 'Item deleted successfully', id });
   } catch (err) {
-    if (err.code === 404) {
-      return res.status(404).json({ error: 'Item not found', id: req.params.id });
-    }
     console.error('[GoogleAlerts] Error deleting item:', err);
     res.status(500).json({ error: 'Failed to delete item' });
   }

@@ -7,6 +7,8 @@ import { EmptyState } from '../ui/EmptyState';
 import { Toast } from '../ui/Toast';
 import { format } from 'date-fns';
 import { remediateItem } from '../../api/remediation';
+import { deleteKWatchItem } from '../../api/kwatch';
+import { deleteGoogleAlertsItem } from '../../api/googleAlerts';
 
 function FeedHeader({ pagination, startDate, endDate }) {
   const totalItems = pagination?.totalItems ?? 0;
@@ -46,6 +48,9 @@ export function FeedList({ items, pagination, loading }) {
   // Toast notification state
   const [toast, setToast] = useState(null);
 
+  // Deleted items state
+  const [deletedIds, setDeletedIds] = useState(new Set());
+
   const showToast = useCallback(({ message, type = 'info' }) => {
     setToast({ id: Date.now(), message, type });
   }, []);
@@ -78,12 +83,36 @@ export function FeedList({ items, pagination, loading }) {
     return response;
   }
 
+  async function handleDelete(id, source, platform) {
+    if (!window.confirm('Are you sure you want to delete this post? This action will remove it from both raw and processed storage and cannot be undone.')) {
+      return;
+    }
+
+    try {
+      if (source === 'google-alerts') {
+        await deleteGoogleAlertsItem(id);
+      } else {
+        await deleteKWatchItem(id, platform);
+      }
+      
+      setDeletedIds(prev => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+      showToast({ message: 'Post deleted successfully', type: 'success' });
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      showToast({ message: error.message || 'Failed to delete post', type: 'error' });
+    }
+  }
+
   if (loading) return <Spinner />;
   if (!items || items.length === 0) return <EmptyState />;
 
   const displayItems = Object.keys(overrides).length > 0
-    ? items.map(item => overrides[item.id] ? { ...item, ...overrides[item.id] } : item)
-    : items;
+    ? items.filter(i => !deletedIds.has(i.id)).map(item => overrides[item.id] ? { ...item, ...overrides[item.id] } : item)
+    : items.filter(i => !deletedIds.has(i.id));
 
   return (
     <div>
@@ -95,6 +124,7 @@ export function FeedList({ items, pagination, loading }) {
             item={item}
             isProcessed={isProcessed}
             onRemediate={isProcessed ? handleRemediate : undefined}
+            onDelete={handleDelete}
             onShowToast={showToast}
           />
         ))}

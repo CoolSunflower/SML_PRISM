@@ -196,7 +196,7 @@ router.patch('/processed/:id/remediate', async (req, res) => {
   }
 });
 
-// DELETE /api/kwatch/:id - Delete a KWatch item
+// DELETE /api/kwatch/:id - Delete a KWatch item from both raw and processed containers
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -206,7 +206,28 @@ router.delete('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Platform (partition key) is required' });
     }
 
-    await kwatchContainer.item(id, platform).delete();
+    let deletedAny = false;
+
+    // Always delete from raw container
+    try {
+      await kwatchContainer.item(id, [platform, id]).delete();
+      deletedAny = true;
+    } catch (err) {
+      if (err.code !== 404) throw err;
+    }
+
+    // Try deleting from processed container (it might not be there)
+    try {
+      await kwatchProcessedContainer.item(id, [platform, id]).delete();
+      deletedAny = true;
+    } catch (err) {
+      if (err.code !== 404) throw err;
+    }
+
+    if (!deletedAny) {
+      return res.status(404).json({ error: 'Item not found in either container' });
+    }
+
     res.json({ message: 'Item deleted successfully', id });
   } catch (error) {
     console.error('Error deleting KWatch item:', error);
