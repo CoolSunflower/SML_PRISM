@@ -21,44 +21,74 @@ const NOT_WORDS_PATH = path.join(CONFIG_DIR, 'alerts_not_words.json');
  * Format: Topic,Sub topic,Query name,Internal ID,Query
  */
 function parseBrandQueriesCSV(csvContent) {
-  const lines = csvContent.split('\n').filter(l => l.trim());
-  if (lines.length === 0) return [];
+  const rows = [];
+  const lines = csvContent.split('\n');
+  let headers = null;
+  let currentRow = null;
+  let inQuotedField = false;
+  let currentField = '';
+  let fieldIndex = 0;
 
-  // Parse CSV with quoted field support
-  const result = [];
-  for (let i = 1; i < lines.length; i++) { // Skip header
-    const line = lines[i];
-    const parts = [];
-    let current = '';
-    let inQuotes = false;
-    let colCount = 0;
+  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    const line = lines[lineIdx];
 
-    for (let j = 0; j < line.length; j++) {
-      const ch = line[j];
-      if (ch === '"') {
-        inQuotes = !inQuotes;
-      } else if (ch === ',' && !inQuotes && colCount < 4) {
-        parts.push(current.trim());
-        current = '';
-        colCount++;
+    if (!headers) {
+      headers = ['topic', 'subTopic', 'queryName', 'internalId', 'query'];
+      continue;
+    }
+
+    if (!currentRow) {
+      currentRow = {};
+      currentField = '';
+      fieldIndex = 0;
+      inQuotedField = false;
+    }
+
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      const nextCh = line[i + 1];
+
+      if (inQuotedField) {
+        if (ch === '"' && nextCh === '"') {
+          currentField += '"';
+          i++; // Skip next quote
+        } else if (ch === '"') {
+          inQuotedField = false;
+        } else {
+          currentField += ch;
+        }
       } else {
-        current += ch;
+        if (ch === '"' && currentField === '') {
+          inQuotedField = true;
+        } else if (ch === ',') {
+          if (fieldIndex < headers.length) {
+            currentRow[headers[fieldIndex]] = currentField.trim();
+          }
+          currentField = '';
+          fieldIndex++;
+        } else {
+          currentField += ch;
+        }
       }
     }
-    parts.push(current.trim()); // last field
 
-    if (parts.length >= 5) {
-      result.push({
-        topic: parts[0],
-        subTopic: parts[1],
-        queryName: parts[2],
-        internalId: parts[3],
-        query: parts[4],
-      });
+    if (inQuotedField) {
+      currentField += '\n';
+    } else {
+      if (fieldIndex < headers.length) {
+        currentRow[headers[fieldIndex]] = currentField.trim();
+      }
+      // Only push if it has at least the topic
+      if (Object.keys(currentRow).length > 0 && currentRow.topic) {
+        rows.push(currentRow);
+      }
+      currentRow = null;
+      currentField = '';
+      fieldIndex = 0;
     }
   }
 
-  return result;
+  return rows;
 }
 
 /**
@@ -100,6 +130,8 @@ router.get('/brand-queries', (req, res) => {
 
 router.put('/brand-queries', async (req, res) => {
   try {
+    console.log('[Config] Received request to update brand queries');
+
     const { queries } = req.body;
     if (!Array.isArray(queries)) {
       return res.status(400).json({ success: false, error: 'queries must be an array' });
@@ -136,6 +168,68 @@ router.put('/brand-queries', async (req, res) => {
     res.json({ success: true, message: 'Brand queries updated' });
   } catch (error) {
     console.error('[Config] Error updating brand queries:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.patch('/brand-queries', async (req, res) => {
+  try {
+    console.log('[Config] Received request to patch brand queries');
+    const { additions = [], updates = [], deletions = [] } = req.body;
+
+    const csvContent = fs.readFileSync(BRAND_QUERIES_PATH, 'utf-8');
+    let queries = parseBrandQueriesCSV(csvContent);
+
+    // deletions: array of internalIds
+    if (deletions.length > 0) {
+      queries = queries.filter(q => !deletions.includes(q.internalId));
+    }
+
+    // updates: array of { originalInternalId, updatedData }
+    if (updates.length > 0) {
+      updates.forEach(u => {
+        const idx = queries.findIndex(q => q.internalId === u.originalInternalId);
+        if (idx !== -1) {
+          // Keep existing properties if any, but overwrite with updatedData (minus tracking data)
+          const newRow = { ...u.updatedData };
+          delete newRow._tid;
+          queries[idx] = newRow;
+        }
+      });
+    }
+
+    // additions: array of query objects
+    if (additions.length > 0) {
+      additions.forEach(a => {
+        const newRow = { ...a };
+        delete newRow._tid;
+        queries.push(newRow);
+      });
+    }
+
+    // Build CSV
+    const newCsvContent = buildBrandQueriesCSV(queries);
+
+    // Write to file
+    fs.writeFileSync(BRAND_QUERIES_PATH, newCsvContent, 'utf-8');
+
+    // Hot-reload
+    const brandClassifier = require('../services/brandClassifier');
+    const filtersModule = require('./filters');
+    const classificationWorkerPool = require('../services/classificationWorkerPool');
+
+    await brandClassifier.reloadQueries();
+    try {
+      await classificationWorkerPool.reloadWorkers();
+    } catch (workerErr) {}
+    if (filtersModule.reloadTopics) {
+      filtersModule.reloadTopics();
+    }
+
+    console.log(`[Config] Brand queries patched (Added: ${additions.length}, Updated: ${updates.length}, Deleted: ${deletions.length})`);
+    res.json({ success: true, message: 'Brand queries patched' });
+  } catch (error) {
+    console.error('[Config] Error patching brand queries:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

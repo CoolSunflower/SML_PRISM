@@ -5,6 +5,7 @@ import { ListEditor } from './ListEditor';
 import {
   getBrandQueries,
   updateBrandQueries,
+  patchBrandQueries,
   getRSSFeeds,
   updateRSSFeeds,
   getBlockedWebsites,
@@ -29,6 +30,7 @@ export function ConfigPage({ onClose }) {
 
   // Data state
   const [brandQueries, setBrandQueries] = useState([]);
+  const [originalBrandQueries, setOriginalBrandQueries] = useState([]);
   const [rssFeeds, setRssFeeds] = useState({});
   const [blockedWebsites, setBlockedWebsites] = useState([]);
   const [blockedWords, setBlockedWords] = useState([]);
@@ -59,7 +61,13 @@ export function ConfigPage({ onClose }) {
         getBlockedWords(),
       ]);
 
-      setBrandQueries(queriesRes.queries || []);
+      const trackQueries = (queriesRes.queries || []).map(q => ({
+        ...q,
+        _tid: q.internalId + '_' + Math.random().toString(36).substring(2)
+      }));
+
+      setBrandQueries(trackQueries);
+      setOriginalBrandQueries(JSON.parse(JSON.stringify(trackQueries)));
       setRssFeeds(feedsRes.feeds || {});
       setBlockedWebsites(websitesRes.websites || []);
       setBlockedWords(wordsRes.words || []);
@@ -77,9 +85,37 @@ export function ConfigPage({ onClose }) {
 
       // Save based on active tab
       switch (activeTab) {
-        case 'brand-queries':
-          await updateBrandQueries(brandQueries);
+        case 'brand-queries': {
+          const currentMap = new Map(brandQueries.map(q => [q._tid, q]));
+          const origMap = new Map((originalBrandQueries || []).map(q => [q._tid, q]));
+
+          const updates = [];
+          const deletions = [];
+          const additions = [];
+
+          for (const [tid, orig] of origMap.entries()) {
+            if (!currentMap.has(tid)) {
+              deletions.push(orig.internalId);
+            } else {
+              const curr = currentMap.get(tid);
+              if (JSON.stringify(orig) !== JSON.stringify(curr)) {
+                updates.push({ originalInternalId: orig.internalId, updatedData: curr });
+              }
+            }
+          }
+
+          for (const [tid, curr] of currentMap.entries()) {
+            if (!origMap.has(tid)) {
+              additions.push(curr);
+            }
+          }
+
+          if (additions.length > 0 || updates.length > 0 || deletions.length > 0) {
+            await patchBrandQueries({ additions, updates, deletions });
+            setOriginalBrandQueries(JSON.parse(JSON.stringify(brandQueries)));
+          }
           break;
+        }
         case 'rss-feeds':
           await updateRSSFeeds(rssFeeds);
           break;

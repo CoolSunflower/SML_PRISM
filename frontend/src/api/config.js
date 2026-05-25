@@ -9,9 +9,18 @@ export function getBrandQueries() {
 }
 
 export function updateBrandQueries(queries) {
+  console.log('Updating brand queries (full replace):', queries);
   return fetchJSON('/config/brand-queries', {
     method: 'PUT',
     body: JSON.stringify({ queries }),
+  });
+}
+
+export function patchBrandQueries(delta) {
+  console.log('Patching brand queries:', delta);
+  return fetchJSON('/config/brand-queries', {
+    method: 'PATCH',
+    body: JSON.stringify(delta),
   });
 }
 

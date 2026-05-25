@@ -38,7 +38,8 @@ export function BrandQueriesEditor({ queries, onChange }) {
 
   const handleAdd = () => {
     if (addForm.topic && addForm.query) {
-      onChange([...queries, { ...addForm }]);
+      const newQuery = { ...addForm, _tid: 'new_' + Math.random().toString(36).substring(2) };
+      onChange([...queries, newQuery]);
       setAddForm({
         topic: '',
         subTopic: '',

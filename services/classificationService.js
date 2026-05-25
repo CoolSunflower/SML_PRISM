@@ -8,7 +8,7 @@
  * its own instances of the brand classifier and relevancy classifier.
  */
 
-const { initializeBrandClassifier, classifyText } = require('./brandClassifier');
+const { initializeBrandClassifier, classifyText, reloadQueries } = require('./brandClassifier');
 const { initializeRelevancyClassifier, classifyRelevancy, isReady: isRelevancyReady } = require('../utils/relevancyClassifier');
 
 const NOT_WORDS = require('../config/alerts_not_words.json');
@@ -36,6 +36,26 @@ async function initializeClassifiers() {
     result.relevancyReady = isRelevancyReady();
   } catch (err) {
     console.error('[ClassificationService] Relevancy classifier init failed:', err.message);
+  }
+
+  return result;
+}
+
+/**
+ * Reload classification queries.
+ * Must be called to refresh brand queries and reset flags.
+ * @returns {Promise<{brandReady: boolean, relevancyReady: boolean, brandQueryCount: number}>}
+ */
+async function reloadClassifiers() {
+  const result = { brandReady: false, relevancyReady: isRelevancyReady(), brandQueryCount: 0 };
+
+  // Reload Brand Classifier
+  try {
+    const brandInit = await reloadQueries();
+    result.brandReady = brandInit.success;
+    result.brandQueryCount = brandInit.queryCount || 0;
+  } catch (err) {
+    console.error('[ClassificationService] Brand classifier reload failed:', err.message);
   }
 
   return result;
@@ -160,6 +180,7 @@ async function performClassification(item) {
 
 module.exports = {
   initializeClassifiers,
+  reloadClassifiers,
   performClassification,
   extractSubTopicFromQuery,
   hasNotWord,

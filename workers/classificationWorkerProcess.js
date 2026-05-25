@@ -18,7 +18,7 @@ const path = require('path');
 process.env.HF_HOME = path.join(__dirname, '..', '.hf-cache');
 process.env.TRANSFORMERS_CACHE = path.join(__dirname, '..', '.hf-cache');
 
-const { initializeClassifiers, performClassification } = require('../services/classificationService');
+const { initializeClassifiers, reloadClassifiers, performClassification } = require('../services/classificationService');
 
 let ready = false;
 
@@ -48,7 +48,7 @@ process.on('message', async (msg) => {
     console.log('[Worker] Received reload request, reinitializing classifiers...');
     try {
       ready = false;
-      const status = await initializeClassifiers();
+      const status = await reloadClassifiers();
       console.log(`[Worker] Reloaded - Brand: ${status.brandReady ? 'Ready' : 'Failed'} (${status.brandQueryCount} queries), Relevancy: ${status.relevancyReady ? 'Ready' : 'Failed'}`);
       ready = true;
       process.send({ type: 'reloadComplete', success: true, queryCount: status.brandQueryCount });
