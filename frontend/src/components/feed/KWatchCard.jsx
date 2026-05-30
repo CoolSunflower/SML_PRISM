@@ -122,16 +122,6 @@ export function KWatchCard({ item, isProcessed, onRemediate, onDelete, onShowToa
                     View Source
                   </a>
                 )}
-                {onDelete && (
-                  <button
-                    onClick={() => onDelete(item.id, 'kwatch', platform)}
-                    className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
-                    title="Delete Post"
-                  >
-                    <span className="material-symbols-outlined text-sm">delete</span>
-                    Delete
-                  </button>
-                )}
               </div>
 
               {/* Remediation controls (processed mode only) */}
