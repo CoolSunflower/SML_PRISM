@@ -77,39 +77,39 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
 
 2. **Configure environment** — create a `.env` file:
    ```env
-   # Azure Cosmos DB
-   COSMOS_ENDPOINT=https://<account>.documents.azure.com:443/
-   COSMOS_KEY=<primary-key>
+    # Copy this file to .env and fill in your values
 
-   # Shared database
-   COSMOS_KWATCH_DATABASE=<database-name>
+    COSMOS_ENDPOINT=https://your-cosmos-account.documents.azure.com:443/
+    COSMOS_KEY=your-primary-key-here
 
-   # KWatch containers
-   COSMOS_KWATCH_CONTAINER=<kwatch-raw-container>
-   COSMOS_KWATCH_PROCESSED_CONTAINER=<kwatch-processed-container>
+    # KWatch Database (separate)
+    COSMOS_KWATCH_DATABASE=SocialMediaListeningData
+    COSMOS_KWATCH_CONTAINER=KWatchRawData
+    COSMOS_KWATCH_PROCESSED_CONTAINER=KWatchProcessedData
 
-   # Google Alerts containers
-   COSMOS_GOOGLE_ALERTS_RAW_CONTAINER=GoogleAlertsRawData
-   COSMOS_GOOGLE_ALERTS_PROCESSED_CONTAINER=GoogleAlertsProcessedData
-   COSMOS_GOOGLE_ALERTS_STATE_CONTAINER=GoogleAlertsState
+    # Google Alerts Containers
+    COSMOS_GOOGLE_ALERTS_RAW_CONTAINER=GoogleAlertsRawData
+    COSMOS_GOOGLE_ALERTS_PROCESSED_CONTAINER=GoogleAlertsProcessedData
+    COSMOS_GOOGLE_ALERTS_STATE_CONTAINER=GoogleAlertsState
 
-   # Server
-   PORT=3000
+    # Worker Pool Configuration
+    CLASSIFICATION_WORKERS=2
+    MAX_CLASSIFICATION_QUEUE_SIZE=1000
 
-   # External Services & Integrations
-   TRANSLATOR_URL=http://localhost:8000
-   TEAMS_WEBHOOK_URL=https://<tenant>.webhook.office.com/webhookb2/...
-   TRANSLATION_CONCURRENCY=5           # limit parallel requests to translator
+    # Translation Service Configuration
+    TRANSLATOR_URL=http://localhost:8000
+    TRANSLATION_CONCURRENCY=5
+    MAX_TRANSLATION_QUEUE_SIZE=500
+    TRANSLATION_TIMEOUT_MS=30000
+    TRANSLATION_MAX_RETRIES=3
 
-   # Workers (optional)
-   CLASSIFICATION_WORKERS=2            # number of child processes
-   MAX_CLASSIFICATION_QUEUE_SIZE=1000  # backpressure limit
+    PORT=3000
 
-   # Google Alerts (optional)
-   GOOGLE_ALERTS_SCRAPE_INTERVAL=7200000  # ms, default 2 hours
+    # Teams messages
+    TEAMS_WEBHOOK_URL=teams-workflow-url
    ```
 
-3. **Configure RSS feeds** — edit `config/alerts_rss_feeds.json`:
+3. **(Optional) Configure RSS feeds** - edit `config/alerts_rss_feeds.json`:
    ```json
    {
      "Stryker": "https://www.google.com/alerts/feeds/<id>/...",
@@ -118,7 +118,7 @@ Google Alerts ──▶ RSS Scraper ──▶ Readability (full text) ──▶ 
    ```
    Keys are the feed/keyword names used for classification sub-topics.
 
-4. **(Optional) Configure blocked domains** — edit `config/alerts_not_websites.json`:
+4. **(Optional) Configure blocked domains** - edit `config/alerts_not_websites.json`:
    ```json
    ["wikipedia.org", "stryker.com"]
    ```
